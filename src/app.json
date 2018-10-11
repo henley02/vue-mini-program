@@ -1,0 +1,44 @@
+{
+  "pages": [
+    "pages/index/main",
+    "pages/logs/main",
+    "pages/counter/main"
+  ],
+  "tabBar": {
+    "color": "#333",
+    "selectedColor": "#e4401c",
+    "backgroundColor": "#fff",
+    "list": [
+      {
+        "pagePath": "pages/index/main",
+        "text": "首页",
+        "iconPath": "/static/images/home.png",
+        "selectedIconPath": "/static/images/home-selected.png"
+      },
+      {
+        "pagePath": "pages/index/main",
+        "text": "芳聊馆",
+        "iconPath": "/static/images/property_safety.png",
+        "selectedIconPath": "/static/images/property_safety-selected.png"
+      },
+      {
+        "pagePath": "pages/index/main",
+        "text": "购物车",
+        "iconPath": "/static/images/shop.png",
+        "selectedIconPath": "/static/images/shop-selected.png"
+      },
+      {
+        "pagePath": "pages/index/main",
+        "text": "我的",
+        "iconPath": "/static/images/user.png",
+        "selectedIconPath": "/static/images/user-selected.png"
+      }
+    ]
+  },
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "WeChat",
+    "navigationBarTextStyle": "black"
+  }
+}
