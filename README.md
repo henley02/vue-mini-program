@@ -1,6 +1,6 @@
-# shopping-mall
+# vue-mini-program
 
-> 及时雨茶书院练手
+>
 
 ## Build Setup
 
