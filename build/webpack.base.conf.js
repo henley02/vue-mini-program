@@ -45,7 +45,8 @@ module.exports = {
       'vue': 'mpvue',
       '@': resolve('src'),
       'public': path.resolve(__dirname, '../src/public'),
-      'api': path.resolve(__dirname, '../src/api')
+      'api': path.resolve(__dirname, '../src/api'),
+      'config': path.resolve(__dirname, '../src/config')
     },
     symlinks: false,
     aliasFields: ['mpvue', 'weapp', 'browser'],

@@ -214,11 +214,11 @@
         console.log('clickHandle:', msg, ev);
       }
     },
-
-    created() {
+    onShow() {
       // 调用应用实例的方法获取全局数据
       this.getUserInfo();
       this.init();
+      this.$bridge.dialog.alert(13213);
     }
   };
 </script>

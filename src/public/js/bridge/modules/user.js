@@ -1,5 +1,9 @@
 export default {
-  login() {
+  /**
+   * 微信登录
+   * @returns {Promise}
+   */
+  wxLogin() {
     return new Promise((resolve, reject) => {
       wx.login({
         success: () => {
@@ -11,7 +15,11 @@ export default {
       });
     });
   },
-  getUserInfo() {
+  /**
+   * 获取微信用户信息
+   * @returns {Promise}
+   */
+  getWXUserInfo() {
     return new Promise((resolve, reject) => {
       wx.login({
         success: () => {

@@ -31,7 +31,6 @@ export default {
     wx.showModal({
       content: options.content,
       showCancel: false,
-      text: '111取消',
       success: function (res) {
         if (res.confirm) {
           if (options.confirmCallback) {
