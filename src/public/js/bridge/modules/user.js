@@ -25,6 +25,7 @@ export default {
         success: () => {
           wx.getUserInfo({
             success: (res) => {
+              console.log(res);
               resolve(res.userInfo);
             },
             fail: (error) => {

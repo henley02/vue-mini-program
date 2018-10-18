@@ -1,5 +1,10 @@
 {
   "pages": [
+    "pages/flg/index/main",
+    "pages/flg/product-list/main",
+    "pages/flg/shop-decoration/main",
+    "pages/address/list/main",
+    "pages/address/add/main",
     "pages/user/login/main",
     "pages/user/register-agreement/main",
     "pages/user/login-password/main",
@@ -22,6 +27,12 @@
       {
         "pagePath": "pages/index/main",
         "text": "芳聊馆",
+        "iconPath": "/static/images/property_safety.png",
+        "selectedIconPath": "/static/images/property_safety-selected.png"
+      },
+      {
+        "pagePath": "pages/index/main",
+        "text": "分销中心",
         "iconPath": "/static/images/property_safety.png",
         "selectedIconPath": "/static/images/property_safety-selected.png"
       },
