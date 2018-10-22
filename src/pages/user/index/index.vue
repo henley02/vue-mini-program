@@ -1,12 +1,14 @@
 <template>
-  <div class="container">
+  <div class="wrapper padding-top-100">
+    我的
   </div>
 </template>
 
 <script>
   /**
-   * 分销中心
+   * 用户登录
    */
+
   export default {
     data() {
       return {};
@@ -14,15 +16,15 @@
     components: {},
     computed: {},
     methods: {},
-    onShow() {
+    created() {
     },
-    onLoad() {
-
+    async onShow() {
     }
   };
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
-  @import "~public/stylus/variable";
   @import "~public/stylus/mixin";
+  @import "~public/css/login";
+
 </style>

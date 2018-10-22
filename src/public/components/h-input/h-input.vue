@@ -43,7 +43,9 @@
     methods: {
       handleInput(event) {
         let value = event.target.value;
-        this.$emit('input', value);
+        setTimeout(() => {
+          this.$emit('input', value);
+        }, 0);
       },
       handleFocus(event) {
         this.$emit('focus', event);

@@ -9,6 +9,7 @@
       <text class="btn_register" @tap='register'>快速注册</text>
       <text class="btn_forget_password" @tap='forgetPassword'>忘记密码</text>
     </div>
+    <authorization :isAuthorization.sync="isAuthorization" v-if="!isAuthorization"></authorization>
     <btn-home></btn-home>
   </div>
 </template>
@@ -18,6 +19,7 @@
    * 用户登录
    */
   import hInput from 'public/components/h-input/h-input.vue';
+  import authorization from 'public/components/authorization/authorization.vue';
   import btnHome from 'public/components/btn-home/btn-home.vue';
   import MD5 from 'public/js/util/md5';
 
@@ -25,11 +27,12 @@
     data() {
       return {
         username: '',
-        password: ''
+        password: '',
+        isAuthorization: true
       };
     },
     components: {
-      hInput, btnHome
+      hInput, btnHome, authorization
     },
     computed: {
       hasValue() {
@@ -58,6 +61,9 @@
       }
     },
     created() {
+    },
+    async onShow() {
+      this.isAuthorization = await this.$bridge.user.isAuthorization();
     }
   };
 </script>

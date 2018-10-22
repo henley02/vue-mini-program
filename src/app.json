@@ -1,17 +1,21 @@
 {
   "pages": [
+    "pages/index/main",
+    "pages/search/main",
     "pages/flg/index/main",
     "pages/flg/product-list/main",
     "pages/flg/shop-decoration/main",
     "pages/address/list/main",
     "pages/address/add/main",
+    "pages/user/index/main",
     "pages/user/login/main",
     "pages/user/register-agreement/main",
     "pages/user/login-password/main",
     "pages/user/register/main",
-    "pages/index/main",
-    "pages/logs/main",
-    "pages/counter/main"
+    "pages/cart/main",
+    "pages/distribution-center/index/main",
+    "pages/distribution-center/list/main",
+    "pages/distribution-center/detail/main"
   ],
   "tabBar": {
     "color": "#333",
@@ -19,32 +23,32 @@
     "backgroundColor": "#fff",
     "list": [
       {
-        "pagePath": "pages/user/login/main",
+        "pagePath": "pages/index/main",
         "text": "首页",
         "iconPath": "/static/images/home.png",
         "selectedIconPath": "/static/images/home-selected.png"
       },
       {
-        "pagePath": "pages/index/main",
+        "pagePath": "pages/flg/index/main",
         "text": "芳聊馆",
-        "iconPath": "/static/images/property_safety.png",
-        "selectedIconPath": "/static/images/property_safety-selected.png"
+        "iconPath": "/static/images/flg.png",
+        "selectedIconPath": "/static/images/flg-selected.png"
       },
       {
-        "pagePath": "pages/index/main",
+        "pagePath": "pages/distribution-center/index/main",
         "text": "分销中心",
-        "iconPath": "/static/images/property_safety.png",
-        "selectedIconPath": "/static/images/property_safety-selected.png"
+        "iconPath": "/static/images/distribution-center.png",
+        "selectedIconPath": "/static/images/distribution-center-selected.png"
       },
       {
-        "pagePath": "pages/index/main",
+        "pagePath": "pages/cart/main",
         "text": "购物车",
         "iconPath": "/static/images/shop.png",
         "selectedIconPath": "/static/images/shop-selected.png"
       },
       {
-        "pagePath": "pages/user/login/main",
-        "text": "我的",
+        "pagePath": "pages/user/index/main",
+        "text": "会员中心",
         "iconPath": "/static/images/user.png",
         "selectedIconPath": "/static/images/user-selected.png"
       }

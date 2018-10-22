@@ -1,6 +1,6 @@
 <template>
   <div class="u-tap-btn">
-    <navigator url="../index/index" open-type="switchTab" class="u-go-home">
+    <navigator url="/pages/index/main" open-type="switchTab" class="u-go-home">
       <div class="iconfont icon-shouyeshouye"></div>
     </navigator>
   </div>

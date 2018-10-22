@@ -1,19 +1,16 @@
 <template>
   <div class="register-agreement">
     <text>用户注册即代表同意</text>
-    <label catchtap='registration'>《注册协议》</label>
+    <label @tap='registration'>《注册协议》</label>
   </div>
 </template>
 <script type="text/ecmascript-6">
   export default {
     name: 'register-agreement',
-    data() {
-      return {};
-    },
-    methods: {},
-    created() {
-    },
-    mounted() {
+    methods: {
+      registration() {
+        this.$bridge.link.goRegisterAgreement();
+      }
     }
   };
 </script>

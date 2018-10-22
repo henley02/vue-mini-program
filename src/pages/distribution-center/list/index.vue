@@ -15,9 +15,6 @@
     computed: {},
     methods: {},
     onShow() {
-    },
-    onLoad() {
-
     }
   };
 </script>

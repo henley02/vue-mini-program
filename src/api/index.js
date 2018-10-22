@@ -1,5 +1,7 @@
-import http from 'public/js/fetch/index';
+import fetch from 'public/js/fetch/index.js';
 
-export const groupDetail = () => {
-  return http({url: 'http://ustbhuangyi.com/sell/api/goods', method: 'get'});
-};
+/**
+ * 获取首页--分类
+ * @param params
+ */
+export const getProductClassify = (params) => fetch({method: 'api.ebusiness.allCategoryShow.get', type: 'STANDARD', ...params}, {isLoading: true});

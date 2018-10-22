@@ -1,5 +1,22 @@
 export default {
   /**
+   * 判断微信是否授权
+   * @returns {Promise}
+   */
+  isAuthorization() {
+    return new Promise((resolve, reject) => {
+      wx.getSetting({
+        success: function (res) {
+          if (res.authSetting['scope.userInfo']) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        }
+      });
+    });
+  },
+  /**
    * 微信登录
    * @returns {Promise}
    */
@@ -11,43 +28,6 @@ export default {
         },
         fail: (error) => {
           reject(error);
-        }
-      });
-    });
-  },
-  /**
-   * 获取微信用户信息
-   * @returns {Promise}
-   */
-  getWXUserInfo() {
-    return new Promise((resolve, reject) => {
-      wx.login({
-        success: () => {
-          wx.getUserInfo({
-            success: (res) => {
-              console.log(res);
-              resolve(res.userInfo);
-            },
-            fail: (error) => {
-              reject(error);
-            }
-          });
-        }
-      });
-    });
-  },
-  authorize() {
-    return new Promise((resolve, reject) => {
-      wx.login({
-        success: () => {
-          wx.authorize({
-            success: (res) => {
-              resolve(res);
-            },
-            fail: (error) => {
-              reject(error);
-            }
-          });
         }
       });
     });
