@@ -33,19 +33,19 @@
       <scroll-view class="foods-wrapper" :scroll-into-view="contentId" scroll-with-animation="true" scroll-y
                    @scroll="onScroll">
         <ul>
-          <li @click="selectFood(item,$event)" v-for="(item,index) in goods" class="food-item border-1px" :key="index">
+          <li @click="selectFood(item,$event)" v-for="(item,index) in goods" class="food-item" :key="index">
             <div class="icon">
               <img :src="item.pictureUrl">
             </div>
-            <div class="content">
-              <h2 class="name">{{item.name}}</h2>
-              <p class="desc">{{item.description}}</p>
-              <div class="extra">
-                <span class="count">月售{{item.sellCount}}份</span><span>好评率{{item.rating}}%</span>
+            <div class="content border-1px">
+              <div class="name-wrapper">
+                <div class="name">{{item.name}}</div>
               </div>
               <div class="price">
-                <span class="now">￥{{item.price}}</span><span class="old"
-                                                              v-show="item.oldPrice">￥{{item.oldPrice}}</span>
+                <span class="now">￥{{item.showPrice}}</span>
+              </div>
+              <div class="extra">
+                <span class='many'>{{item.saleQuantity}}条成交</span>
               </div>
               <div class="cartcontrol-wrapper">
                 <!--<cartcontrol @add="addFood" :food="food"></cartcontrol>-->
@@ -288,46 +288,41 @@
       .food-item
         display: flex
         margin: rpx(20) 0 rpx(20) rpx(10)
-        border-1px(rgba(7, 17, 27, 0.1))
         &:last-child
           border-none()
           margin-bottom: 0
         .icon
           flex: 0 0 57px
-          margin-right: 10px
+          margin-right: rpx(15)
           img
             width: rpx(178);
             height: rpx(178);
             margin-top: rpx(11);
         .content
+          border-1px(rgba(7, 17, 27, 0.1))
           flex: 1
-          .name
-            margin: 2px 0 8px 0
-            height: 14px
-            line-height: 14px
-            font-size: 14px
-            color: rgb(7, 17, 27)
-          .desc, .extra
-            line-height: 10px
-            font-size: 10px
-            color: rgb(147, 153, 159)
-          .desc
-            line-height: 12px
-            margin-bottom: 8px
-          .extra
-            .count
-              margin-right: 12px
-          .price
-            font-weight: 700
-            line-height: 24px
-            .now
-              margin-right: 8px
+          height: 95px;
+          .name-wrapper
+            width: rpx(362);
+            height: rpx(100);
+            font-size: rpx(28);
+            padding-top: rpx(8);
+            .name
+              margin: 2px 0 8px 0
+              height: 14px
+              line-height: 14px
               font-size: 14px
-              color: rgb(240, 20, 20)
-            .old
-              text-decoration: line-through
-              font-size: 10px
-              color: rgb(147, 153, 159)
+          .extra
+            .many
+              padding-left: rpx(8)
+              color: #999
+              font-size: rpx(24)
+          .price
+            font-size: rpx(24)
+            .now
+              padding-bottom: rpx(8)
+              font-size: rpx(32)
+              color: #ea281a
           .cartcontrol-wrapper
             position: absolute
             right: 0
