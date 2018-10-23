@@ -1,49 +1,58 @@
 <template>
   <div class="container">
     <div class="search-wrapper">
-      <div class="weui-search-bar" @tap="goSearch()">
+      <div class="weui-search-bar">
         <div class="weui-search-bar__form">
           <div class="weui-search-bar__box">
-            <input type="text" class="weui-search-bar__input" placeholder="搜索商品"/>
+            <icon class="weui-icon-search_in-box" type="search" size="14"></icon>
+            <input type="text" class="weui-search-bar__input" placeholder="搜索商品" v-model="inputVal" :focus="inputFocus"
+                   @input="bindKeyInput(e)" confirm-type="search" @confirm="inputConfirm(event)" @blur="inputBlur"/>
+            <div class="weui-icon-clear" v-if="inputVal.length > 0" @tap="clearInput">
+              <icon type="clear" size="14"></icon>
+            </div>
           </div>
-          <label class="weui-search-bar__label">
+          <label class="weui-search-bar__label" v-if="!inputShowed" @tap="howInput">
             <icon class="weui-icon-search" type="search" size="14"></icon>
             <div class="weui-search-bar__text">搜索商品</div>
           </label>
         </div>
+        <div class="weui-search-bar__cancel-btn" v-if="inputShowed" @tap="hideInput">取消</div>
       </div>
     </div>
-    <div class="m-tab">
-      <div class="m-navbar">
-        <div class="m-navbar-item" :class="{'m-navbar-item-on':tapindex==1}" bindtap="allOrders">
-          <label class="m-sort">综合
-            <image src="../../img/select2x.png" class='sorg' style='width:10rpx;height:10rpx' v-if='tapindex==1'/>
-          </label>
-        </div>
-        <div class="m-navbar-item" :class="{'m-navbar-item-on':tapindex==2}" bindtap="toBePaid">
-          销量
-        </div>
-        <div class="m-navbar-item" @tap="sortByPrice()" :class="{'m-navbar-item-on':tapindex==3}">
-          <label class="m-sort" v-if="sort==0">价格
-            <image src="../../img/transimg.png" class='sorg'/>
-          </label>
-          <label class="m-sort" v-else-if="sort==1">价格
-            <image src="../../img/pricedown.png" class='sotr'/>
-          </label>
-        </div>
-      </div>
-    </div>
-    <div>
-      <scroll-view class="m-category-l" scroll-y="true">
-        <div v-for="(item,index) in classifyList" :key="index" bindtap="ckCategoryitem" class='p-category-l'
-             :class="{'current':currentIndex===index}">
-          <div class='p-l'>
-            <div class='m-category-l-item_img'>
+    <div class="goods">
+      <scroll-view class="menu-wrapper" :scroll-into-view="navId" scroll-with-animation="true" scroll-y>
+        <ul class="menu-ul">
+          <li v-for="(item,index) in classifyList" class="menu-item" :key="index" @click="selectMenu(item)">
+            <div class='img'>
               <image :src='item.pictureUrl'></image>
             </div>
-            <div class="m-category-l-item">{{item.categoryName}}</div>
-          </div>
-        </div>
+            <span class="text" :class="{'current':currentCategoryID===item.id}">{{item.categoryName}}</span>
+          </li>
+        </ul>
+      </scroll-view>
+      <scroll-view class="foods-wrapper" :scroll-into-view="contentId" scroll-with-animation="true" scroll-y
+                   @scroll="onScroll">
+        <ul>
+          <li @click="selectFood(item,$event)" v-for="(item,index) in goods" class="food-item border-1px" :key="index">
+            <div class="icon">
+              <img :src="item.pictureUrl">
+            </div>
+            <div class="content">
+              <h2 class="name">{{item.name}}</h2>
+              <p class="desc">{{item.description}}</p>
+              <div class="extra">
+                <span class="count">月售{{item.sellCount}}份</span><span>好评率{{item.rating}}%</span>
+              </div>
+              <div class="price">
+                <span class="now">￥{{item.price}}</span><span class="old"
+                                                              v-show="item.oldPrice">￥{{item.oldPrice}}</span>
+              </div>
+              <div class="cartcontrol-wrapper">
+                <!--<cartcontrol @add="addFood" :food="food"></cartcontrol>-->
+              </div>
+            </div>
+          </li>
+        </ul>
       </scroll-view>
     </div>
   </div>
@@ -51,24 +60,38 @@
 
 <script>
   import card from '@/components/card';
-  import {getProductClassify} from 'api/index';
+  import {getProductClassify, getGoodList, getMerchant} from 'api/index';
 
   export default {
     data() {
       return {
-        classMap: ['decrease', 'discount', 'special', 'invoice', 'guarantee'],
-        goods: [],
         classifyList: [],
-        currentCategoryID: '',
-        information: [],
-        sort: 0,
-        tapindex: 1,
-        flag: false
+        data: {
+          pageSize: 10,
+          operatingUnitId: '',
+          pageNumber: 1
+        },
+        currentCategoryID: -1,
+        goods: [],
+
+        classMap: ['decrease', 'discount', 'special', 'invoice', 'guarantee'],
+        inputVal: '',
+        inputShowed: false,
+        inputFocus: false,
+        userInfo: {},
+        contentId: '', // 每个food-list的id，scroll-into-view滚动到对应的id
+        navId: '', // 导航模块对应的id，用来联动内容区域
+        navulHeight: 0, // 导航里ul高度
+        navItemHeight: 0, // 每个导航高度
+        listHeight: [], // foods内部块的高度
+        contentHeight: [] // 内容区域scroll-view高度
       };
     },
+
     components: {
       card
     },
+    computed: {},
     watch: {
       currentIndex() {
         if (this.contentHeight < this.navulHeight) {
@@ -83,20 +106,117 @@
       }
     },
     methods: {
-      goSearch() {
-        this.$bridge.link.goSearch();
+      selectMenu(item) {
+        this.currentCategoryID = item.id;
+        this.data.pageNumber = 1;
+        this.fetchGoodList();
       },
-      async init() {
+      onScroll(e) {
+        this.contentId = '';
+        let scrollTop = e.target.scrollTop;
+        let length = this.listHeight.length;
+        if (scrollTop >= this.listHeight[length - 1] - this.contentHeight) {
+          return;
+        } else if (scrollTop > 0 && scrollTop < this.listHeight[0]) {
+          this.currentIndex = 0;
+        }
+        for (let i = 0; i < length; i++) {
+          if (scrollTop >= this.listHeight[i - 1] && scrollTop < this.listHeight[i]) {
+            this.currentIndex = i;
+          }
+        }
+      },
+      getFoodHeight() {
+        var query = wx.createSelectorQuery();
+        let h = 0;
+        query.selectAll('.food-list-hook').boundingClientRect((rects) => {
+          rects.forEach((rect) => {
+            h += rect.height;
+            this.listHeight.push(h);
+          });
+        });
+        query.select('.foods-wrapper').boundingClientRect((rect) => {
+          this.contentHeight = rect.height;
+        });
+        query.select('.menu-ul').boundingClientRect((rect) => {
+          this.navulHeight = rect.height;
+        });
+        query.select('.menu-item').boundingClientRect((rect) => {
+          this.navItemHeight = rect.height;
+        }).exec();
+      },
+      async fetchGoodList() {
+        let params = {
+          categoryIds: this.currentCategoryID.split(' '),
+          operatingUnitId: this.data.operatingUnitId,
+          systemType: 'B2C',
+          deviceType: 'MOBILE',
+          pageNumber: this.data.pageNumber,
+          pageSize: this.data.pageSize
+        };
+        let res = await getGoodList(params);
+        if (this.data.pageNumber === 1) {
+          this.goods = res.result;
+        } else {
+          this.goods.concat(res.result);
+        }
+      },
+      async getMerchantInfo() {
+        let params = {
+          deviceType: 'MOBILE',
+          systemType: 'B2C'
+        };
+        let res = await getMerchant(params);
+        this.data.operatingUnitId = res.systemSite.operatingUnitId;
       },
       async fetchProductInfo() {
         let res = await getProductClassify({});
         this.classifyList = res.result;
         this.currentCategoryID = res.result[0].id;
+        await this.getMerchantInfo();
+        this.fetchGoodList();
+      },
+      inputBlur() {
+        // this.inputFocus = false;
+      },
+      /**
+       * 清空搜索框内容
+       */
+      clearInput() {
+        this.inputVal = '';
+      },
+      /**
+       * 显示隐藏搜索框
+       */
+      howInput() {
+        this.inputShowed = true;
+        this.inputFocus = true;
+      },
+      hideInput() {
+        this.inputVal = '';
+        this.inputShowed = false;
+        this.inputFocus = false;
+      },
+      bindKeyInput(e) {
+      },
+      inputConfirm(e) {
+        console.log('确认');
+        this.$bridge.dialog.confirm({
+          title: 'aaaa',
+          content: this.inputVal,
+          confirmCallback: () => {
+            console.log('dianji ');
+          }
+        });
+      },
+      bindViewTap() {
+        this.$bridge.link.navigateTo('../logs/main');
+      },
+      clickHandle(msg, ev) {
+        console.log('clickHandle:', msg, ev);
       }
     },
     onShow() {
-      // 调用应用实例的方法获取全局数据
-      // this.init();
       this.fetchProductInfo();
     }
   };
@@ -123,31 +243,38 @@
   .goods
     display: flex
     position: absolute
-    top: 96 rpx
+    top: rpx(96);
     bottom: 0px
     width: 100%
     overflow: hidden
     .menu-wrapper
-      flex: 0 0 80px
-      width: 100px
+      flex: 0 0 rpx(164)
+      width: rpx(164)
       border-right: 1px solid #ccc
       .menu-item
         display: flex
+        flex-direction: column
         align-items: center
         justify-content: center
-        height: 60 rpx
-        width: 100%
+        height: rpx(164);
+        width: rpx(164);
         text-align: center
         line-height: 14px
-        border-left: 2px solid #fff;
-        &.current
-          border-left: 2px solid red;
+        .img
+          text-align: center;
+          image
+            width: rpx(56)
+            height: rpx(56)
         .text
           justify-content: center;
           width: 100%
           vertical-align: middle
-          font-size: 14px
-          color: #333
+          font-size: rpx(24)
+          color: #000
+          border-left: 4px solid #fff;
+          &.current
+            color: #ea281a
+            border-left: 4px solid #ea281a;
     .foods-wrapper
       flex: 1
       .title
@@ -160,8 +287,7 @@
         background: #f3f5f7
       .food-item
         display: flex
-        margin: 18px
-        padding-bottom: 18px
+        margin: rpx(20) 0 rpx(20) rpx(10)
         border-1px(rgba(7, 17, 27, 0.1))
         &:last-child
           border-none()
@@ -170,8 +296,9 @@
           flex: 0 0 57px
           margin-right: 10px
           img
-            width: 114 rpx;
-            height: 114 rpx
+            width: rpx(178);
+            height: rpx(178);
+            margin-top: rpx(11);
         .content
           flex: 1
           .name

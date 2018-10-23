@@ -10,11 +10,10 @@ import getPostParameter from './postparameter.js';
  */
 function fetch(data, config) {
   if (config.isLoading) {
-    wx.showLoading({title: '拼命加载中...'});
+    wx.showLoading({title: '加载中...'});
   }
   data.tenantId = tenantId;
   let postParameter = getPostParameter(data);
-  console.log(postParameter);
   return new Promise((resolve, reject) => {
     wx.request({
       url: `${apiUrl}`,

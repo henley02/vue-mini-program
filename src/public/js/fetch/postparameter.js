@@ -74,9 +74,7 @@ export default function getPostParameter(request) {
   }
   strTemp = strTemp + secret;
   param_sign = MD5.hexMD5(strTemp).toString().toUpperCase();
-  console.log(1);
   post_data = 'sign=' + param_sign.toUpperCase();
-  console.log(2);
   for (let i = 0; i < arrayKeyTemp.length; i++) {
     if (Array.isArray(param_array[arrayKeyTemp[i]])) {
       post_data = post_data + '&' + arrayKeyTemp[i] + '=' + encodeURI(JSON.stringify(param_array[arrayKeyTemp[i]]));
@@ -88,6 +86,5 @@ export default function getPostParameter(request) {
       }
     }
   }
-  console.log(post_data);
   return post_data;
 };
