@@ -184,6 +184,8 @@
         };
         let res = await getMerchant(params);
         this.data.operatingUnitId = res.systemSite.operatingUnitId;
+        let app = getApp();
+        app.globalData.operatingUnitId = res.systemSite.operatingUnitId;
       },
       /**
        * 获取分类列表

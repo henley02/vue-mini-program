@@ -23,3 +23,9 @@ export const getMerchant = (params) => fetch({method: 'api.ebusiness.settingNonP
  * @param params
  */
 export const login = (params) => fetch({method: 'api.system.member.login', ...params}, {isLoading: true});
+
+/**
+ * 获取用户信息
+ * @param params
+ */
+export const fetchUserInfo = (params) => fetch({method: 'api.ebusiness.memberDetailIndex.get', ...params}, {isLoading: true});
