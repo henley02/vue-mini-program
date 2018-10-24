@@ -4,7 +4,7 @@
       <div class="banner-wrapper">
         <button open-type="getUserInfo" lang="zh_CN" @getuserinfo="onGotUserInfo">获取用户信息</button>
         <div style="border-radius: 50%;height: 60px;width:60px; ">
-          <open-data type="userAvatarUrl" class="" class="head-img"></open-data>
+          <img :src="wxInfo.avatarUrl"/>
         </div>
       </div>
     </div>
@@ -18,7 +18,8 @@
   export default {
     data() {
       return {
-        userInfo: {}
+        userInfo: {},
+        wxInfo: {}
       };
     },
     components: {},
@@ -30,9 +31,12 @@
       }
     },
     async onShow() {
-      console.log(1);
-      this.userInfo = await this.$bridge.user.getWXUserInfo();
-      console.log(this.userInfo);
+      let app = getApp();
+      if (!app.globalData.userInfo) {
+        this.$bridge.link.goLogin();
+      }
+      this.wxInfo = app.globalData.wxInfo;
+      console.log(this.wxInfo);
     }
   };
 </script>

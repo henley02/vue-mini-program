@@ -30,7 +30,15 @@
           </li>
         </ul>
       </scroll-view>
-      <scroll-view class="foods-wrapper" :scroll-into-view="contentId" scroll-with-animation="true" scroll-y
+      <div class="right-wrapper">
+        <div class="filtrate-wrapper">
+          <div class="filter-item">综合</div>
+          <div class="filter-item">销量</div>
+          <div class="filter-item">价格</div>
+        </div>
+
+      </div>
+      <scroll-view class="foods-wrapper" scroll-with-animation="true" scroll-y
                    @scroll="onScroll">
         <ul>
           <li @click="selectFood(item,$event)" v-for="(item,index) in goods" class="food-item" :key="index">
@@ -61,6 +69,7 @@
 <script>
   import card from '@/components/card';
   import {getProductClassify, getGoodList, getMerchant} from 'api/index';
+  import {tenantId} from 'public/config/index.js';
 
   export default {
     data() {
@@ -79,7 +88,6 @@
         inputShowed: false,
         inputFocus: false,
         userInfo: {},
-        contentId: '', // 每个food-list的id，scroll-into-view滚动到对应的id
         navId: '', // 导航模块对应的id，用来联动内容区域
         navulHeight: 0, // 导航里ul高度
         navItemHeight: 0, // 每个导航高度
@@ -112,7 +120,7 @@
         this.fetchGoodList();
       },
       onScroll(e) {
-        this.contentId = '';
+        console.log(e);
         let scrollTop = e.target.scrollTop;
         let length = this.listHeight.length;
         if (scrollTop >= this.listHeight[length - 1] - this.contentHeight) {
@@ -145,6 +153,9 @@
           this.navItemHeight = rect.height;
         }).exec();
       },
+      /**
+       * 根据分类id获取对应的商品列表
+       */
       async fetchGoodList() {
         let params = {
           categoryIds: this.currentCategoryID.split(' '),
@@ -152,7 +163,8 @@
           systemType: 'B2C',
           deviceType: 'MOBILE',
           pageNumber: this.data.pageNumber,
-          pageSize: this.data.pageSize
+          pageSize: this.data.pageSize,
+          tenantId: tenantId
         };
         let res = await getGoodList(params);
         if (this.data.pageNumber === 1) {
@@ -161,16 +173,23 @@
           this.goods.concat(res.result);
         }
       },
+      /**
+       * 获取商家信息
+       */
       async getMerchantInfo() {
         let params = {
           deviceType: 'MOBILE',
-          systemType: 'B2C'
+          systemType: 'B2C',
+          tenantId: tenantId
         };
         let res = await getMerchant(params);
         this.data.operatingUnitId = res.systemSite.operatingUnitId;
       },
+      /**
+       * 获取分类列表
+       */
       async fetchProductInfo() {
-        let res = await getProductClassify({});
+        let res = await getProductClassify({tenantId: tenantId});
         this.classifyList = res.result;
         this.currentCategoryID = res.result[0].id;
         await this.getMerchantInfo();
@@ -233,8 +252,12 @@
     margin: 0 auto;
     width: 100%;
     .weui-search-bar
+      padding: rpx(20) rpx(30)
+    .weui-search-bar
       width: 100%;
       background-color: #fff
+      border-top: none
+      border-bottom: rpx(1) solid #DDD
       .weui-search-bar__label
       .weui-search-bar__input
       .weui-search-bar__box
@@ -275,56 +298,72 @@
           &.current
             color: #ea281a
             border-left: 4px solid #ea281a;
-    .foods-wrapper
-      flex: 1
-      .title
-        padding-left: 14px
-        height: 26px
-        line-height: 26px
-        border-left: 2px solid #d9dde1
-        font-size: 12px
-        color: rgb(147, 153, 159)
-        background: #f3f5f7
-      .food-item
-        display: flex
-        margin: rpx(20) 0 rpx(20) rpx(10)
-        &:last-child
-          border-none()
-          margin-bottom: 0
-        .icon
-          flex: 0 0 57px
-          margin-right: rpx(15)
-          img
-            width: rpx(178);
-            height: rpx(178);
-            margin-top: rpx(11);
-        .content
-          border-1px(rgba(7, 17, 27, 0.1))
-          flex: 1
-          height: 95px;
-          .name-wrapper
-            width: rpx(362);
-            height: rpx(100);
-            font-size: rpx(28);
-            padding-top: rpx(8);
-            .name
-              margin: 2px 0 8px 0
-              height: 14px
-              line-height: 14px
-              font-size: 14px
-          .extra
-            .many
-              padding-left: rpx(8)
-              color: #999
-              font-size: rpx(24)
-          .price
+
+  .right-wrapper
+    width: 100%
+    display: flex
+    flex-direction: column
+    .filtrate-wrapper
+      display: flex
+      flex-direction: row
+      border-bottom: rpx(1) solid #DDD
+      .filter-item
+        width: 33.3%
+        padding: rpx(20) 0;
+        font-size: rpx(24)
+        color: #666666;
+        text-align: center
+
+  .foods-wrapper
+    flex: 1
+    .title
+      padding-left: 14px
+      height: 26px
+      line-height: 26px
+      border-left: 2px solid #d9dde1
+      font-size: 12px
+      color: rgb(147, 153, 159)
+      background: #f3f5f7
+    .food-item
+      display: flex
+      margin: rpx(20) 0 rpx(20) rpx(10)
+      &:last-child
+        border-none()
+        margin-bottom: 0
+      .icon
+        flex: 0 0 57px
+        margin-right: rpx(15)
+        img
+          width: rpx(178);
+          height: rpx(178);
+          margin-top: rpx(11);
+      .content
+        border-1px(rgba(7, 17, 27, 0.1))
+        flex: 1
+        height: 95px;
+        .name-wrapper
+          width: rpx(362);
+          height: rpx(100);
+          font-size: rpx(28);
+          padding-top: rpx(8);
+          .name
+            margin: 2px 0 8px 0
+            height: 14px
+            line-height: 14px
+            font-size: 14px
+        .extra
+          .many
+            padding-left: rpx(8)
+            color: #999
             font-size: rpx(24)
-            .now
-              padding-bottom: rpx(8)
-              font-size: rpx(32)
-              color: #ea281a
-          .cartcontrol-wrapper
-            position: absolute
-            right: 0
-            bottom: 12px
+        .price
+          font-size: rpx(24)
+          .now
+            padding-bottom: rpx(8)
+            font-size: rpx(32)
+            color: #ea281a
+        .cartcontrol-wrapper
+          position: absolute
+          right: 0
+          bottom: 12px
 </style>

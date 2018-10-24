@@ -17,3 +17,9 @@ export const getGoodList = (params) => fetch({method: 'api.ebusiness.findCommodi
  * @param params
  */
 export const getMerchant = (params) => fetch({method: 'api.ebusiness.settingNonPassport.get', ...params}, {isLoading: true});
+
+/**
+ * 登录
+ * @param params
+ */
+export const login = (params) => fetch({method: 'api.system.member.login', ...params}, {isLoading: true});

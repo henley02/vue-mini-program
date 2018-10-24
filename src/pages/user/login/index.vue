@@ -22,6 +22,8 @@
   import authorization from 'public/components/authorization/authorization.vue';
   import btnHome from 'public/components/btn-home/btn-home.vue';
   import MD5 from 'public/js/util/md5';
+  import {login} from 'api/index.js';
+  import {tenantId} from 'public/config/index.js';
 
   export default {
     data() {
@@ -49,15 +51,30 @@
       forgetPassword() {
         this.$bridge.link.navigateTo('/pages/user/login-password/main?type=forgetPassword');
       },
-      login() {
-        if (this.hasValue) {
+      async login() {
+        if (!this.hasValue) {
           return false;
         }
         if (!(/^1\d{10}$/.test(this.username))) {
           this.$bridge.dialog.alert({content: '请输入正确的手机号'});
           return false;
         }
-        console.log(MD5.hexMD5(this.password));
+        let params = {
+          username: this.username,
+          password: MD5.hexMD5(this.password),
+          tenantid: tenantId
+        };
+        let res = await login(params);
+        if (res.code === 'BUSINESS_ERROR') {
+          this.$bridge.dialog.alert({content: res.message});
+        } else {
+          let app = getApp();
+          app.globalData.userInfo = res;
+          wx.navigateBack({
+            delta: 1
+          });
+        }
+        console.log(res);
       }
     },
     created() {
