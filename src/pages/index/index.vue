@@ -4,19 +4,13 @@
       <div class="weui-search-bar">
         <div class="weui-search-bar__form">
           <div class="weui-search-bar__box">
-            <icon class="weui-icon-search_in-box" type="search" size="14"></icon>
-            <input type="text" class="weui-search-bar__input" placeholder="搜索商品" v-model="inputVal" :focus="inputFocus"
-                   @input="bindKeyInput(e)" confirm-type="search" @confirm="inputConfirm(event)" @blur="inputBlur"/>
-            <div class="weui-icon-clear" v-if="inputVal.length > 0" @tap="clearInput">
-              <icon type="clear" size="14"></icon>
-            </div>
+            <input type="text" class="weui-search-bar__input" />
           </div>
-          <label class="weui-search-bar__label" v-if="!inputShowed" @tap="howInput">
+          <label class="weui-search-bar__label" @tap="goSearch">
             <icon class="weui-icon-search" type="search" size="14"></icon>
             <div class="weui-search-bar__text">搜索商品</div>
           </label>
         </div>
-        <div class="weui-search-bar__cancel-btn" v-if="inputShowed" @tap="hideInput">取消</div>
       </div>
     </div>
     <div class="goods">
@@ -32,36 +26,53 @@
       </scroll-view>
       <div class="right-wrapper">
         <div class="filtrate-wrapper">
-          <div class="filter-item">综合</div>
-          <div class="filter-item">销量</div>
-          <div class="filter-item">价格</div>
+          <div class="filter-item" @tap="toggleSynthesizeMore()"
+               :class="{'active':isShowSynthesizeMore || selectedFilterType === filterType.EVALUATION_QUANTITY || selectedFilterType === filterType.SHELVES_TIME }">
+            <span>综合</span>
+            <span class="synthesize-sort"
+                  v-if="isShowSynthesizeMore || selectedFilterType === filterType.EVALUATION_QUANTITY || selectedFilterType === filterType.SHELVES_TIME"></span>
+            <div v-if="isShowSynthesizeMore" class="synthesize_more">
+              <div @tap="sort(filterType.EVALUATION_QUANTITY,filterSort.DESC)">人气</div>
+              <div @tap="sort(filterType.SHELVES_TIME,filterSort.DESC)">上架时间</div>
+            </div>
+          </div>
+          <div class="filter-item" @tap="sort(filterType.SALE_QUANTITY,filterSort.DESC)"
+               :class="{'active':selectedFilterType === filterType.SALE_QUANTITY}">
+            <span>销量</span>
+          </div>
+          <div class="filter-item" :class="{'active':selectedFilterType === filterType.SHOW_PRICE}"
+               @tap="sort(filterType.SHOW_PRICE,selectedFilterSort===filterSort.DESC?filterSort.ASC:filterSort.DESC)">
+            <span>价格</span>
+            <div class="price-sort"
+                 :class="{'active':selectedFilterType === filterType.SHOW_PRICE && selectedFilterSort===filterSort.ASC}"></div>
+          </div>
         </div>
-
+        <scroll-view class="foods-wrapper" scroll-with-animation="true" scroll-y @scrolltolower="dropDown">
+          <ul>
+            <li @click="goDetail(item.id)" v-for="(item,index) in goods" class="food-item" :key="index">
+              <div class="icon">
+                <img :src="item.pictureUrl">
+              </div>
+              <div class="content border-1px">
+                <div class="name-wrapper">
+                  <div class="name">{{item.name}}</div>
+                </div>
+                <div class="price">
+                  <span class="now">￥{{item.showPrice}}</span>
+                </div>
+                <div class="extra">
+                  <span class='many'>{{item.saleQuantity}}条成交</span>
+                </div>
+                <div class="cart_control_wrapper">
+                  <div @tap.stop="addToCart(item)" class="add_to_card"></div>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <div v-if="isLoading && data.pageNumber !== 1" class="drop-down-status">正在加载ing</div>
+          <div v-if="isEnd && data.pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
+        </scroll-view>
       </div>
-      <scroll-view class="foods-wrapper" scroll-with-animation="true" scroll-y
-                   @scroll="onScroll">
-        <ul>
-          <li @click="selectFood(item,$event)" v-for="(item,index) in goods" class="food-item" :key="index">
-            <div class="icon">
-              <img :src="item.pictureUrl">
-            </div>
-            <div class="content border-1px">
-              <div class="name-wrapper">
-                <div class="name">{{item.name}}</div>
-              </div>
-              <div class="price">
-                <span class="now">￥{{item.showPrice}}</span>
-              </div>
-              <div class="extra">
-                <span class='many'>{{item.saleQuantity}}条成交</span>
-              </div>
-              <div class="cartcontrol-wrapper">
-                <!--<cartcontrol @add="addFood" :food="food"></cartcontrol>-->
-              </div>
-            </div>
-          </li>
-        </ul>
-      </scroll-view>
     </div>
   </div>
 </template>
@@ -73,18 +84,33 @@
   export default {
     data() {
       return {
-        classifyList: [],
+        classifyList: [], // 商品分类列表
         data: {
-          pageSize: 10,
+          pageSize: 10, // 页数
           operatingUnitId: '',
-          pageNumber: 1
+          pageNumber: 1 // 页码
         },
-        currentCategoryID: -1,
-        goods: [],
+        currentCategoryID: -1, // 当前选中的商品分类
+        goods: [], // 商品列表
+        isEnd: false, // 数据是否加载完
+        canDropDown: true, // 是否可以下拉加载
+        isLoading: false,
+        isShowSynthesizeMore: false,
+        selectedFilterType: '', // 选择的筛选
+        selectedFilterSort: '', // 顺序
+        filterType: {
+          EVALUATION_QUANTITY: 'EVALUATION_QUANTITY', // 综合--人气
+          SHELVES_TIME: 'SHELVES_TIME', // 综合--上架时间
+          SALE_QUANTITY: 'SALE_QUANTITY', // 销量
+          SHOW_PRICE: 'SHOW_PRICE' // 价格
+        },
+        filterSort: {
+          DESC: 'DESC', // 降序
+          ASC: 'ASC' // 升序
+        },
 
         classMap: ['decrease', 'discount', 'special', 'invoice', 'guarantee'],
         inputVal: '',
-        inputShowed: false,
         inputFocus: false,
         userInfo: {},
         navId: '', // 导航模块对应的id，用来联动内容区域
@@ -99,63 +125,63 @@
       card
     },
     computed: {},
-    watch: {
-      currentIndex() {
-        if (this.contentHeight < this.navulHeight) {
-          let h = this.currentIndex * this.navItemHeight;
-          if (h > this.contentHeight) {
-            // 导航滑动
-            this.navId = `nav_${this.currentIndex}`;
-          } else {
-            this.navId = 'nav_0';
-          }
-        }
-      }
-    },
+    watch: {},
     methods: {
+      toggleSynthesizeMore() {
+        this.isShowSynthesizeMore = !this.isShowSynthesizeMore;
+      },
+      sort(type, sort) {
+        console.log(type, sort);
+        this.selectedFilterType = type;
+        this.selectedFilterSort = sort;
+        this.data.pageNumber = 1;
+        this.isEnd = false;
+        this.canDropDown = true;
+        this.fetchGoodList();
+      },
+      /**
+       * 下拉加载
+       */
+      dropDown(e) {
+        if (this.isEnd || !this.canDropDown) {
+          return false;
+        }
+        this.canDropDown = false;
+        this.fetchGoodList();
+        console.log(e);
+      },
+      /**
+       * 跳转到商品详情
+       */
+      goDetail(id) {
+        this.$bridge.link.goProductDetail(id);
+      },
+      /**
+       * 添加到购物车
+       */
+      addToCart(item) {
+        console.log('添加到购物车');
+      },
+      /**
+       * 左侧商品分类点击
+       */
       selectMenu(item) {
         this.currentCategoryID = item.id;
         this.data.pageNumber = 1;
+        this.isEnd = false;
+        this.canDropDown = true;
+        this.selectedFilterType = '';
+        this.selectedFilterSort = '';
         this.fetchGoodList();
-      },
-      onScroll(e) {
-        console.log(e);
-        let scrollTop = e.target.scrollTop;
-        let length = this.listHeight.length;
-        if (scrollTop >= this.listHeight[length - 1] - this.contentHeight) {
-          return;
-        } else if (scrollTop > 0 && scrollTop < this.listHeight[0]) {
-          this.currentIndex = 0;
-        }
-        for (let i = 0; i < length; i++) {
-          if (scrollTop >= this.listHeight[i - 1] && scrollTop < this.listHeight[i]) {
-            this.currentIndex = i;
-          }
-        }
-      },
-      getFoodHeight() {
-        var query = wx.createSelectorQuery();
-        let h = 0;
-        query.selectAll('.food-list-hook').boundingClientRect((rects) => {
-          rects.forEach((rect) => {
-            h += rect.height;
-            this.listHeight.push(h);
-          });
-        });
-        query.select('.foods-wrapper').boundingClientRect((rect) => {
-          this.contentHeight = rect.height;
-        });
-        query.select('.menu-ul').boundingClientRect((rect) => {
-          this.navulHeight = rect.height;
-        });
-        query.select('.menu-item').boundingClientRect((rect) => {
-          this.navItemHeight = rect.height;
-        }).exec();
       },
       /**
        * 根据分类id获取对应的商品列表
        */
       async fetchGoodList() {
+        this.isLoading = true;
+        if (this.data.pageNumber === 1) {
+          this.goods = [];
+        }
         let params = {
           categoryIds: this.currentCategoryID.split(' '),
           operatingUnitId: this.data.operatingUnitId,
@@ -164,12 +190,25 @@
           pageNumber: this.data.pageNumber,
           pageSize: this.data.pageSize
         };
-        let res = await getGoodList(params);
+        if (this.selectedFilterType) {
+          params.sortColumn = this.selectedFilterType;
+          params.sortType = this.selectedFilterSort;
+        }
+        let res = await getGoodList(params, {isLoading: this.data.pageNumber === 1});
         if (this.data.pageNumber === 1) {
           this.goods = res.result;
         } else {
-          this.goods.concat(res.result);
+          this.goods = this.goods.concat(res.result);
         }
+        // 判断数据是否全部加载完
+        if (res.result.length < this.data.pageSize) {
+          this.isEnd = true;
+          this.canDropDown = false;
+        } else {
+          this.canDropDown = true;
+          this.data.pageNumber++;
+        }
+        this.isLoading = false;
       },
       /**
        * 获取商家信息
@@ -193,47 +232,14 @@
         await this.getMerchantInfo();
         this.fetchGoodList();
       },
-      inputBlur() {
-        // this.inputFocus = false;
-      },
       /**
-       * 清空搜索框内容
+       * 跳转到搜索页面
        */
-      clearInput() {
-        this.inputVal = '';
-      },
-      /**
-       * 显示隐藏搜索框
-       */
-      howInput() {
-        this.inputShowed = true;
-        this.inputFocus = true;
-      },
-      hideInput() {
-        this.inputVal = '';
-        this.inputShowed = false;
-        this.inputFocus = false;
-      },
-      bindKeyInput(e) {
-      },
-      inputConfirm(e) {
-        console.log('确认');
-        this.$bridge.dialog.confirm({
-          title: 'aaaa',
-          content: this.inputVal,
-          confirmCallback: () => {
-            console.log('dianji ');
-          }
-        });
-      },
-      bindViewTap() {
-        this.$bridge.link.navigateTo('../logs/main');
-      },
-      clickHandle(msg, ev) {
-        console.log('clickHandle:', msg, ev);
+      goSearch() {
+        this.$bridge.link.goSearch();
       }
     },
-    onShow() {
+    onLoad() {
       this.fetchProductInfo();
     }
   };
@@ -264,7 +270,7 @@
   .goods
     display: flex
     position: absolute
-    top: rpx(96);
+    top: rpx(102 rpx);
     bottom: 0px
     width: 100%
     overflow: hidden
@@ -304,16 +310,44 @@
     .filtrate-wrapper
       display: flex
       flex-direction: row
+      align-items: center
       border-bottom: rpx(1) solid #DDD
+      flex-shrink: 0
       .filter-item
+        position: relative
         width: 33.3%
         padding: rpx(20) 0;
         font-size: rpx(24)
         color: #666666;
         text-align: center
+        &.active
+          color: #EA281A
+        .synthesize-sort
+          position: relative
+          top: rpx(-3)
+          display: inline-block
+          margin-left: rpx(4)
+          width: rpx(8)
+          height rpx(8)
+          background-image: url('../../public/images/select2x.png')
+          background-repeat: no-repeat
+          background-size: 100% 100%
+        .price-sort
+          display: inline-block
+          margin-top: rpx(10)
+          margin-left: rpx(10)
+          background-image: url('../../public/images/pricedown.png')
+          width: rpx(10)
+          height rpx(16)
+          background-repeat: no-repeat
+          background-size: 100% 100%
+          transform: rotate(180deg)
+          &.active
+            transform: rotate(0deg)
 
   .foods-wrapper
     flex: 1
+    overflow-y: auto
     .title
       padding-left: 14px
       height: 26px
@@ -360,8 +394,30 @@
             padding-bottom: rpx(8)
             font-size: rpx(32)
             color: #ea281a
-        .cartcontrol-wrapper
+        .cart_control_wrapper
           position: absolute
-          right: 0
-          bottom: 12px
+          right: rpx(40)
+          bottom: rpx(24)
+          .add_to_card
+            width: rpx(40)
+            height: rpx(40)
+            bg-image: ('../../public/images/shop')
+            background-repeat: no-repeat
+            background-size: 100% 100%
+    .drop-down-status
+      text-align: center;
+      font-size: rpx(24);
+      padding: rpx(20);
+      color: #ccc;
+
+  .synthesize_more
+    position: absolute;
+    top: rpx(74)
+    width: 100%;
+    background: #fff;
+    z-index: 20;
+    div
+      height: rpx(60);
+      line-height: rpx(60)
+      color: #000
 </style>

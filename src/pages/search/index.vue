@@ -64,13 +64,10 @@
       bindKeyInput(e) {
       },
       inputConfirm(e) {
-        this.$bridge.dialog.confirm({
-          title: 'aaaa',
-          content: this.inputVal,
-          confirmCallback: () => {
-            console.log('dianji ');
-          }
-        });
+        if (this.inputVal.trim() === '') {
+          this.$bridge.dialog.alert({content: '请输入商品名称'});
+          return false;
+        }
       }
     },
     onShow() {

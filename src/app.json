@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/main",
+    "pages/detail/main",
     "pages/search/main",
     "pages/flg/index/main",
     "pages/flg/product-list/main",
@@ -11,6 +12,7 @@
     "pages/user/login/main",
     "pages/user/register-agreement/main",
     "pages/user/login-password/main",
+    "pages/user/account-safety/main",
     "pages/user/register/main",
     "pages/cart/main",
     "pages/distribution-center/index/main",

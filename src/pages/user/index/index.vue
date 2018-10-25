@@ -3,17 +3,17 @@
     <div class="container">
       <div class="userinfo">
         <div class='userinfo-img'>
-          <image :src="memberUserInfo.user.avatar ? memberUserInfo.user.avatar : '../../img/userImg.png'"/>
+          <image :src="memberUserInfo.user.avatar"/>
         </div>
         <text class='userinfo-text'>{{memberUserInfo.member ? memberUserInfo.member.name : '未登录'}}</text>
         <div class='userinfo-Info' v-if="!memberUserInfo.member" bindtap='Clicklogin'>点击登录</div>
         <div class='userinfo-user-Info' v-else>
-          <div v-if="memberUserInfo.currentLevel.name">{{memberUserInfo.currentLevel.name}} | {{PointsInfo}} </div>
+          <div v-if="memberUserInfo.currentLevel.name">{{memberUserInfo.currentLevel.name}} | {{point}} </div>
           <div v-if="memberUserInfo.lackPoint && memberUserInfo.nextLevel.name">
             还需{{memberUserInfo.lackPoint}}分升级为{{memberUserInfo.nextLevel.name}}
           </div>
         </div>
-        <div class='userinfo-qian' bindtap='signIn'>{{memberUserInfo.hasSignIn == true ? '已签到' : '签到'}}</div>
+        <div class='userinfo-qian' bindtap='signIn'>{{memberUserInfo.hasSignIn ? '已签到' : '签到'}}</div>
       </div>
       <div class="m-panel-bd">
         <div class="m-media-box m-media-box-small-appmsg">
@@ -40,16 +40,6 @@
     <div class="m-panel-bd" style='margin-bottom:20rpx'>
       <div class="m-media-box m-media-box-small-appmsg">
         <div class="m-cells">
-          <navigator url="../collect/collect" class="m-cell m-cell-access">
-            <div class="m-cell-hd " style="color:#fd690c">
-              <image src='../../img/shoucang.png' class='m-cell-img'></image>
-            </div>
-            <div class="m-cell-bd m-cell-primary">
-              <p>收藏</p>
-            </div>
-            <div>{{collection}}</div>
-            <text class="m-cell-ft"></text>
-          </navigator>
           <navigator url="../integral/integral" class="m-cell m-cell-access">
             <div class="m-cell-hd " style="color:#fd690c">
               <image src='../../img/integrals.png' class='m-cell-img1'></image>
@@ -68,16 +58,6 @@
               <p>优惠券</p>
             </div>
             <div>{{Couponamount}}</div>
-            <text class="m-cell-ft"></text>
-          </navigator>
-          <navigator url="../cards/index" class="m-cell m-cell-access">
-            <div class="m-cell-hd " style="color:#fd690c">
-              <image src='../../img/giftcardicon.png' class='m-cell-img3'></image>
-            </div>
-            <div class="m-cell-bd m-cell-primary">
-              <p>礼品卡</p>
-            </div>
-            <div>{{GiftcardCount}}</div>
             <text class="m-cell-ft"></text>
           </navigator>
         </div>
@@ -118,12 +98,6 @@
             </div>
             <text class="m-cell-ft"></text>
           </div>
-          <navigator url="../Increasedticket/Increasedticket" class="m-cell m-cell-access">
-            <div class="m-cell-bd m-cell-primary">
-              <p>增票资质</p>
-            </div>
-            <text class="m-cell-ft"></text>
-          </navigator>
         </div>
       </div>
     </div>
@@ -135,20 +109,80 @@
   /**
    * 用户登录
    */
-  import {fetchUserInfo} from 'api/index.js';
+  import {fetchUserInfo, fetchPoint} from 'api/index.js';
 
   export default {
     data() {
       return {
+        defaultHead: require('public/images/default-head.png'),
+        point: 0, // 我的积分
         memberUserInfo: {
+          user: {
+            account: '',
+            activeDate: '',
+            class: '',
+            id: '',
+            isActive: '',
+            isBindIm: '',
+            isEmailBind: '',
+            isMobileBind: '',
+            isNeedCheck: '',
+            isOnline: '',
+            mobilePhone: '',
+            name: '',
+            pinyin: '',
+            py: '',
+            rowVersion: '',
+            sourceId: '',
+            sourceType: '',
+            tenantId: ''
+          },
           collectionNum: '', // 收藏数量
           couponEntityNum: '' // 优惠券数量
-        }
+        },
+        orderItems: [
+          {
+            status: 'UN_PAID',
+            name: '待付款',
+            url: 'bill',
+            imageurl: require('public/images/paying.png')
+          },
+          {
+            status: 'UN_SIGNED',
+            name: '待收货',
+            url: 'bill',
+            imageurl: require('public/images/delivering.png')
+          },
+          {
+            status: 'SIGNED',
+            name: '待评价',
+            url: 'bill',
+            imageurl: require('public/images/evaluating.png')
+          },
+          {
+            status: 'EVALUATION',
+            name: '退售后',
+            url: 'bill',
+            imageurl: require('public/images/sold.png')
+          }
+        ]
       };
     },
     components: {},
     computed: {},
     methods: {
+      goAccountSafety() {
+        this.$bridge.link.goAccountSafety();
+      },
+      async getPoint() {
+        let userInfo = this.$bridge.storage.get('userInfo');
+        let params = {
+          memberId: userInfo.memberId,
+          passportId: userInfo.id
+        };
+        let res = await fetchPoint(params, {isLoading: false});
+        this.point = res.point;
+      },
       async getUserINfo() {
         let userInfo = this.$bridge.storage.get('userInfo');
         let operatingUnitId = this.$bridge.storage.get('operatingUnitId');
@@ -160,8 +194,12 @@
           storeId: '986901391685849088'
         };
         let res = await fetchUserInfo(params);
+        if (!res.user.avatar) {
+          res.user.avatar = this.defaultHead;
+        }
         this.memberUserInfo = res;
         console.log(res);
+        console.log(userInfo);
       }
     },
     created() {
@@ -173,6 +211,7 @@
         this.$bridge.link.goLogin();
       } else {
         this.getUserINfo();
+        this.getPoint();
       }
     }
   };
@@ -181,12 +220,6 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
   @import "~public/css/login";
-
-  /* pages/mine/mine.wxss */
-
-  page {
-    font-family: PingFang-SC-Regular;
-  }
 
   .userinfo {
     width: 100%;

@@ -24,7 +24,23 @@ export default {
   goRegisterAgreement() {
     jump('/pages/user/register-agreement/main');
   },
+  /**
+   * 跳转到查询页面
+   */
   goSearch() {
     jump('/pages/search/main');
+  },
+  /**
+   * 跳转到商品详情页面
+   * @param id
+   */
+  goProductDetail(id) {
+    jump('/pages/detail/main?id=' + id);
+  },
+  /**
+   * 跳转到账户安全
+   */
+  goAccountSafety() {
+    jump('/pages/user/account-safety/main');
   }
 };
