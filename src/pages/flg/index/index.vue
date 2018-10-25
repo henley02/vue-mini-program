@@ -30,12 +30,12 @@
         console.log(e.detail.rawData);
       }
     },
-    async onShow() {
-      let app = getApp();
-      if (!app.globalData.userInfo) {
+    async onLoad() {
+      let userInfo = this.$bridge.storage.get('userInfo');
+      if (!userInfo) {
         this.$bridge.link.goLogin();
       }
-      this.wxInfo = app.globalData.wxInfo;
+      this.wxInfo = this.$bridge.storage.get('wxInfo');
       console.log(this.wxInfo);
     }
   };

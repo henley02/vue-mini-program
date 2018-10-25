@@ -23,7 +23,6 @@
   import btnHome from 'public/components/btn-home/btn-home.vue';
   import MD5 from 'public/js/util/md5';
   import {login} from 'api/index.js';
-  import {tenantId} from 'public/config/index.js';
 
   export default {
     data() {
@@ -61,23 +60,18 @@
         }
         let params = {
           username: this.username,
-          password: MD5.hexMD5(this.password),
-          tenantid: tenantId
+          password: MD5.hexMD5(this.password)
         };
         let res = await login(params);
         if (res.code === 'BUSINESS_ERROR') {
           this.$bridge.dialog.alert({content: res.message});
         } else {
-          let app = getApp();
-          app.globalData.userInfo = res;
+          this.$bridge.storage.save('userInfo', res);
           wx.navigateBack({
             delta: 1
           });
         }
-        console.log(res);
       }
-    },
-    created() {
     },
     async onShow() {
       this.isAuthorization = await this.$bridge.user.isAuthorization();

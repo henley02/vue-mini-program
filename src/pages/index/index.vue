@@ -69,7 +69,6 @@
 <script>
   import card from '@/components/card';
   import {getProductClassify, getGoodList, getMerchant} from 'api/index';
-  import {tenantId} from 'public/config/index.js';
 
   export default {
     data() {
@@ -163,8 +162,7 @@
           systemType: 'B2C',
           deviceType: 'MOBILE',
           pageNumber: this.data.pageNumber,
-          pageSize: this.data.pageSize,
-          tenantId: tenantId
+          pageSize: this.data.pageSize
         };
         let res = await getGoodList(params);
         if (this.data.pageNumber === 1) {
@@ -179,19 +177,17 @@
       async getMerchantInfo() {
         let params = {
           deviceType: 'MOBILE',
-          systemType: 'B2C',
-          tenantId: tenantId
+          systemType: 'B2C'
         };
         let res = await getMerchant(params);
         this.data.operatingUnitId = res.systemSite.operatingUnitId;
-        let app = getApp();
-        app.globalData.operatingUnitId = res.systemSite.operatingUnitId;
+        this.$bridge.storage.save('operatingUnitId', res.systemSite.operatingUnitId);
       },
       /**
        * 获取分类列表
        */
       async fetchProductInfo() {
-        let res = await getProductClassify({tenantId: tenantId});
+        let res = await getProductClassify({});
         this.classifyList = res.result;
         this.currentCategoryID = res.result[0].id;
         await this.getMerchantInfo();

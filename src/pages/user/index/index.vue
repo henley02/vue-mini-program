@@ -150,10 +150,11 @@
     computed: {},
     methods: {
       async getUserINfo() {
-        let app = getApp();
+        let userInfo = this.$bridge.storage.get('userInfo');
+        let operatingUnitId = this.$bridge.storage.get('operatingUnitId');
         let params = {
-          passportId: app.globalData.userInfo.id,
-          operatingUnitId: app.globalData.operatingUnitId,
+          passportId: userInfo.id,
+          operatingUnitId: operatingUnitId,
           systemType: 'B2C',
           deviceType: 'MOBILE',
           storeId: '986901391685849088'
@@ -166,7 +167,13 @@
     created() {
     },
     async onShow() {
-      this.getUserINfo();
+      let userInfo = this.$bridge.storage.get('userInfo');
+      console.log(userInfo);
+      if (!userInfo) {
+        this.$bridge.link.goLogin();
+      } else {
+        this.getUserINfo();
+      }
     }
   };
 </script>

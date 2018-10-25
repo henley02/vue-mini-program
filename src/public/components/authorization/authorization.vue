@@ -22,12 +22,10 @@
     },
     methods: {
       getUserInfo(e) {
-        let app = getApp();
         // 允许了授权
         if (e.mp.detail.errMsg === 'getUserInfo:ok') {
           this.$emit('update:isAuthorization', true);
-          app.globalData.wxInfo = JSON.parse(e.mp.detail.rawData);
-          console.log(app.globalData.wxInfo);
+          this.$bridge.storage.save('wxInfo', JSON.parse(e.mp.detail.rawData));
         }
       }
     }

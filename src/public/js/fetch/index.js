@@ -1,4 +1,4 @@
-import {apiUrl} from 'public/config/index.js';
+import {apiUrl, tenantId} from 'public/config/index.js';
 
 import getPostParameter from './postparameter.js';
 
@@ -11,6 +11,11 @@ import getPostParameter from './postparameter.js';
 function fetch(data, config) {
   if (config.isLoading) {
     wx.showLoading({title: '加载中...'});
+  }
+  if (data.method === 'api.system.member.login') {
+    data.tenantid = tenantId;
+  } else {
+    data.tenantId = tenantId;
   }
   let postParameter = getPostParameter(data);
   return new Promise((resolve, reject) => {

@@ -2,44 +2,27 @@
  * 存储
  */
 export default {
+  /**
+   * 保存数据
+   * @param key
+   * @param value
+   */
   save(key, value) {
-    return new Promise((resolve, reject) => {
-      wx.setStorage({
-        key: key,
-        data: value,
-        success: function () {
-          resolve(true);
-        },
-        fail: function () {
-          reject(new Error('保存数据失败'));
-        }
-      });
-    });
+    wx.setStorageSync(key, value);
   },
+  /**
+   * 获取数据
+   * @param key
+   * @returns {*}
+   */
   get(key) {
-    return new Promise((resolve, reject) => {
-      wx.getStorage({
-        key: key,
-        success: function (data) {
-          resolve(data);
-        },
-        fail: function () {
-          reject(new Error('获取数据失败'));
-        }
-      });
-    });
+    return wx.getStorageSync(key);
   },
+  /**
+   * 删除数据
+   * @param key
+   */
   remove(key) {
-    return new Promise((resolve, reject) => {
-      wx.removeStorage({
-        key: key,
-        success: function () {
-          resolve(true);
-        },
-        fail: function () {
-          reject(new Error('清空数据失败'));
-        }
-      });
-    });
+    wx.removeStorageSync(key);
   }
 };
