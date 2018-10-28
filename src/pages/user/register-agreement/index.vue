@@ -2,6 +2,7 @@
   <div v-html="content"></div>
 </template>
 <script type="text/ecmascript-6">
+  import {fetchRegisterAgreement} from 'api/index.js';
   /*
   * 注册协议
   * */
@@ -9,8 +10,18 @@
     name: 'register-agreement',
     data() {
       return {
-        content: '<span>3213213</span>'
+        content: ''
       };
+    },
+    methods: {
+      async init() {
+        let res = await fetchRegisterAgreement({systemType: 'SMALL_PROGRAM'});
+        console.log(res);
+        this.content = res.result[0].description;
+      }
+    },
+    onShow() {
+      this.init();
     }
   };
 </script>

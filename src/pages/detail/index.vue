@@ -1,16 +1,20 @@
 <template>
   <div class="container">
     <div class="navbar">
-      <text v-for="(item,index) in navbar" :key="index" :class="{'active':currentTab==index}" class="item" bindtap="navbarTap">{{item}}</text>
+      <text v-for="(item,index) in navbar" :key="index" :class="{'active':currentTab==index}" class="item"
+            bindtap="navbarTap">{{item}}
+      </text>
     </div>
     <scroll-div scroll-y="true" class="s-container">
       <!-- 商品 -->
       <div v-if="currentTab==0">
-        <div class='m-picture-number'><text>{{index}} / {{ProductInfo.pictureList.length}}</text></div>
+        <div class='m-picture-number'>
+          <text>{{index}} / {{ProductInfo.pictureList.length}}</text>
+        </div>
         <div class="m-banner-ad">
-          <swiper   autoplay="false" interval="3000" duration="300" current="0" bindchange='onSlideChangeEnd'>
-            <swiper-item  v-for="(item,index) in ProductInfo.pictureList" :key="index">
-              <image class="slide-image"  :src="item.url" />
+          <swiper autoplay="false" interval="3000" duration="300" current="0" bindchange='onSlideChangeEnd'>
+            <swiper-item v-for="(item,index) in ProductInfo.pictureList" :key="index">
+              <image class="slide-image" :src="item.url"/>
             </swiper-item>
           </swiper>
         </div>
@@ -21,7 +25,7 @@
               <div class='p-info-price'>
                 <div class='p-price-text'>
                   <div class="m-info-price">￥
-                    <text v-if="!According">{{Salespromotion?Salespromotion:showPriceone}}</text>
+                    <text v-if="!According">{{Salespromotion ? Salespromotion : showPriceone}}</text>
                   </div>
                   <div class='p-info-text' v-if="Salespromotion < showPriceone || showPrice < showPriceone">促销价</div>
                 </div>
@@ -163,9 +167,14 @@
                   </div>
                   <div style='padding-top:25rpx;color:#000000;font-size:28rpx;'>{{comment.content}}</div>
                   <div v-if="comment.attachmentList" class="m-media-list">
-                    <image bindtap="onShowBigImageTap"  v-for="(item,i) in comment.attachmentList" :src="item.filePath" :key="i"/>
+                    <image bindtap="onShowBigImageTap" v-for="(item,i) in comment.attachmentList" :src="item.filePath"
+                           :key="i"/>
                   </div>
-                  <div style='color:#000000;font-size:28rpx;margin-top:300rpx' v-for='(item,i) in comment.replyList' :key="i"><text>{{item.replyUserName}}:</text> <text style='color:#666666'>{{item.replyContent}}</text></div>
+                  <div style='color:#000000;font-size:28rpx;margin-top:300rpx' v-for='(item,i) in comment.replyList'
+                       :key="i">
+                    <text>{{item.replyUserName}}:</text>
+                    <text style='color:#666666'>{{item.replyContent}}</text>
+                  </div>
                 </div>
               </div>
             </div>
@@ -210,26 +219,28 @@
     </div>
     <!-- 筛选规格 -->
     <div class="m-panel-sp" :class="{'hide':selectsp==0}" bindtap="closesp" v-if="!conponflag">
-      <div class="m-panel-sp-content" :class="{'bounceOutDown animated':selectct==0,'bozunceInUp animated':selectct!=0}">
+      <div class="m-panel-sp-content"
+           :class="{'bounceOutDown animated':selectct==0,'bozunceInUp animated':selectct!=0}">
         <div class="m-panel-sp-pinfo">
           <div class="m-panel-sp-pimg">
-            <image :src="ProductInfo.commodity.pictureUrl" />
+            <image :src="ProductInfo.commodity.pictureUrl"/>
           </div>
           <div class="m-panel-sp-pname">
             <!-- <div class='m-pprice'>¥{{showPrice}}</div> -->
-            <div class='m-pprice'>¥{{Salespromotion?Salespromotion:showPrice}}</div>
+            <div class='m-pprice'>¥{{Salespromotion ? Salespromotion : showPrice}}</div>
             <div class="m-pstock" v-if="repertoryquantity>0">库存{{repertoryquantity}}件</div>
             <div class="m-pstock" v-else>库存0件</div>
             <div class="p-pstock">请选择</div>
           </div>
-          <icon type="cancel" class="m-panel-sp-icon" color="#888" catchtap="closesp" />
+          <icon type="cancel" class="m-panel-sp-icon" color="#888" catchtap="closesp"/>
         </div>
         <scroll-div class="m-panel-sp-listbox" scroll-y="true">
           <div class="m-panel-sp-listbox-item">
             <div class="m-cells-title">{{ProductInfo.spec1AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in ProductInfo.spec1AttrList" :key="index">
-                <label :class="{'m-panel-sp-sellabel':prduindex==i,'p-panel-sp':prduindex!=i}" catchtap="selectsp">{{item.valueName}}</label>
+                <label :class="{'m-panel-sp-sellabel':prduindex==i,'p-panel-sp':prduindex!=i}"
+                       catchtap="selectsp">{{item.valueName}}</label>
               </block>
             </div>
           </div>
@@ -237,7 +248,8 @@
             <div class="m-cells-title">{{ProductInfo.spec2AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in ProductInfo.spec2AttrList" :key="index">
-                <label :class="{'m-panel-sp-sellabel':spec2AttrList==i}" catchtap="spec2AttrList">{{item.valueName}}</label>
+                <label :class="{'m-panel-sp-sellabel':spec2AttrList==i}"
+                       catchtap="spec2AttrList">{{item.valueName}}</label>
               </block>
             </div>
           </div>
@@ -245,7 +257,8 @@
             <div class="m-cells-title">{{ProductInfo.spec3AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in ProductInfo.spec3AttrList" :key="index">
-                <label :class="{'m-panel-sp-sellabel':spec3AttrList==i}" catchtap="spec3AttrList">{{item.valueName}}</label>
+                <label :class="{'m-panel-sp-sellabel':spec3AttrList==i}"
+                       catchtap="spec3AttrList">{{item.valueName}}</label>
               </block>
             </div>
           </div>
@@ -255,7 +268,7 @@
             <div class="m-panel-sp-labellist">
               <div class="u-cart-num">
                 <div class="u-num-btn" catchtap="sub" :class="minusStatus">-</div>
-                <input type="number" v-model="numval" bindblur="writenum" />
+                <input type="number" v-model="numval" bindblur="writenum"/>
                 <div class="u-num-btn" catchtap="add">+</div>
               </div>
             </div>
@@ -338,19 +351,8 @@
     },
     components: {},
     computed: {},
-    methods: {
-      onGotUserInfo(e) {
-        console.log(e.detail.userInfo);
-        console.log(e.detail.rawData);
-      }
-    },
-    async onLoad() {
-      let userInfo = this.$bridge.storage.get('userInfo');
-      if (!userInfo) {
-        this.$bridge.link.goLogin();
-      }
-      this.wxInfo = this.$bridge.storage.get('wxInfo');
-      console.log(this.wxInfo);
+    methods: {},
+    onLoad() {
     }
   };
 </script>

@@ -4,7 +4,7 @@
       <div class="weui-search-bar">
         <div class="weui-search-bar__form">
           <div class="weui-search-bar__box">
-            <input type="text" class="weui-search-bar__input" />
+            <input type="text" class="weui-search-bar__input"/>
           </div>
           <label class="weui-search-bar__label" @tap="goSearch">
             <icon class="weui-icon-search" type="search" size="14"></icon>
@@ -63,14 +63,20 @@
                 <div class="extra">
                   <span class='many'>{{item.saleQuantity}}条成交</span>
                 </div>
-                <div class="cart_control_wrapper">
+                <!--<div class="cart_control_wrapper">
                   <div @tap.stop="addToCart(item)" class="add_to_card"></div>
-                </div>
+                </div>-->
               </div>
             </li>
           </ul>
           <div v-if="isLoading && data.pageNumber !== 1" class="drop-down-status">正在加载ing</div>
           <div v-if="isEnd && data.pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
+          <div v-if="goods.length==0 && isEnd" class="no-data-wrapper">
+            <div class="no-data">
+              <image :src="noData"/>
+              <div class='text'>无商品</div>
+            </div>
+          </div>
         </scroll-view>
       </div>
     </div>
@@ -108,16 +114,7 @@
           DESC: 'DESC', // 降序
           ASC: 'ASC' // 升序
         },
-
-        classMap: ['decrease', 'discount', 'special', 'invoice', 'guarantee'],
-        inputVal: '',
-        inputFocus: false,
-        userInfo: {},
-        navId: '', // 导航模块对应的id，用来联动内容区域
-        navulHeight: 0, // 导航里ul高度
-        navItemHeight: 0, // 每个导航高度
-        listHeight: [], // foods内部块的高度
-        contentHeight: [] // 内容区域scroll-view高度
+        noData: require('public/images/no-data.png') // 没有商品列表的默认图片
       };
     },
 
@@ -420,4 +417,25 @@
       height: rpx(60);
       line-height: rpx(60)
       color: #000
+
+  .no-data-wrapper
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: flex
+    flex-direction column
+    justify-content: center
+    align-items: center
+    image
+      display: block
+      width: rpx(156)
+      height: rpx(156)
+    .text
+      padding-top: rpx(24)
+      color: #999;
+      font-size: rpx(28)
+      text-align: center
+
 </style>

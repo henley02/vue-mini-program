@@ -39,3 +39,28 @@ export const fetchUserInfo = (params) => fetch({method: 'api.ebusiness.memberDet
  * @param params
  */
 export const fetchPoint = (params, config) => fetch({method: 'api.membership.memberPoint.get', ...params}, config);
+
+/**
+ * 签到
+ * @param params
+ * @param config
+ */
+export const signIn = (params) => fetch({method: 'api.ebusiness.signInNew.member', ...params}, {isLoading: true});
+
+/**
+ * 退出
+ * @param params
+ */
+export const exit = (params) => fetch({method: 'api.security.passport.revoke', ...params}, {isLoading: false});
+
+/**
+ * 删除用户的权限
+ * @param params
+ */
+export const deleteUserOauth = (params) => fetch({method: 'api.security.userOauth.delete', ...params}, {isLoading: false});
+
+/**
+ * 获取注册协议
+ * @param params
+ */
+export const fetchRegisterAgreement = (params) => fetch({method: 'api.ebusiness.registrationAgreementNew.find', ...params}, {isLoading: true});

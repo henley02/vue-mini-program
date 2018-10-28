@@ -13,7 +13,7 @@
             还需{{memberUserInfo.lackPoint}}分升级为{{memberUserInfo.nextLevel.name}}
           </div>
         </div>
-        <div class='userinfo-qian' bindtap='signIn'>{{memberUserInfo.hasSignIn ? '已签到' : '签到'}}</div>
+        <div class='userinfo-qian' @tap='signIn'>{{memberUserInfo.hasSignIn ? '已签到' : '签到'}}</div>
       </div>
       <div class="m-panel-bd">
         <div class="m-media-box m-media-box-small-appmsg">
@@ -40,24 +40,14 @@
     <div class="m-panel-bd" style='margin-bottom:20rpx'>
       <div class="m-media-box m-media-box-small-appmsg">
         <div class="m-cells">
-          <navigator url="../integral/integral" class="m-cell m-cell-access">
+          <navigator :url="item.url" class="m-cell m-cell-access" v-for="(item,index) in extendList" :key="index">
             <div class="m-cell-hd " style="color:#fd690c">
-              <image src='../../img/integrals.png' class='m-cell-img1'></image>
+              <image :src="item.imageUrl" class='m-cell-img1'/>
             </div>
             <div class="m-cell-bd m-cell-primary">
-              <p>积分</p>
+              <p>{{item.name}}</p>
             </div>
-            <div>{{PointsInfo}}</div>
-            <text class="m-cell-ft"></text>
-          </navigator>
-          <navigator url="../coupon/coupon" class="m-cell m-cell-access">
-            <div class="m-cell-hd " style="color:#fd690c">
-              <image src='../../img/coupon.png' class='m-cell-img2'></image>
-            </div>
-            <div class="m-cell-bd m-cell-primary">
-              <p>优惠券</p>
-            </div>
-            <div>{{Couponamount}}</div>
+            <div>{{item.value}}</div>
             <text class="m-cell-ft"></text>
           </navigator>
         </div>
@@ -67,41 +57,16 @@
     <div class="m-panel-bd" style="margin-bottom:10rpx;">
       <div class="m-media-box m-media-box-small-appmsg">
         <div class="m-cells">
-          <navigator url="../consumptionrecords/consumptionrecords" class="m-cell m-cell-access">
-
+          <navigator v-for="(item,index) in list " :key="index" :url="item.url" class="m-cell m-cell-access">
             <div class="m-cell-bd m-cell-primary">
-              <p>消费记录</p>
+              <p>{{item.name}}</p>
             </div>
             <text class="m-cell-ft"></text>
           </navigator>
-          <navigator url="../Pointsrecord/Pointsrecord" class="m-cell m-cell-access">
-            <div class="m-cell-bd m-cell-primary">
-              <p>积分兑换记录</p>
-            </div>
-            <text class="m-cell-ft"></text>
-          </navigator>
-          <navigator url="../Useraccount/Useraccount" class="m-cell m-cell-access">
-            <div class="m-cell-bd m-cell-primary">
-              <p>我的账户</p>
-            </div>
-            <text class="m-cell-ft"></text>
-          </navigator>
-          <navigator url="../Dataaddress/Dataaddress" class="m-cell m-cell-access">
-            <div class="m-cell-bd m-cell-primary">
-              <p>资料.地址管理</p>
-            </div>
-            <text class="m-cell-ft"></text>
-          </navigator>
-          <div class="m-cell m-cell-access" bindtap='security'>
-            <div class="m-cell-bd m-cell-primary">
-              <p>账户安全</p>
-            </div>
-            <text class="m-cell-ft"></text>
-          </div>
         </div>
       </div>
     </div>
-    <button bindtap='exite' class='u-btn'>退出</button>
+    <button @tap='exit' class='u-btn'>退出</button>
   </div>
 </template>
 
@@ -109,13 +74,26 @@
   /**
    * 用户登录
    */
-  import {fetchUserInfo, fetchPoint} from 'api/index.js';
+  import {fetchUserInfo, fetchPoint, signIn, exit, deleteUserOauth} from 'api/index.js';
 
   export default {
     data() {
       return {
+        isClick: true,
         defaultHead: require('public/images/default-head.png'),
         point: 0, // 我的积分
+        userInfo: {},
+        extendList: [
+          {name: '积分', imageUrl: require('public/images/user/integral.png'), value: 0, url: 'integral/integral'},
+          {name: '优惠券', imageUrl: require('public/images/user/coupon.png'), value: 0, url: 'coupon/coupon'}
+        ],
+        list: [
+          {name: '消费记录', url: 'pages/user/consumption-records/main'},
+          {name: '积分兑换记录', url: '/pages/user/points-record/main'},
+          {name: '我的账户', url: '/pages/user/user-account/main'},
+          {name: '资料.地址管理', url: '/pages/address/list/main'},
+          {name: '账户安全', url: '/pages/user/account-safety/main'}
+        ],
         memberUserInfo: {
           user: {
             account: '',
@@ -171,23 +149,86 @@
     components: {},
     computed: {},
     methods: {
+      /**
+       * 退出
+       */
+      exit() {
+        this.$bridge.dialog.confirm({
+          title: '提示',
+          content: '确定退出吗',
+          confirmCallback: async () => {
+            let res = await exit({id: this.userInfo.memberId});
+            if (res.firstErrorMessage === '') {
+              this.deleteUserOauth();
+            } else {
+              this.$bridge.dialog.alert(res.firstErrorMessage);
+            }
+          }
+        });
+      },
+      /**
+       * 删除用户授权
+       */
+      async deleteUserOauth() {
+        let params = {
+          deleteType: 'BY_USER',
+          userIds: [this.memberUserInfo.user.id]
+        };
+        let res = await deleteUserOauth(params);
+        if (res.firstErrorMessage === '') {
+          this.$bridge.storage.remove('userInfo');
+          wx.redirectTo({
+            url: '/pages/user/login/main'
+          });
+        } else {
+          this.$bridge.dialog.alert(res.firstErrorMessage);
+        }
+        console.log(res);
+      },
+      /**
+       * 跳转到安全中心
+       */
       goAccountSafety() {
         this.$bridge.link.goAccountSafety();
       },
+      /**
+       *  获取用户积分
+       */
       async getPoint() {
-        let userInfo = this.$bridge.storage.get('userInfo');
         let params = {
-          memberId: userInfo.memberId,
-          passportId: userInfo.id
+          memberId: this.userInfo.memberId,
+          passportId: this.userInfo.id
         };
         let res = await fetchPoint(params, {isLoading: false});
         this.point = res.point;
+        this.extendList.find(item => item.name === '积分').value = this.point;
       },
+      /**
+       * 签到
+       * @returns {Promise.<void>}
+       */
+      async signIn() {
+        let res = await signIn({objectId: this.userInfo.memberId, passportId: this.userInfo.id, deviceType: 'MOBILE'});
+        if (res.firstErrorMessage === '') {
+          wx.showToast({
+            title: '已签到',
+            icon: 'success',
+            duration: 1000
+          });
+          this.memberUserInfo.hasSignIn = true;
+          this.getPoint();
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+      },
+      /**
+       * 获取用户信息
+       * @returns {Promise.<void>}
+       */
       async getUserINfo() {
-        let userInfo = this.$bridge.storage.get('userInfo');
         let operatingUnitId = this.$bridge.storage.get('operatingUnitId');
         let params = {
-          passportId: userInfo.id,
+          passportId: this.userInfo.id,
           operatingUnitId: operatingUnitId,
           systemType: 'B2C',
           deviceType: 'MOBILE',
@@ -198,16 +239,14 @@
           res.user.avatar = this.defaultHead;
         }
         this.memberUserInfo = res;
-        console.log(res);
-        console.log(userInfo);
+        console.log(this.memberUserInfo);
+        this.extendList.find(item => item.name === '优惠券').value = res.couponEntityNum;
       }
     },
-    created() {
-    },
     async onShow() {
-      let userInfo = this.$bridge.storage.get('userInfo');
-      console.log(userInfo);
-      if (!userInfo) {
+      this.userInfo = this.$bridge.storage.get('userInfo');
+      console.log(this.userInfo);
+      if (!this.userInfo) {
         this.$bridge.link.goLogin();
       } else {
         this.getUserINfo();
