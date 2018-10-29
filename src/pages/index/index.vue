@@ -1,15 +1,10 @@
 <template>
   <div class="container">
-    <div class="search-wrapper">
-      <div class="weui-search-bar">
-        <div class="weui-search-bar__form">
-          <div class="weui-search-bar__box">
-            <input type="text" class="weui-search-bar__input"/>
-          </div>
-          <label class="weui-search-bar__label" @tap="goSearch">
-            <icon class="weui-icon-search" type="search" size="14"></icon>
-            <div class="weui-search-bar__text">搜索商品</div>
-          </label>
+    <div class="m-search-box">
+      <div class="u-search-box" @tap="goSearch()">
+        <div class="u-search-cont">
+          <icon type="search" size="14"></icon>
+          <text>搜索商品</text>
         </div>
       </div>
     </div>
@@ -245,29 +240,33 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/variable";
   @import "~public/stylus/mixin";
-  @import "~weui-wxss/dist/style/widget/weui-searchbar/weui-searchbar.wxss";
-
-  .search-wrapper
-    display: flex;
-    justify-content: center;
-    margin: 0 auto;
-    width: 100%;
-    .weui-search-bar
-      padding: rpx(20) rpx(30)
-    .weui-search-bar
-      width: 100%;
-      background-color: #fff
-      border-top: none
-      border-bottom: rpx(1) solid #DDD
-      .weui-search-bar__label
-      .weui-search-bar__input
-      .weui-search-bar__box
-        background: #eee
+  .m-search-box
+    padding: rpx(19) rpx(31);
+    background-color: #FFFFFF;
+    overflow: hidden;
+    border-bottom: rpx(1) solid #DDDDDD;
+    .u-search-box
+      padding: rpx(20)
+      .u-search-cont
+        width: 100%;
+        background-color: #eee;
+        border-radius: rpx(4);
+        text-align: center;
+        padding: rpx(8) 0 rpx(12) 0;
+        icon
+          display: inline-block;
+          vertical-align: bottom;
+          margin-right: rpx(10);
+          font-size: rpx(24);
+          color: #838d9c;
+        text
+          font-size: rpx(28);
+          color: #838d9c;
 
   .goods
     display: flex
     position: absolute
-    top: rpx(102 rpx);
+    top: rpx(145);
     bottom: 0px
     width: 100%
     overflow: hidden

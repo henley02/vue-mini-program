@@ -10,13 +10,17 @@ export default {
    * 跳转到登录
    */
   goLogin() {
-    jump('/pages/user/login/main');
+    wx.redirectTo({
+      url: '/pages/user/login/main'
+    });
   },
   /**
    * 跳转到首页
    */
   goIndex() {
-    jump('/pages/index/main');
+    wx.switchTab({
+      url: '/pages/index/main'
+    });
   },
   /**
    * 跳转到注册协议

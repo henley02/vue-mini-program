@@ -2,7 +2,7 @@ import Vue from 'vue';
 import App from './App';
 import bridge from 'public/js/bridge';
 import 'public/stylus/index.styl';
-import 'weui-wxss/dist/app.wxss';
+import 'public/wx/app.wxss';
 Vue.use(bridge);
 
 Vue.config.productionTip = false;

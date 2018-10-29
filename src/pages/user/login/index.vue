@@ -67,9 +67,10 @@
           this.$bridge.dialog.alert({content: res.message});
         } else {
           this.$bridge.storage.save('userInfo', res);
-          wx.navigateBack({
-            delta: 1
-          });
+          this.$bridge.link.goIndex();
+          // wx.navigateBack({
+          // delta: 1
+          // });
         }
       }
     },

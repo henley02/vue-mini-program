@@ -78,5 +78,4 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/variable";
   @import "~public/stylus/mixin";
-  @import "~weui-wxss/dist/style/widget/weui-searchbar/weui-searchbar.wxss";
 </style>

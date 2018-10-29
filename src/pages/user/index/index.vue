@@ -17,12 +17,12 @@
     <div class="m-panel-bd">
       <div class="m-media-box m-media-box-small-appmsg">
         <div class="m-cells">
-          <navigator url="../orders/index" class="m-cell m-cell-access">
+          <div class="m-cell m-cell-access">
             <div class="m-cell-bd m-cell-primary">
-              <p>全部订单</p>
+              <div>全部订单</div>
             </div>
             <text class="m-cell-ft"></text>
-          </navigator>
+          </div>
         </div>
       </div>
     </div>
@@ -84,7 +84,7 @@
         point: 0, // 我的积分
         userInfo: {},
         extendList: [
-          {name: '积分', imageUrl: require('public/images/user/integral.png'), value: 0, url: 'integral/integral'},
+          {name: '积分', imageUrl: require('public/images/user/integrals.png'), value: 0, url: 'integral/integral'},
           {name: '优惠券', imageUrl: require('public/images/user/coupon.png'), value: 0, url: 'coupon/coupon'}
         ],
         list: [
@@ -265,6 +265,9 @@
   @import "~public/stylus/mixin";
   @import "~public/css/login";
 
+  .container
+    background-color: rgb(244, 244, 244)
+
   .userInfo {
     width: 100%;
     height: rpx(288);
@@ -321,55 +324,6 @@
     border-radius: rpx(6);
   }
 
-  .account-bg {
-    width: 100%;
-    height: rpx(150);
-  }
-
-  .userinfo-avatar {
-    width: rpx(108);
-    height: rpx(350);
-    margin: rpx(20);
-    border-radius: 50%;
-  }
-
-  .userinfo-nickname {
-    color: #fff;
-  }
-
-  /* 订单 */
-
-  .order {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    height: rpx(90);
-  }
-
-  .myorder-text {
-    font-size: rpx(30);
-    color: gray;
-    margin: rpx(20);
-    width: 40%;
-  }
-
-  .myorderlook-text {
-    font-size: rpx(30);
-    color: gray;
-    position: relative;
-    right: rpx(20);
-    width: 60%;
-    text-align: right;
-  }
-
-  .next-image {
-    width: rpx(20);
-    height: rpx(25);
-    position: relative;
-    right: rpx(10);
-  }
-
   .navs {
     display: flex;
     background: #fff;
@@ -412,15 +366,6 @@
 
   /* 列表 */
 
-  .m-cell-img {
-    display: flex;
-    width: rpx(43);
-    height: rpx(40);
-    align-self: center;
-    top: rpx(5);
-    padding-right: rpx(12);
-  }
-
   .m-cell-img1 {
     display: flex;
     width: rpx(38);
@@ -430,50 +375,17 @@
     padding-right: rpx(12);
   }
 
-  .m-cell-img2 {
-    display: flex;
-    width: rpx(36);
-    height: rpx(30);
-    align-self: center;
-    top: rpx(5);
-    padding-right: rpx(12);
-  }
-
-  .m-cell-img3 {
-    display: flex;
-    width: rpx(37);
-    height: rpx(30);
-    align-self: center;
-    top: rpx(5);
-    padding-right: rpx(12);
-  }
-
-  .m-cell-img_yuhu {
-    display: flex;
-    width: 19px;
-    height: 19px;
-    align-self: center;
-    top: rpx(5);
+  .m-cell-hd {
+    text-align: center;
+    line-height: rpx(56);
   }
 
   .m-cell-bd p {
     margin-left: rpx(4);
   }
 
-  .m-cell-hd {
-    text-align: center;
-    line-height: rpx(56);
-  }
-
-  .m-cell-primary {
-    font-size: 14px;
-  }
-
-  .foucs-redpoint {
-    width: 8px;
-    height: 8px;
-    border-radius: 4px;
-    background-color: red;
+  .m-cell-primary div {
+    font-size: rpx(34);
   }
 
   .u-btn {

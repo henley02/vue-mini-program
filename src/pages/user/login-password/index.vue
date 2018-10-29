@@ -68,9 +68,7 @@
           });
           this.$bridge.storage.remove('userName');
           setTimeout(() => {
-            wx.redirectTo({
-              url: '/pages/user/login/main'
-            });
+            this.$bridge.link.goLogin();
           }, 1500);
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
@@ -101,9 +99,7 @@
           });
           this.$bridge.storage.remove('userName');
           setTimeout(() => {
-            wx.redirectTo({
-              url: '/pages/user/login/main'
-            });
+            this.$bridge.link.goLogin();
           }, 1500);
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
