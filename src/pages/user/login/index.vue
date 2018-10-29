@@ -48,7 +48,7 @@
         this.$bridge.link.navigateTo('/pages/user/register/main?type=register');
       },
       forgetPassword() {
-        this.$bridge.link.navigateTo('/pages/user/login-password/main?type=forgetPassword');
+        this.$bridge.link.navigateTo('/pages/user/register/main?type=forgetPassword');
       },
       async login() {
         if (!this.hasValue) {

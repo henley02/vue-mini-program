@@ -64,3 +64,44 @@ export const deleteUserOauth = (params) => fetch({method: 'api.security.userOaut
  * @param params
  */
 export const fetchRegisterAgreement = (params) => fetch({method: 'api.ebusiness.registrationAgreementNew.find', ...params}, {isLoading: true});
+
+/**
+ * 获取图形验证码
+ * @param params
+ */
+export const fetchIdentifyingCode = (params) => fetch({method: 'api.security.loginCode.create', ...params}, {isLoading: false});
+
+/**
+ * 获取手机验证码
+ * @param params
+ */
+export const fetchMobileVerificationCode = (params) => fetch({method: 'api.ebusiness.mobileVerificationCode.create', ...params}, {isLoading: true});
+
+/**
+ * 验证手机验证码
+ * @param params
+ */
+export const mobileVerificationCodeCheck = (params) => fetch({method: 'api.security.valification.check', ...params}, {isLoading: true});
+
+/**
+ * 验证图形验证码
+ * @param params
+ */
+export const checkGraphicVerificationCode = (params) => fetch({method: 'api.security.loginCode.check', ...params}, {isLoading: true});
+
+/**
+ * 注册获取主键id
+ * @param params
+ */
+export const loginnewId = (params) => fetch({method: 'api.base.newId.get', ...params}, {isLoading: false});
+/**
+ * 注册
+ * @param params
+ */
+export const register = (params) => fetch({method: 'api.ebusiness.memberNew.register', ...params}, {isLoading: true});
+
+/**
+ * 更改登录密码
+ * @param params
+ */
+export const changeLoginPassword = (params) => fetch({method: 'api.security.loginPassword.updateByVerifyCode', ...params}, {isLoading: true});

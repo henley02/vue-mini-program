@@ -8,7 +8,7 @@
              maxlength="10"
              name="username"></h-input>
 
-    <button class="btn_confirm" :class="{'disable': !hasValue}" bindtap='loginInfo'>
+    <button class="btn_confirm" :class="{'disable': !hasValue}" @tap='confirm'>
       {{type == 'register' ? '注册完成' : '确认'}}
     </button>
 
@@ -17,6 +17,8 @@
 </template>
 
 <script>
+  import {loginnewId, register, changeLoginPassword} from 'api/index';
+  import MD5 from 'public/js/util/md5';
   /**
    * 修改登录密码、设置登录密码
    */
@@ -28,7 +30,9 @@
       return {
         password: '',
         affirmPassword: '',
-        type: ''
+        type: '',
+        id: '', // 主键
+        code: ''
       };
     },
     computed: {
@@ -42,9 +46,110 @@
     components: {
       hInput, registerAgreement
     },
-    created() {
+    methods: {
+      /**
+       * 变更登录密码
+       * @returns {Promise.<void>}
+       */
+      async changePassword() {
+        let userName = this.$bridge.storage.get('userName');
+        let params = {
+          account: userName,
+          password: MD5.hexMD5(this.password),
+          code: this.code,
+          verificationType: 'SHORT_MOBILE'
+        };
+        let res = await changeLoginPassword(params);
+        if (res.firstErrorMessage === '') {
+          wx.showToast({
+            title: '更改成功',
+            icon: 'success',
+            duration: 3000
+          });
+          this.$bridge.storage.remove('userName');
+          setTimeout(() => {
+            wx.redirectTo({
+              url: '/pages/user/login/main'
+            });
+          }, 1500);
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+      },
+      /**
+       * 注册
+       * @returns {Promise.<void>}
+       */
+      async register() {
+        let userName = this.$bridge.storage.get('userName');
+        let params = {
+          id: this.id,
+          isCustomer: false,
+          isDistributor: false,
+          isActive: true,
+          userNameForAccount: userName,
+          loginPassword: this.password,
+          name: userName,
+          mobilePhone: userName
+        };
+        let res = await register(params);
+        if (res.firstErrorMessage === '') {
+          wx.showToast({
+            title: '注册成功',
+            icon: 'success',
+            duration: 3000
+          });
+          this.$bridge.storage.remove('userName');
+          setTimeout(() => {
+            wx.redirectTo({
+              url: '/pages/user/login/main'
+            });
+          }, 1500);
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+      },
+      /**
+       * 确定
+       */
+      confirm() {
+        if (this.password.trim() === '') {
+          this.$bridge.dialog.alert({content: '密码不能为空'});
+          return;
+        }
+        if (this.password.length < 6) {
+          this.$bridge.dialog.alert({content: '请输入正确密码'});
+          return;
+        }
+        if (this.password.length > 10) {
+          this.$bridge.dialog.alert({content: '请输入正确密码'});
+          return;
+        }
+        if (this.affirmPassword.trim() === '') {
+          this.$bridge.dialog.alert({content: '确认密码不能为空'});
+          return;
+        }
+        if (this.password !== this.affirmPassword) {
+          this.$bridge.dialog.alert({content: '两次输入的密码不一致'});
+          return;
+        }
+        if (this.type === 'register') {
+          this.register();
+        } else if (this.type === 'forgetPassword') {
+          this.changePassword();
+        }
+      },
+      /**
+       * 获取主键
+       * @returns {Promise.<void>}
+       */
+      async getPrimaryKey() {
+        let res = await loginnewId({});
+        this.id = res;
+      }
     },
     onLoad(options) {
+      this.code = options.code;
       this.type = options.type;
       if (this.type === 'register') {
         wx.setNavigationBarTitle({
@@ -55,6 +160,7 @@
           title: '设置登录密码'
         });
       }
+      this.getPrimaryKey();
     }
   };
 </script>

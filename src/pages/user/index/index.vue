@@ -1,37 +1,36 @@
 <template>
-  <div>
-    <div class="container">
-      <div class="userinfo">
-        <div class='userinfo-img'>
-          <image :src="memberUserInfo.user.avatar"/>
-        </div>
-        <text class='userinfo-text'>{{memberUserInfo.member ? memberUserInfo.member.name : '未登录'}}</text>
-        <div class='userinfo-Info' v-if="!memberUserInfo.member" bindtap='Clicklogin'>点击登录</div>
-        <div class='userinfo-user-Info' v-else>
-          <div v-if="memberUserInfo.currentLevel.name">{{memberUserInfo.currentLevel.name}} | {{point}} </div>
-          <div v-if="memberUserInfo.lackPoint && memberUserInfo.nextLevel.name">
-            还需{{memberUserInfo.lackPoint}}分升级为{{memberUserInfo.nextLevel.name}}
-          </div>
-        </div>
-        <div class='userinfo-qian' @tap='signIn'>{{memberUserInfo.hasSignIn ? '已签到' : '签到'}}</div>
+  <div class="container" v-if="!isLoading">
+    <div class="userInfo">
+      <div class='userInfo-img'>
+        <image :src="memberUserInfo.user.avatar"/>
       </div>
-      <div class="m-panel-bd">
-        <div class="m-media-box m-media-box-small-appmsg">
-          <div class="m-cells">
-            <navigator url="../orders/index" class="m-cell m-cell-access">
-              <div class="m-cell-bd m-cell-primary">
-                <p>全部订单</p>
-              </div>
-              <text class="m-cell-ft"></text>
-            </navigator>
-          </div>
+      <text class='userInfo-text'>{{memberUserInfo.member.name}}</text>
+      <div class='userInfo-user-Info'>
+        <div v-if="memberUserInfo.currentLevel.name">{{memberUserInfo.currentLevel.name}} | {{point}} </div>
+        <div v-if="memberUserInfo.lackPoint && memberUserInfo.nextLevel.name">
+          还需{{memberUserInfo.lackPoint}}分升级为{{memberUserInfo.nextLevel.name}}
         </div>
       </div>
+      <div class='userInfo-signIn' @tap='signIn'>{{memberUserInfo.hasSignIn ? '已签到' : '签到'}}</div>
+    </div>
 
+    <div class="m-panel-bd">
+      <div class="m-media-box m-media-box-small-appmsg">
+        <div class="m-cells">
+          <navigator url="../orders/index" class="m-cell m-cell-access">
+            <div class="m-cell-bd m-cell-primary">
+              <p>全部订单</p>
+            </div>
+            <text class="m-cell-ft"></text>
+          </navigator>
+        </div>
+      </div>
+    </div>
+    <div class="">
       <div class="navs">
         <block v-for="(item,index) in orderItems" :key="index">
           <div class="nav-item" catchtap="onToOrderTap">
-            <image :src="item.imageurl" class="nav-image"/>
+            <image :src="item.imageUrl" class="nav-image"/>
             <text>{{item.name}}</text>
           </div>
         </block>
@@ -79,6 +78,7 @@
   export default {
     data() {
       return {
+        isLoading: true,
         isClick: true,
         defaultHead: require('public/images/default-head.png'),
         point: 0, // 我的积分
@@ -123,25 +123,25 @@
             status: 'UN_PAID',
             name: '待付款',
             url: 'bill',
-            imageurl: require('public/images/paying.png')
+            imageUrl: require('public/images/paying.png')
           },
           {
             status: 'UN_SIGNED',
             name: '待收货',
             url: 'bill',
-            imageurl: require('public/images/delivering.png')
+            imageUrl: require('public/images/delivering.png')
           },
           {
             status: 'SIGNED',
             name: '待评价',
             url: 'bill',
-            imageurl: require('public/images/evaluating.png')
+            imageUrl: require('public/images/evaluating.png')
           },
           {
             status: 'EVALUATION',
             name: '退售后',
             url: 'bill',
-            imageurl: require('public/images/sold.png')
+            imageUrl: require('public/images/sold.png')
           }
         ]
       };
@@ -226,6 +226,7 @@
        * @returns {Promise.<void>}
        */
       async getUserINfo() {
+        this.isLoading = true;
         let operatingUnitId = this.$bridge.storage.get('operatingUnitId');
         let params = {
           passportId: this.userInfo.id,
@@ -235,17 +236,21 @@
           storeId: '986901391685849088'
         };
         let res = await fetchUserInfo(params);
+        if (res.code === '21') {
+          this.$bridge.link.goLogin();
+          return false;
+        }
         if (!res.user.avatar) {
           res.user.avatar = this.defaultHead;
         }
         this.memberUserInfo = res;
         console.log(this.memberUserInfo);
         this.extendList.find(item => item.name === '优惠券').value = res.couponEntityNum;
+        this.isLoading = false;
       }
     },
     async onShow() {
       this.userInfo = this.$bridge.storage.get('userInfo');
-      console.log(this.userInfo);
       if (!this.userInfo) {
         this.$bridge.link.goLogin();
       } else {
@@ -260,13 +265,60 @@
   @import "~public/stylus/mixin";
   @import "~public/css/login";
 
-  .userinfo {
+  .userInfo {
     width: 100%;
     height: rpx(288);
     background: -webkit-linear-gradient(to right, rgb(230, 70, 74), rgb(248, 117, 75)); /* Safari 5.1 - 6.0 */
     background: -o-linear-gradient(to right, rgb(230, 70, 74), rgb(248, 117, 75)); /* Opera 11.1 - 12.0 */
     background: -moz-linear-gradient(to right, rgb(230, 70, 74), rgb(248, 117, 75));
     background: linear-gradient(to right, rgb(230, 70, 74), rgb(248, 117, 75));
+  }
+
+  .userInfo-img {
+    width: rpx(110);
+    height: rpx(110);
+    border-radius: rpx(10);
+    position: relative;
+    top: rpx(97);
+    left: rpx(45);
+  }
+
+  .userInfo-img image {
+    width: rpx(110);
+    height: rpx(110);
+    border-radius: rpx(10);
+  }
+
+  .userInfo-text {
+    position: absolute;
+    left: rpx(176);
+    top: rpx(91);
+    color: #fff;
+    font-size: rpx(32);
+  }
+
+  .userInfo-user-Info {
+    position: absolute;
+    display: initial;
+    left: rpx(179);
+    top: rpx(143);
+    font-size: rpx(24);
+    color: #facfb7;
+  }
+
+  .userInfo-signIn {
+    position: absolute;
+    display: initial;
+    left: rpx(594);
+    top: rpx(183);
+    border: rpx(1) #fff solid;
+    font-size: rpx(29);
+    color: #fff;
+    width: rpx(109);
+    height: rpx(61);
+    line-height: rpx(61);
+    text-align: center;
+    border-radius: rpx(6);
   }
 
   .account-bg {
@@ -422,69 +474,6 @@
     height: 8px;
     border-radius: 4px;
     background-color: red;
-  }
-
-  .userinfo-img {
-    width: rpx(110);
-    height: rpx(110);
-    border-radius: rpx(10);
-    position: relative;
-    top: rpx(97);
-    left: rpx(45);
-  }
-
-  .userinfo-img image {
-    width: rpx(110);
-    height: rpx(110);
-    border-radius: rpx(10);
-
-  }
-
-  .userinfo-text {
-    position: absolute;
-    left: rpx(176);
-    top: rpx(91);
-    color: #fff;
-    font-size: rpx(32);
-  }
-
-  .userinfo-Info {
-    position: absolute;
-    display: initial;
-    left: rpx(179);
-    top: rpx(142);
-    border: rpx(1) #fff solid;
-    font-size: rpx(28);
-    color: #fff;
-    width: rpx(168);
-    height: rpx(52);
-    line-height: rpx(52);
-    text-align: center;
-    border-radius: rpx(4);
-  }
-
-  .userinfo-qian {
-    position: absolute;
-    display: initial;
-    left: rpx(594);
-    top: rpx(183);
-    border: rpx(1) #fff solid;
-    font-size: rpx(29);
-    color: #fff;
-    width: rpx(109);
-    height: rpx(61);
-    line-height: rpx(61);
-    text-align: center;
-    border-radius: rpx(6);
-  }
-
-  .userinfo-user-Info {
-    position: absolute;
-    display: initial;
-    left: rpx(179);
-    top: rpx(143);
-    font-size: rpx(24);
-    color: #facfb7;
   }
 
   .u-btn {
