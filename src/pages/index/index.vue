@@ -240,6 +240,10 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/variable";
   @import "~public/stylus/mixin";
+  body {
+    background-color: red !important
+  }
+
   .m-search-box
     padding: rpx(19) rpx(31);
     background-color: #FFFFFF;

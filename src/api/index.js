@@ -101,7 +101,13 @@ export const loginnewId = (params) => fetch({method: 'api.base.newId.get', ...pa
 export const register = (params) => fetch({method: 'api.ebusiness.memberNew.register', ...params}, {isLoading: true});
 
 /**
- * 更改登录密码
+ * 注册设置登录密码
  * @param params
  */
-export const changeLoginPassword = (params) => fetch({method: 'api.security.loginPassword.updateByVerifyCode', ...params}, {isLoading: true});
+export const registerSetLoginPassword = (params) => fetch({method: 'api.security.loginPassword.updateByVerifyCode', ...params}, {isLoading: true});
+
+/**
+ * 修改登录密码
+ * @param params
+ */
+export const changeLoginPassword = (params) => fetch({method: 'api.security.loginPassword.modify', ...params}, {isLoading: true});

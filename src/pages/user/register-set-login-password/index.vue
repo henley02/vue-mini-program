@@ -17,12 +17,11 @@
 </template>
 
 <script>
-  import {loginnewId, register, changeLoginPassword} from 'api/index';
+  import {loginnewId, register, registerSetLoginPassword} from 'api/index';
   import MD5 from 'public/js/util/md5';
   /**
    * 修改登录密码、设置登录密码
    */
-  import hInput from 'public/components/h-input/h-input.vue';
   import registerAgreement from 'public/components/register-agreement/register-agreement.vue';
 
   export default {
@@ -44,7 +43,7 @@
       }
     },
     components: {
-      hInput, registerAgreement
+      registerAgreement
     },
     methods: {
       /**
@@ -59,7 +58,7 @@
           code: this.code,
           verificationType: 'SHORT_MOBILE'
         };
-        let res = await changeLoginPassword(params);
+        let res = await registerSetLoginPassword(params);
         if (res.firstErrorMessage === '') {
           wx.showToast({
             title: '更改成功',

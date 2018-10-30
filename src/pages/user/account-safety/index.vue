@@ -1,19 +1,12 @@
 <template>
   <div class="container">
     <div class='m-security'>
-      <div class='m-account-list'>
+      <div class='m-account-list' v-for="(item,index) in list" :key="index">
         <div class='m-title'>
-          <div class='m-title1'>登录密码</div>
-          <div class='m-detail'>用于修改您的账户登录密码</div>
+          <div class='name'>{{item.name}}</div>
+          <div class='desc'>{{item.desc}}</div>
         </div>
-        <div class='m-btn' @tap='changepassword'>修改密码</div>
-      </div>
-      <div class='m-account-list'>
-        <div class='m-title'>
-          <div class='m-title1'>支付密码</div>
-          <div class='m-detail'>用于修改您的支付密码</div>
-        </div>
-        <div class='m-btn' @tap='paymentpassword'>修改密码</div>
+        <div class='m-btn' @tap='jump(item.url)'>{{item.btnText}}</div>
       </div>
     </div>
   </div>
@@ -25,19 +18,28 @@
    */
   export default {
     data() {
-      return {};
+      return {
+        list: [
+          {name: '登录密码', desc: '用于修改您的账户登录密码', btnText: '修改密码', url: '/pages/user/change-password/main'},
+          {name: '支付密码', desc: '用于修改您的支付密码', btnText: '修改密码', url: '/pages/user/change-payment-code/main'}
+        ]
+      };
     },
-    components: {},
-    computed: {},
-    methods: {},
-    onShow() {
+    methods: {
+      jump(url) {
+        this.$bridge.link.navigateTo(url);
+      }
     }
   };
 </script>
 
-<style scoped lang="stylus" rel="stylesheet/stylus">
+<style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/variable";
   @import "~public/stylus/mixin";
+  body, html {
+    background-color: rgb(244, 244, 244)
+  }
+
   .m-account-list {
     background: #FFFFFF;
     border-top: rpx(1) solid rgb(244, 244, 244);
@@ -46,14 +48,13 @@
 
   .m-title {
     padding: rpx(39) 0 rpx(40) rpx(30);
-
   }
 
-  .m-title1 {
+  .name {
     font-size: rpx(32);
   }
 
-  .m-detail {
+  .desc {
     padding-top: rpx(4);
     color: #999999;
     font-size: rpx(24);

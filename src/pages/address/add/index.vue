@@ -44,7 +44,6 @@
   /**
    * 修改登录密码、设置登录密码
    */
-  import hInput from 'public/components/h-input/h-input.vue';
 
   export default {
     data() {
@@ -77,12 +76,6 @@
           tenantId: ''
         }
       };
-    },
-    computed: {},
-    components: {
-      hInput
-    },
-    created() {
     },
     onLoad(options) {
       this.type = options.type;

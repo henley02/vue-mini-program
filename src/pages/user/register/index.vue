@@ -26,7 +26,6 @@
   /**
    * 注册、找回密码的第一个页面
    */
-  import hInput from 'public/components/h-input/h-input.vue';
   import registerAgreement from 'public/components/register-agreement/register-agreement.vue';
 
   import {
@@ -88,9 +87,9 @@
 
           if (res1.verified) {
             if (this.type === 'REGISTER') {
-              this.$bridge.link.navigateTo('/pages/user/login-password/main?type=register');
+              this.$bridge.link.navigateTo('/pages/user/register-set-login-password/main?type=register');
             } else {
-              this.$bridge.link.navigateTo(`/pages/user/login-password/main?type=forgetPassword&code=${this.SMSVerificationCode}`);
+              this.$bridge.link.navigateTo(`/pages/user/register-set-login-password/main?type=forgetPassword&code=${this.SMSVerificationCode}`);
             }
           } else {
             this.$bridge.dialog.alert({content: '图形验证码错误'});
@@ -144,7 +143,7 @@
       }
     },
     components: {
-      hInput, registerAgreement
+      registerAgreement
     },
     onLoad(options) {
       if (options.type === 'register') {
@@ -160,8 +159,7 @@
       }
       this.fetchIdentifyingCode();
     },
-    beforeDestroy() {
-      console.log('onHide');
+    onShow() {
       clearInterval(this.t);
       this.isSend = false;
     }

@@ -18,7 +18,6 @@
   /**
    * 用户登录
    */
-  import hInput from 'public/components/h-input/h-input.vue';
   import authorization from 'public/components/authorization/authorization.vue';
   import btnHome from 'public/components/btn-home/btn-home.vue';
   import MD5 from 'public/js/util/md5';
@@ -33,7 +32,7 @@
       };
     },
     components: {
-      hInput, btnHome, authorization
+      btnHome, authorization
     },
     computed: {
       hasValue() {

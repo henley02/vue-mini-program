@@ -217,6 +217,7 @@
           });
           this.memberUserInfo.hasSignIn = true;
           this.getPoint();
+          this.getUserINfo();
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
@@ -332,7 +333,6 @@
 
   .m-cell {
     border-bottom: rpx(1) solid #eee;
-
   }
 
   .m-cell-ft {
@@ -385,7 +385,7 @@
   }
 
   .m-cell-primary div {
-    font-size: rpx(34);
+    font-size: rpx(28);
   }
 
   .u-btn {
