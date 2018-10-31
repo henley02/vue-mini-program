@@ -13,8 +13,8 @@
           </div>
         </div>
         <div class="m-ad-edit">
-          <div class="edit" @tap="EditAddress"></div>
-          <div class="del" @tap="del(item.id)"></div>
+          <label class="iconfont icon-edit" @tap="editAddress(item.id)"></label>
+          <label class="iconfont icon-delete" @tap="del(item.id,index)"></label>
         </div>
       </div>
       <!-- 无数据时展示 -->
@@ -34,26 +34,61 @@
   /**
    * 收货地址--列表
    */
+  import {fetchAddressList, delAddress} from 'api/index.js';
+
   export default {
     data() {
       return {
         noData: require('public/images/address/address.png'),
         addImg: require('public/images/address/add.png'),
         type: '', // 1 选择收货地址 2
-        list: []
+        list: [],
+        pageNumber: 1,
+        pageSize: 10,
+        userInfo: {}
       };
     },
     components: {},
     methods: {
+      editAddress(id) {
+        this.$bridge.link.navigateTo(`/pages/user/address-add/main?id=${id}`);
+      },
+      async getData() {
+        let params = {
+          passportId: this.userInfo.id,
+          memberId: this.userInfo.memberId,
+          pageSize: this.pageSize,
+          pageNumber: this.pageNumber
+        };
+        let res = await fetchAddressList(params, {isLoading: this.pageNumber === 1});
+        if (res.firstErrorMessage === '') {
+          if (this.pageNumber === 1) {
+            this.list = res.result;
+          } else {
+            this.list = this.list.concat(res.result);
+          }
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+        console.log(res);
+      },
       add() {
         this.$bridge.link.navigateTo('/pages/user/address-add/main');
       },
-      del(id) {
+      del(id, index) {
         this.$bridge.dialog.confirm({
           title: '温馨提示',
           content: '确认删除？',
-          confirmCallback: () => {
-            console.log(2);
+          confirmCallback: async () => {
+            let res = await delAddress({passportId: this.userInfo.id, id: id});
+            if (res.firstErrorMessage === '') {
+              wx.showToast({
+                title: '删除成功'
+              });
+              this.list.splice(index, 1);
+            } else {
+              this.$bridge.dialog.alert({content: res.firstErrorMessage});
+            }
           },
           cancelCallback: () => {
             console.log(1);
@@ -62,6 +97,10 @@
       }
     },
     created() {
+    },
+    onShow() {
+      this.userInfo = this.$bridge.storage.get('userInfo');
+      this.getData();
     },
     onLoad(options) {
       this.type = options.type;
@@ -72,7 +111,7 @@
   };
 </script>
 
-<style  lang="stylus" rel="stylesheet/stylus">
+<style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
   @import "~public/css/login";
   body {
@@ -97,19 +136,15 @@
     height: rpx(100);
   }
 
-  .m-ad-edit div {
-    width: rpx(50);
+  .m-ad-edit label {
+    width: rpx(40);
     height: rpx(50);
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-  }
-
-  .edit {
-    background-image: url('./../../../public/images/address/edit.png');
-  }
-
-  .del {
-    background-image: url('./../../../public/images/address/del.png');
+    line-height: rpx(50);
+    font-size: rpx(35);
+    display: block;
+    vertical-align: middle;
+    text-align: center;
+    color: #888;
   }
 
   .u-btn-sty {

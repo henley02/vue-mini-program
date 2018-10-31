@@ -129,3 +129,22 @@ export const changeAvatar = (params) => fetch({method: 'api.master.user.avatar.u
  * @param params
  */
 export const updateMember = (params) => fetch({method: 'api.master.membership.member.update', ...params}, {isLoading: true});
+
+/**
+ * 获取收货地址列表
+ * @param params
+ * @param config
+ */
+export const fetchAddressList = (params, config) => fetch({method: 'api.master.membership.memberLocation.find', ...params}, config);
+
+/**
+ * 根据某条收货地址id获取对应的信息
+ * @param params
+ */
+export const fetchAddressById = (params) => fetch({method: 'api.master.membership.memberLocation.find', ...params}, {isLoading: true});
+
+/**
+ * 删除收货地址
+ * @param params
+ */
+export const delAddress = (params) => fetch({method: 'api.master.membership.memberLocation.delete', ...params}, {isLoading: true});
