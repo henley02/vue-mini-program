@@ -46,5 +46,13 @@ export default {
    */
   goAccountSafety() {
     jump('/pages/user/account-safety/main');
+  },
+  /**
+   * 跳转到个人中心
+   */
+  goUserIndex() {
+    wx.switchTab({
+      url: '/pages/user/index/main'
+    });
   }
 };

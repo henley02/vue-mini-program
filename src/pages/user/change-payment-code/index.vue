@@ -10,7 +10,7 @@
       <div v-if="!isSend" class="captcha" @tap="verify">获取验证码</div>
       <div v-else="" class="captcha" style="color:#999">{{countdown}}s</div>
     </div>
-    <div class="btn_confirm" :class="{'disable': !hasValue}" @tap='nextStep'>下一步</div>
+    <button class="btn_confirm" :class="{'disable': !hasValue}" @tap='nextStep'>下一步</button>
   </div>
 </template>
 
@@ -128,6 +128,13 @@
     top: 0;
     z-index: 9;
     line-height: rpx(90);
+  }
+
+  .btn_confirm {
+    margin: rpx(76) rpx(30)
+    background-color: #EA281A;
+    color: white;
+    font-size: rpx(32)
   }
 </style>
 

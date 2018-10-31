@@ -1,32 +1,20 @@
 <template>
   <div class='wrapper'>
-    <form bindsubmit="formSubmit" v-if="flag==false">
-      <text class="info">输入6位数字支付密码</text>
+    <div>
+      <text class="info" v-if="!isNext">输入6位数字支付密码</text>
+      <text class="info" v-else>再次输入</text>
       <div class='content'>
         <block v-for="(item,index) in 6" :key="index">
-          <input class='iptbox' :value="Value.length>=index+1?Value[index]:''" disabled :password='ispassword'
-                 catchtap='Tap'/>
+          <input class='iptbox' :value="temporary.length>=index+1?temporary[index]:''" disabled type="password"
+                 @tap='getFocus()'/>
         </block>
       </div>
-      <input name="password" :password="true" class='ipt' maxlength="6" focus="isFocus" bindinput="Focus"/>
+      <input name="password" type="password" class='ipt' maxlength="6" :focus="isFocus" v-model="temporary"
+             @blur="lossFocus"/>
       <div>
-        <button class="btn-area" formType="submit" bindtap='onSubmit'>确认</button>
+        <button class="btn-area" @tap='onSubmit'>确认</button>
       </div>
-    </form>
-    <form bindsubmit="formSubmit" v-else>
-      <text class="info">再次输入</text>
-      <div class='content'>
-        <block v-for="(item,index) in 6" :key="index">
-          <input class='iptbox' :value="Value.length>=index+1?Value[index]:''" disabled password='ispassword'
-                 catchtap='Tap'/>
-        </block>
-      </div>
-      <input name="password" :password="true" class='ipt' maxlength="6" focus="isFocus"
-             bindinput="Focus"/>
-      <div>
-        <button class="btn-area" formType="submit" bindtap='onSubmits'>确认</button>
-      </div>
-    </form>
+    </div>
   </div>
 </template>
 
@@ -34,90 +22,106 @@
   /**
    * 修改交易密码--第二步
    */
-  import registerAgreement from 'public/components/register-agreement/register-agreement.vue';
 
-  import {
-    fetchIdentifyingCode,
-    fetchMobileVerificationCode
-  } from 'api/index';
+  import {changePaymentCode} from 'api/index';
+  import MD5 from 'public/js/util/md5';
 
   export default {
     data() {
       return {
-        flag: false
+        isNext: false,
+        temporary: '', // 临时值
+        isFocus: true,
+        paymentCode: '',
+        confirmPaymentCode: '',
+        sutry: ''
       };
     },
     computed: {
-      hasValue() {
-        if (this.mobilePhone.trim() === '' || this.graphicVerificationCode.trim() === '' || this.SMSVerificationCode.trim() === '') {
-          return false;
+      showValue() {
+        if (!this.isNext) {
+          return this.paymentCode;
+        } else {
+          return this.confirmPaymentCode;
         }
-        return true;
       }
     },
     methods: {
       /**
-       * 获取手机验证码
+       * 失去焦点
        */
-      async verify() {
-        if (!(/^1\d{10}$/.test(this.mobilePhone))) {
-          this.$bridge.dialog.alert({content: '请输入正确的手机号'});
-          return;
-        }
-        let params = {
-          mobilePhone: this.mobilePhone,
-          type: this.type
-        };
-        let res = await fetchMobileVerificationCode(params);
-        if (res.firstErrorMessage === '') {
-          this.$bridge.storage.save('userName', this.mobilePhone);
-          this.countdown = 60;
-          this.isSend = true;
-          this.t = setInterval(() => {
-            this.countdown--;
-            if (this.countdown === 0) {
-              this.isSend = false;
-              clearInterval(this.t);
-            }
-          }, 1000);
-        } else {
-          this.$bridge.dialog.alert({content: res.firstErrorMessage});
-        }
+      lossFocus() {
+        this.isFocus = false;
       },
       /**
-       * 获取图形验证码
-       * @returns {Promise.<void>}
+       * 获取焦点
        */
-      async fetchIdentifyingCode() {
-        let res = await fetchIdentifyingCode({});
-        if (res.firstErrorMessage === '') {
-          res.verifyCode.img = 'data:image/png;base64,' + res.verifyCode.img;
-          this.verifyCode = res.verifyCode;
+      getFocus() {
+        this.isFocus = true;
+      },
+      async onSubmit() {
+        if (this.temporary.trim() === '') {
+          this.$bridge.dialog.alert({content: '支付密码不能为空'});
+          return;
+        } else if (this.temporary.length < 6) {
+          this.$bridge.dialog.alert({content: '请输入正确的支付密码'});
+          return;
+        }
+        if (!this.isNext) {
+          this.paymentCode = this.temporary;
+          this.temporary = '';
+          this.isNext = true;
+          this.getFocus();
         } else {
-          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+          this.confirmPaymentCode = this.temporary;
+          console.log(this.confirmPaymentCode, this.paymentCode);
+          if (this.confirmPaymentCode !== this.paymentCode) {
+            this.$bridge.dialog.alert({content: '两次支付密码不一致'});
+            return;
+          }
+          let userInfo = this.$bridge.storage.get('userInfo');
+          let params = {
+            passportId: userInfo.id,
+            transactionPassword: MD5.hexMD5(this.paymentCode),
+            id: userInfo.userId
+          };
+          let res = await changePaymentCode(params);
+          if (res.firstErrorMessage === '') {
+            if (this.sutry === 1) {
+              wx.navigateBack({
+                delta: -6
+              });
+            } else if (this.sutry === 2) {
+              wx.navigateBack({
+                delta: -6
+              });
+            } else if (this.sutry === 3) {
+              wx.navigateBack({
+                delta: -6
+              });
+            } else {
+              wx.showToast({
+                title: '设置成功',
+                duration: 3000
+              });
+              setTimeout(() => {
+                wx.navigateBack({
+                  delta: 2
+                });
+              }, 1500);
+            }
+          } else {
+            this.$bridge.dialog.alert({content: res.firstErrorMessage});
+          }
         }
       }
     },
-    components: {
-      registerAgreement
-    },
     onLoad(options) {
-      if (options.type === 'register') {
-        this.type = 'REGISTER';
-        wx.setNavigationBarTitle({
-          title: '注册'
-        });
-      } else if (options.type === 'forgetPassword') {
-        this.type = 'CHECK';
-        wx.setNavigationBarTitle({
-          title: '找回密码'
-        });
-      }
-      this.fetchIdentifyingCode();
+      this.sutry = options.sutry;
     },
     onShow() {
-      clearInterval(this.t);
-      this.isSend = false;
+      this.isNext = false;
+      this.temporary = '';
     }
   };
 </script>

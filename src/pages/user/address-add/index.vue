@@ -14,9 +14,9 @@
         <label class="u-label">所在地区</label>
       </div>
       <div>
-        <label class="label-a">{{provinceName + cityName + districtName}}</label>
+        <label class="label-a">{{area}}</label>
       </div>
-      <image src='../../img/right.png' class='a-img'></image>
+      <image :src='arrowsRight' class='a-img'></image>
     </div>
     <h-input :label="`邮编`" :type="`number`" v-model="form.postCode" placeholder="6位数邮编"
              maxlength="6"
@@ -48,6 +48,7 @@
   export default {
     data() {
       return {
+        arrowsRight: require('public/images/arrows-right.png'),
         form: {
           countryId: '', // 国家id
           countryName: '', // 国家名称
@@ -77,6 +78,16 @@
         }
       };
     },
+    computed: {
+      area() {
+        let str = this.form.provinceName + this.form.cityName + this.form.districtName;
+        if (str === '') {
+          return '请选择';
+        } else {
+          return str;
+        }
+      }
+    },
     onLoad(options) {
       this.type = options.type;
       if (this.type === 1) {
@@ -85,8 +96,23 @@
     }
   };
 </script>
-<style scoped lang="stylus" rel="stylesheet/stylus">
+<style lang="stylus" rel="stylesheet/stylus">
   @import "~public/css/login";
+  body {
+    background-color: rgb(244, 244, 244)
+  }
+
+  .wrapper {
+    background-color: #fff;
+  }
+
+  .form-group {
+    height: rpx(57);
+  }
+
+  .form-group .label {
+    font-size: rpx(28)
+  }
 
   .t-text-are {
     width: 100%;

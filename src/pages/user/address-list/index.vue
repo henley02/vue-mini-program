@@ -40,59 +40,13 @@
         noData: require('public/images/address/address.png'),
         addImg: require('public/images/address/add.png'),
         type: '', // 1 选择收货地址 2
-        list: [
-          {
-            'address': '123123131',
-            'cityId': '120100',
-            'cityName': '天津市',
-            'contactName': '发放',
-            'contactPhone': '13401455202',
-            'countryId': '86',
-            'countryName': '中国',
-            'districtId': '120102',
-            'districtName': '河东区',
-            'id': '1051452293566042112',
-            'isDefault': true,
-            'memberId': '1051451870750838784',
-            'memberName': '13401455202',
-            'postCode': '226531',
-            'provinceId': '120000',
-            'provinceName': '天津市',
-            'receiptAddress': '123123131',
-            'receiptName': '发放',
-            'receiptPhone': '13401455202',
-            'rowVersion': '1',
-            'tenantId': '852769418315444224'
-          },
-          {
-            'address': '31312321',
-            'cityId': '120100',
-            'cityName': '天津市',
-            'contactName': '1312',
-            'contactPhone': '13232565656',
-            'countryId': '86',
-            'countryName': '中国',
-            'districtId': '120102',
-            'districtName': '河东区',
-            'id': '1052748711576604672',
-            'isDefault': false,
-            'memberId': '1051451870750838784',
-            'memberName': '13401455202',
-            'postCode': '226531',
-            'provinceId': '120000',
-            'provinceName': '天津市',
-            'receiptAddress': '31312321',
-            'receiptName': '1312',
-            'receiptPhone': '13232565656',
-            'rowVersion': '0',
-            'tenantId': '852769418315444224'
-          }]
+        list: []
       };
     },
     components: {},
     methods: {
       add() {
-        this.$bridge.link.navigateTo('/pages/address/add/main');
+        this.$bridge.link.navigateTo('/pages/user/address-add/main');
       },
       del(id) {
         this.$bridge.dialog.confirm({
@@ -118,9 +72,13 @@
   };
 </script>
 
-<style scoped lang="stylus" rel="stylesheet/stylus">
+<style  lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
   @import "~public/css/login";
+  body {
+    background-color: rgb(244, 244, 244)
+  }
+
   .m-ad-item {
     display: flex;
     flex-direction row;

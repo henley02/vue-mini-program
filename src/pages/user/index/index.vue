@@ -91,14 +91,13 @@
           {name: '消费记录', url: 'pages/user/consumption-records/main'},
           {name: '积分兑换记录', url: '/pages/user/points-record/main'},
           {name: '我的账户', url: '/pages/user/user-account/main'},
-          {name: '资料.地址管理', url: '/pages/address/list/main'},
+          {name: '资料.地址管理', url: '/pages/user/user-manage/main'},
           {name: '账户安全', url: '/pages/user/account-safety/main'}
         ],
         memberUserInfo: {
           user: {
             account: '',
             activeDate: '',
-            class: '',
             id: '',
             isActive: '',
             isBindIm: '',
@@ -114,9 +113,7 @@
             sourceId: '',
             sourceType: '',
             tenantId: ''
-          },
-          collectionNum: '', // 收藏数量
-          couponEntityNum: '' // 优惠券数量
+          }
         },
         orderItems: [
           {
@@ -146,8 +143,6 @@
         ]
       };
     },
-    components: {},
-    computed: {},
     methods: {
       /**
        * 退出

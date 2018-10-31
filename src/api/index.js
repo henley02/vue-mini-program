@@ -111,3 +111,21 @@ export const registerSetLoginPassword = (params) => fetch({method: 'api.security
  * @param params
  */
 export const changeLoginPassword = (params) => fetch({method: 'api.security.loginPassword.modify', ...params}, {isLoading: true});
+
+/**
+ * 修改支付密码
+ * @param params
+ */
+export const changePaymentCode = (params) => fetch({method: 'api.security.userTransactionPassword.update', ...params}, {isLoading: true});
+
+/**
+ * 更新用户头像
+ * @param params
+ */
+export const changeAvatar = (params) => fetch({method: 'api.master.user.avatar.update', ...params}, {isLoading: true});
+
+/**
+ * 更新个人资料
+ * @param params
+ */
+export const updateMember = (params) => fetch({method: 'api.master.membership.member.update', ...params}, {isLoading: true});
