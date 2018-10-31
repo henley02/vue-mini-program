@@ -39,7 +39,7 @@
       </navigator>
     </div>
     <div class='m-address'>
-      <div class='u-1-1' @tap='save()'>保存</div>
+      <div class='btn-save' @tap='save()'>保存</div>
     </div>
   </div>
 </template>
@@ -257,28 +257,6 @@
     margin-top: rpx(30);
   }
 
-  .via-m-u {
-    height: rpx(24);
-    width: rpx(14);
-    padding-left: rpx(28);
-    padding-top: rpx(63);
-  }
-
-  .via-m-u1 {
-    height: rpx(24);
-    width: rpx(14);
-    position: relative;
-    top: rpx(37);
-    left: rpx(376);
-  }
-
-  .via-m-u2 {
-    height: rpx(24);
-    width: rpx(14);
-    padding-left: rpx(542);
-    padding-top: rpx(39);
-  }
-
   .via-m-u3 {
     height: rpx(24);
     width: rpx(14);
@@ -295,14 +273,6 @@
     left: rpx(341);
   }
 
-  .via-m-u5 {
-    height: rpx(24);
-    width: rpx(14);
-    position: relative;
-    top: rpx(37);
-    left: rpx(469);
-  }
-
   .u-1 {
     display: flex;
     height: rpx(100);
@@ -314,13 +284,6 @@
     display: flex;
     height: rpx(100);
     background-color: white;
-  }
-
-  .u-nick {
-    text-align: right;
-    line-height: rpx(100);
-    position: relative;
-    left: rpx(408);
   }
 
   .u-name {
@@ -347,15 +310,7 @@
     width: rpx(200);
   }
 
-  .u-3-3 {
-    line-height: rpx(100);
-    width: rpx(142);
-    position: relative;
-    left: rpx(356);
-  }
-
-  .u-1-1 {
-    /* display: flex; */
+  .btn-save {
     width: 100%;
     margin: 0 auto;
     height: rpx(100);
@@ -365,65 +320,8 @@
     color: red;
   }
 
-  .m-select-box-msk {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 3;
-  }
-
-  .m-close-panel {
-    height: rpx(60);
-    border-bottom: rpx(1) solid #dfdfdf;
-    font-size: rpx(24);
-    text-align: right;
-    color: coral;
-    line-height: rpx(60);
-    box-sizing: border-box;
-    padding: 0 rpx(20);
-  }
-
-  .m-select-content {
-    position: relative;
-  }
-
-  .u-select {
-    width: 100%;
-    height: 300px;
-    text-align: center;
-  }
-
-  .u-select .m-cell-bd {
-    width: 100%;
-    line-height: 50px;
-    font-size: rpx(28);
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .u-select .m-cell-bd label {
-    width: 100%;
-  }
-
-  .m-cell-select-before .m-cell-bd {
-    padding: 0;
-  }
-
   .m-cell-bd switch {
     float: right;
-  }
-
-  .m-select-box {
-    position: absolute;
-    width: 100%;
-    height: 300px;
-    background-color: #fff;
-    left: 0;
-    bottom: 0;
   }
 
 </style>
