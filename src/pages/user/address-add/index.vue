@@ -20,7 +20,7 @@
         </div>
 
       </div>
-      <div class="m-cell m-cell-select-before" bindtap="showbox">
+      <div class="m-cell m-cell-select-before" @tap="showbox">
         <div class="m-cell-hd">
           <label class="u-label">所在地区</label>
         </div>
@@ -52,20 +52,54 @@
       </div>
     </div>
     <div class='b-btn-sty'>
-      <button class='btn' bindtap='submitbtn'>保存</button>
+      <button class='btn' @tap='submitBtn'>保存</button>
     </div>
+
+    <div class="picker-view" :animation="animationAddressMenu"
+         :style="{visibility:addressMenuIsShow ? 'visible':'hidden'}">
+      <div style="height:10% ;width:95%;margin-top:10rpx">
+        <text @tap="cityCancel">取消</text>
+        <text style="float: right" catchtap="citySure">确定</text>
+      </div>
+      <!--"可以显示默认的城市，使用后级联选择城市反应很慢就不使用了-->
+      <picker-view style="width: 100%; height: 300px;" @change="cityChange" :value="value">
+        <picker-view-column>
+          <div v-for="(item,index) in provinces" :key="index" class="picker-item">
+            {{item.name}}
+          </div>
+        </picker-view-column>
+        <picker-view-column>
+          <div v-for="(item,index) in citys" :key="index" class="picker-item">
+            {{item.name}}
+          </div>
+        </picker-view-column>
+        <picker-view-column>
+          <div v-for="(item,index) in areas" :key="index" class="picker-item">
+            {{item.name}}
+          </div>
+        </picker-view-column>
+      </picker-view>
+    </div>
+
   </div>
 </template>
 
 <script>
   /**
-   * 修改登录密码、设置登录密码
+   * 收货地址添加、修改
    */
-  import {fetchAddressById} from 'api/index';
+  import {fetchAddressById, addAddress, updateAddress, getAreaListByPid} from 'api/index';
 
   export default {
     data() {
       return {
+        addressMenuIsShow: false,
+        value: [0, 0, 0],
+        provinces: [],
+        citys: [],
+        areas: [],
+        areaInfo: '',
+
         id: '', // 收货地址id
         userInfo: {},
         arrowsRight: require('public/images/arrows-right.png'),
@@ -93,7 +127,7 @@
           memberId: '', //
           memberName: '', // 注册人的手机号码
 
-          rowVersion: '1',
+          rowVersion: '',
           tenantId: ''
         }
       };
@@ -109,6 +143,148 @@
       }
     },
     methods: {
+      showbox() {
+        this.startAddressAnimation(true);
+      },
+      cityCancel(e) {
+        this.startAddressAnimation(false);
+      },
+      // 执行动画
+      startAddressAnimation(isShow) {
+        this.addressMenuIsShow = isShow;
+      },
+      // 处理省市县联动逻辑
+      async cityChange(e) {
+        let value = e.target.value;
+        let provinceIndex = value[0];
+        let cityIndex = value[1];
+        // 如果省份选择项和之前不一样，表示滑动了省份，此时市默认是省的第一组数据，
+        console.log(1);
+        if (this.value[0] !== provinceIndex) {
+          this.value = [provinceIndex, 0, 0];
+          this.citys = await this.getAreaList({type: 'CITY', pid: this.provinces[provinceIndex].id});
+          this.areas = await this.getAreaList({type: 'DISTRICT', pid: this.citys[0].id});
+        } else if (this.value[1] !== cityIndex) {
+          // 滑动选择了第二项数据，即市，此时区显示省市对应的第一组数据
+          this.value = [provinceIndex, cityIndex, 0];
+          this.areas = await this.getAreaList({type: 'DISTRICT', pid: this.citys[cityIndex].id});
+        } else {
+          // 滑动选择了区
+          this.value = e.target.value;
+        }
+      },
+      async getData() {
+        this.provinces = await this.getAreaList({type: 'PROVINCE', pid: 86});
+        this.citys = await this.getAreaList({type: 'CITY', pid: this.provinces[0].id});
+        this.areas = await this.getAreaList({type: 'DISTRICT', pid: this.citys[0].id});
+      },
+      getAreaList(params) {
+        return new Promise(async (resolve, reject) => {
+          let res = await getAreaListByPid(params);
+          if (res.firstErrorMessage === '') {
+            resolve(res.areaList);
+          } else {
+            resolve([]);
+          }
+        });
+      },
+      submitBtn() {
+        let regEn = /[`~!@#$%^&*()_+<>?:"{},./\\;'[\]]/im;
+        let regCn = /[·！#￥（——）：；“”‘、，|《。》？、【】[\]]/im;
+        if (this.form.contactName.trim() === '') {
+          this.$bridge.dialog.alert({content: '请输入您的姓名'});
+          return;
+        }
+        if (this.form.contactPhone.trim() === '') {
+          this.$bridge.dialog.alert({content: '请输入您的手机号'});
+          return;
+        }
+        if (!(/^1\d{10}$/.test(this.form.contactPhone))) {
+          this.$bridge.dialog.alert({content: '请输入正确的手机号'});
+          return;
+        }
+        if (this.area === '请选择') {
+          this.$bridge.dialog.alert({content: '请选择所在地区'});
+          return;
+        }
+
+        if (this.form.postCode.trim() === '') {
+          this.$bridge.dialog.alert({content: '请输入邮编'});
+          return;
+        }
+        if (this.form.postCode.length < 6) {
+          this.$bridge.dialog.alert({content: '请输入正确邮编'});
+          return;
+        }
+        if (this.form.receiptAddress.length < 5) {
+          this.$bridge.dialog.alert({content: '详细地址不少于5个字'});
+          return;
+        }
+        if (regEn.test(this.form.receiptAddress) || regCn.test(this.form.receiptAddress)) {
+          this.$bridge.dialog.alert({content: '请输入正确的详细地址'});
+          return false;
+        }
+        let params = this.form;
+        params.memberId = this.userInfo.memberId;
+        params.passportId = this.userInfo.id;
+        if (params.countryId === '') {
+          params.countryId = '86';
+          params.countryName = '中国';
+        }
+        console.log(params);
+        if (this.id) {
+          this.updateAddress(params);
+        } else {
+          this.addAddress(params);
+        }
+      },
+      async addAddress(params) {
+        let res = await addAddress(params);
+        if (res.firstErrorMessage === '') {
+          wx.showToast({
+            title: '保存成功'
+          });
+          setTimeout(function () {
+            wx.navigateBack({
+              delta: 1
+            });
+          }, 1000);
+        } else {
+          this.$bridge.dialog.confirm({
+            title: '提示',
+            content: res.firstErrorMessage,
+            confirmCallback: () => {
+              setTimeout(() => {
+                wx.navigateBack({
+                  delta: 1
+                });
+              });
+            }
+          });
+        }
+      },
+      async updateAddress(params) {
+        let res = await updateAddress(params);
+        if (res.firstErrorMessage === '' && res.result === '1') {
+          wx.showToast({
+            title: '修改成功',
+            success: () => {
+              setTimeout(() => {
+                wx.navigateBack({
+                  delta: 1
+                });
+              }, 2000);
+            }
+          });
+        } else {
+          wx.showToast({
+            title: res.firstErrorMessage || '修改失败'
+          });
+        }
+      },
+      /**
+       * 选中、取消默认
+       */
       changeDefault() {
         this.form.isDefault = !this.form.isDefault;
       },
@@ -119,22 +295,39 @@
         let res = await fetchAddressById({ids: this.id.split(','), passportId: this.userInfo.id});
         if (res.firstErrorMessage === '') {
           this.form = res.result[0];
-          console.log(this.form);
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
       }
     },
-    onLoad(options) {
-      this.type = options.type;
-      this.id = options.id;
-      if (this.type === 1) {
-      } else if (this.type === 2) {
-      }
-    },
     onShow() {
+      this.getData();
+      this.id = this.$root.$mp.query.id || '';
+      this.form = {
+        countryId: '',
+        countryName: '',
+        provinceId: '',
+        provinceName: '',
+        cityId: '',
+        cityName: '',
+        districtId: '',
+        districtName: '',
+        postCode: '',
+        address: '',
+        receiptAddress: '',
+        contactName: '',
+        contactPhone: '',
+        receiptName: '',
+        receiptPhone: '',
+        id: '',
+        isDefault: false,
+        memberId: '',
+        memberName: '',
+        rowVersion: '',
+        tenantId: ''
+      };
       this.userInfo = this.$bridge.storage.get('userInfo');
-      if (this.id) {
+      if (this.id !== '') {
         this.getAddressInfo();
       }
     }
@@ -272,5 +465,27 @@
     top: rpx(6)
     &.active
       background-image: url("../../../public/images/address/selected.png");
+
+  .picker-view {
+    width: 100%;
+    display: flex;
+    z-index: 12;
+    background-color: #fff;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    bottom: 0 rpx;
+    left: 0 rpx;
+    height: 40vh;
+  }
+
+  .picker-item {
+    line-height: rpx(70);
+    margin-left: rpx(5);
+    margin-right: rpx(5);
+    text-align: center;
+    font-size: rpx(24);
+  }
 </style>
 

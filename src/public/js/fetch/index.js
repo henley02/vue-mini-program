@@ -36,7 +36,9 @@ function fetch(data, config) {
         console.log(error);
       },
       complete: res => {
-        wx.hideLoading();
+        if (config.isLoading) {
+          wx.hideLoading();
+        }
       }
     });
   });

@@ -32,7 +32,7 @@ export const login = (params) => fetch({method: 'api.system.member.login', ...pa
  * 获取用户信息
  * @param params
  */
-export const fetchUserInfo = (params) => fetch({method: 'api.ebusiness.memberDetailIndex.get', ...params}, {isLoading: true});
+export const fetchUserInfo = (params, config) => fetch({method: 'api.ebusiness.memberDetailIndex.get', ...params}, config);
 
 /**
  * 获取我的积分
@@ -148,3 +148,54 @@ export const fetchAddressById = (params) => fetch({method: 'api.master.membershi
  * @param params
  */
 export const delAddress = (params) => fetch({method: 'api.master.membership.memberLocation.delete', ...params}, {isLoading: true});
+
+/**
+ * 添加新的收货地址
+ * @param params
+ */
+export const addAddress = (params) => fetch({method: 'api.master.membership.memberLocation.create', ...params}, {isLoading: true});
+
+/**
+ * 更新收货地址
+ * @param params
+ */
+export const updateAddress = (params) => fetch({method: 'api.master.membership.memberLocation.update', ...params}, {isLoading: true});
+
+/**
+ * 获取省市区的信息
+ * @param params
+ */
+export const getAreaListByPid = (params) => fetch({method: 'api.data.areaListByPid.get', ...params}, {isLoading: false});
+
+/**
+ * 获取积分兑换记录
+ * @param params
+ * @param config
+ */
+export const fetchPointRecordList = (params, config) => fetch({method: 'api.ebusiness.orderNew.find', ...params}, config);
+
+/**
+ * 积分确认收货按钮
+ * @param params
+ */
+export const pointConfirmReceiving = (params) => fetch({method: 'api.ebusiness.order.sign', ...params}, {isLoading: true});
+
+/**
+ * 获取消费记录
+ * @param params
+ * @param config
+ */
+export const fetchConsumptionRecords = (params, config) => fetch({method: 'api.ebusiness.memberTransactionNew.find', ...params}, config);
+
+/**
+ * 我的账户 - 获取会员信息
+ * @param params
+ * @param config
+ */
+export const fetchMembership = (params) => fetch({method: 'api.master.membership.member.get', ...params}, {isLoading: true});
+
+/**
+ * 我的账户 - 查询我的余额
+ * @param params
+ */
+export const fetchMemberBalance = (params) => fetch({method: 'api.membership.memberBalance.get', ...params}, {isLoading: true});

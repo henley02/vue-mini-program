@@ -6,7 +6,7 @@
       </div>
       <text class='userInfo-text'>{{memberUserInfo.member.name}}</text>
       <div class='userInfo-user-Info'>
-        <div v-if="memberUserInfo.currentLevel.name">{{memberUserInfo.currentLevel.name}} | {{point}} </div>
+        <div v-if="memberUserInfo.currentLevel && memberUserInfo.currentLevel.name">{{memberUserInfo.currentLevel.name}} | {{point}} </div>
         <div v-if="memberUserInfo.lackPoint && memberUserInfo.nextLevel.name">
           还需{{memberUserInfo.lackPoint}}分升级为{{memberUserInfo.nextLevel.name}}
         </div>
@@ -88,7 +88,7 @@
           {name: '优惠券', imageUrl: require('public/images/user/coupon.png'), value: 0, url: 'coupon/coupon'}
         ],
         list: [
-          {name: '消费记录', url: 'pages/user/consumption-records/main'},
+          {name: '消费记录', url: '/pages/user/consumption-records/main'},
           {name: '积分兑换记录', url: '/pages/user/points-record/main'},
           {name: '我的账户', url: '/pages/user/user-account/main'},
           {name: '资料.地址管理', url: '/pages/user/user-manage/main'},
@@ -212,7 +212,7 @@
           });
           this.memberUserInfo.hasSignIn = true;
           this.getPoint();
-          this.getUserINfo();
+          this.getUserINfo(2);
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
@@ -221,7 +221,7 @@
        * 获取用户信息
        * @returns {Promise.<void>}
        */
-      async getUserINfo() {
+      async getUserINfo(time) {
         this.isLoading = true;
         let operatingUnitId = this.$bridge.storage.get('operatingUnitId');
         let params = {
@@ -231,7 +231,7 @@
           deviceType: 'MOBILE',
           storeId: '986901391685849088'
         };
-        let res = await fetchUserInfo(params);
+        let res = await fetchUserInfo(params, {isLoading: time === 1});
         if (res.code === '21') {
           this.$bridge.link.goLogin();
           return false;
@@ -250,7 +250,7 @@
       if (!this.userInfo) {
         this.$bridge.link.goLogin();
       } else {
-        this.getUserINfo();
+        this.getUserINfo(1);
         this.getPoint();
       }
     }

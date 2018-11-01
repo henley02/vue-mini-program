@@ -176,7 +176,7 @@
           deviceType: 'MOBILE',
           storeId: '986901391685849088'
         };
-        let res = await fetchUserInfo(params);
+        let res = await fetchUserInfo(params, {isLoading: true});
         if (res.code === '21') {
           this.$bridge.link.goLogin();
           return false;
