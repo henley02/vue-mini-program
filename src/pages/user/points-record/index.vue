@@ -33,7 +33,7 @@
   /*
   * 积分兑换记录
   * */
-  import {fetchPointRecordList, pointConfirmReceiving} from 'api/index.js';
+  import {fetchRecordList, pointConfirmReceiving} from 'api/index.js';
 
   export default {
     name: 'points-record',
@@ -77,7 +77,7 @@
           isPaid: true,
           mobileType: 'MOBILE'
         };
-        let res = await fetchPointRecordList(params, {isLoading: true});
+        let res = await fetchRecordList(params, {isLoading: true});
         if (res.firstErrorMessage === '') {
           this.exchangeData = res.result;
         } else {
@@ -94,7 +94,6 @@
 </script>
 <style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
-  @import "~public/css/login";
   .m-product {
     display: flex;
     height: rpx(230);

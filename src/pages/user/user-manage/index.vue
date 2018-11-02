@@ -184,7 +184,6 @@
         if (!res.user.avatar) {
           res.user.avatar = this.defaultHead;
         }
-        console.log(res);
         if (res.member.sex === 'MALE') {
           res.member.sexName = '男';
         } else {
@@ -205,7 +204,6 @@
 </script>
 <style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
-  @import "~public/css/login";
   body, html {
     background-color: rgb(244, 244, 244)
   }

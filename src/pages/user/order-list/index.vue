@@ -1,0 +1,698 @@
+<template>
+  <div>
+    <div class="m-product-all">
+      <div class="m-tab">
+        <div class="m-navbar">
+          <block v-for="(item,index) in tabList" :key="index">
+            <div class="m-navbar-items" :class="{'m-navbar-item-on':type == item.status}" @tap="changeTab(item)">
+              {{item.name}}
+            </div>
+          </block>
+        </div>
+      </div>
+      <scroll-view scroll-y="true" class="m-orderlist" bindscrolltolower="scrollbottom">
+        <block v-for="(item,index1) in list" v-if="type=='EVALUATION'" :key="index1">
+          <div class="m-panel m-panel-access">
+            <div class="m-panel-hda" style='border-bottom:0;'>服务单号{{item.number}}
+              <label v-if="item.status == 'UN_APPROVED'">待审核</label>
+              <label v-if="item.status == 'DISAGREED'">审核不通过</label>
+              <label v-if="item.status == 'AGREED'">审核通过</label>
+              <label v-if="item.status == 'WAIT_RECEIPT'">等待退款</label>
+              <label v-if="item.status == 'WAIT_REFUND'">待退款</label>
+              <label v-if="item.status == 'REFUND'">已退款</label>
+              <label v-if="item.status == 'CANCELLED'">已取消</label>
+            </div>
+            <div class="m-panel-hda" style='border-top:0;'>订单编号：{{item.id}}</div>
+
+            <div class="m-product-list">
+              <navigator class="m-product-item" url="../Detailsrefunds/Detailsrefunds?currentItemId=item.id">
+                <div class="i-product-img">
+                  <image :src="item.refundLineList[0].pictureUrl"/>
+                </div>
+                <div class="m-product-info">
+                  <div class="m-product-name">{{item.refundLineList[0].commodityTitle}}</div>
+                </div>
+              </navigator>
+            </div>
+
+            <div class="m-total-info">
+              共{{item.refundLineList[0].quantity}}件商品 实付款：
+              <label class="m-total-price" style='margin-right:10rpx'>￥{{item.paidAmount}}</label>
+              <text>退款金额：
+                <text class="m-total-price" style='font-size:28rpx;color:#ea281a;'>￥{{item.requestedAmount}}</text>
+              </text>
+            </div>
+            <div class="m-total-btn">
+              <navigator v-if="item.status == 'UN_APPROVED'" class="u-link-btn" bindtap="onCancelOrderTapdetail">取消退单
+              </navigator>
+              <navigator v-if="item.status == 'AGREED'" class="u-link-btn" bindtap="onCancelOrderTapInfo"
+                         style='width:181);'>填写物流信息
+              </navigator>
+            </div>
+          </div>
+        </block>
+
+        <block v-for="(order,index) in list" :key="index" v-if="type !=='EVALUATION'">
+          <div class="m-panel m-panel-access">
+            <div class="m-panel-hd">订单编号：{{order.id}}
+              <label v-if="order.status == 'UN_PAID'">待付款</label>
+              <label v-if="order.status == 'UN_SHIPMENT'">待发货</label>
+              <label v-if="order.status == 'UN_SIGNED'">待收货</label>
+              <label v-if="order.status == 'SIGNED'">已签收</label>
+              <label v-if="order.status == 'EVALUATION'">已评价</label>
+              <label v-if="order.status == 'CANCELLED'">已取消</label>
+              <label v-if="order.status == 'WAIT_GROUP'">待拼团</label>
+            </div>
+
+            <div class="m-product-list">
+              <navigator class="m-product-item"
+                         :url="'src/pages/detail/main?id='+order.orderLineList[0].commodityId">
+                <div class="i-product-img">
+                  <image :src="order.orderLineList[0].pictureUrl"/>
+                </div>
+                <div class="m-product-info">
+                  <div class="m-product-name">{{order.orderLineList[0].commodityTitle}}</div>
+                </div>
+              </navigator>
+            </div>
+
+            <div class="m-total-info">
+              共{{order.totalCount}}件商品 实付款：
+              <label class="m-total-price">￥{{order.paidAmount}}</label>
+            </div>
+
+            <div class="m-total-btn">
+              <navigator v-if="order.status == 'UN_PAID'" class="u-link-btn" bindtap="onCancelOrderTap">取消订单</navigator>
+              <navigator v-if="order.status == 'UN_PAID'" class="u-link-btn i-link-btn" catchtap='suitZhifu'>去付款
+              </navigator>
+              <navigator v-if="order.status == 'SIGNED'" class="u-link-btn" bindtap='evaluation'>评价</navigator>
+              <navigator v-if="order.status == 'UN_SIGNED'" url='../Logisticsdetails/Logisticsdetails?prouId=order.id'
+                         class="u-link-btn" bindtap="looklogistics">查看物流
+              </navigator>
+              <div v-if="order.status == 'UN_SIGNED'" class="u-link-btn i-link-btn" bindtap="bindConfirmReceiptTap">
+                确认收货
+              </div>
+              <navigator v-if="order.status == 'UN_SHIPMENT' || order.status =='EVALUATION'"
+                         :url="'/pages/user/order-detail/main?order_id'+order.id" class="u-link-btn">订单详情
+              </navigator>
+              <navigator v-if="order.status == 'UN_SIGNED'" :url="'/pages/user/order-detail/main?order_id'+order.id"
+                         class="u-link-btn">订单详情
+              </navigator>
+              <navigator v-if="order.status == 'SIGNED'" :url="'/pages/user/order-detail/main?order_id'+order.id"
+                         class="u-link-btn">订单详情
+              </navigator>
+              <navigator v-if="order.status == 'UN_PAID'" :url="'/pages/user/order-detail/main?order_id'+order.id"
+                         class="u-link-btn">订单详情
+              </navigator>
+            </div>
+          </div>
+        </block>
+
+        <div v-if="list.length===0 && isEnd">
+          <image :src='noDataImg' class='shoppingcart' mode='scaleToFill'/>
+          <div class='no-order-text'>暂无订单</div>
+        </div>
+      </scroll-view>
+    </div>
+
+    <!-- 支付模态框 -->
+    <div class="auth-pop" v-if="flagm">
+      <div class="auth-box">
+        <div class='auth-box-title'>输入支付密码</div>
+
+        <div class='auth-box-meny'>￥{{Price}}</div>
+        <div class="m-panel-bd" style='border-bottom:1rpx solid #DDDDDD;'>
+          <div class="m-media-box m-media-box-small-appmsg">
+            <navigator class="m-cell m-cell-access" style='font-size:28rpx;background:#F4F4FB;'>
+              <div class="m-cell-bd m-cell-primary" style='position:relative;right:154);'>
+                <p>支付方式</p>
+              </div>
+              <div>余额支付</div>
+              <text class="m-cell-ft"></text>
+            </navigator>
+          </div>
+        </div>
+        <form bindsubmit="formSubmit">
+          <div class='content'>
+            <block v-for="(item,index) in Length" :key="index">
+              <input class='iptbox' :value="Value.length>=index+1?Value[index]:''" disabled type="password"
+                     catchtap='Tap'/>
+            </block>
+          </div>
+          <input name="password" type="password" class='ipt' :maxlength="Length" :focus="isFocus" bindinput="Focus"/>
+        </form>
+        <image src="../../img/close.png" class='auth-box-img' catchtap='bindimg'></image>
+      </div>
+    </div>
+    <!-- 选择支付方式 -->
+    <div class="auth-pop" v-if="payment">
+      <div class="auth-box" style='background:#FFFFFF;position:relative;top:-40rpx'>
+        <div class='auth-box-zhi'>选择支付方式</div>
+        <div class='a-cell-content' bindtap='balancepaid'>
+          <image src='../../img/yue.png' class='a-cell-con-img'/>
+          <div class='a-cell-tetx'>
+            <div class='a-cell-title'>余额支付</div>
+            <div class='a-cells-te'>使用你的账号余额支付</div>
+          </div>
+        </div>
+        <div class='a-cell-content' bindtap='WeChatPay'>
+          <image src='../../img/weixin.png' class='a-cell-con-img'/>
+          <div class='a-cell-tetx' style='margin-top:23);'>
+            <div class='a-cell-title'>微信支付</div>
+            <!-- <div class='a-cells-te'>支持支付余额,快捷支付等多种支付方式</div> -->
+          </div>
+        </div>
+        <image src="../../img/close.png" class='auth-box-imgs' catchtap='bindimgs'/>
+      </div>
+    </div>
+  </div>
+</template>
+<script type="text/ecmascript-6">
+  /*
+  * 全部订单
+  * */
+  import {fetchRecordList, fetchRefundList} from 'api/index';
+
+  export default {
+    name: 'consumption-records',
+    data() {
+      return {
+        noDataImg: require('public/images/user/noorder.png'),
+        tabList: [
+          {
+            status: 'UN_PAID',
+            name: '待付款'
+          },
+          {
+            status: 'UN_SHIPMENT',
+            name: '待发货'
+          },
+          {
+            status: 'UN_SIGNED',
+            name: '待收货'
+          },
+          {
+            status: 'SIGNED',
+            name: '待评价'
+          },
+          {
+            status: 'EVALUATION',
+            name: '退售后'
+          }
+        ],
+        userInfo: {},
+        list: [],
+        type: '',
+        isLoading: false,
+        pageSize: 10, // 页数
+        pageNumber: 1, // 页码
+        isEnd: false,
+        canDropDown: true // 是否可以下拉加载
+      };
+    },
+    methods: {
+      changeTab(item) {
+        this.type = item.status;
+        this.pageNumber = 1;
+        this.isEnd = false;
+        this.canDropDown = true;
+        if (this.type === 'EVALUATION') {
+          this.getReFundList();
+        } else {
+          this.getOrderList();
+        }
+      },
+      /**
+       * 获取退换货的数据
+       */
+      async getReFundList() {
+        let params = {
+          systemType: 'B2C',
+          passportId: this.userInfo.id,
+          memberId: this.userInfo.memberId,
+          pageSize: this.pageSize,
+          pageNumber: this.pageNumber,
+          storeId: '986901391685849088'
+        };
+        let res = await fetchRefundList(params, {isLoading: this.pageNumber === 1});
+        this.list = this.list.concat(res.result);
+        // 判断数据是否全部加载完
+        if (res.result.length < this.pageSize) {
+          this.isEnd = true;
+          this.canDropDown = false;
+        } else {
+          this.canDropDown = true;
+          this.pageNumber++;
+        }
+        this.isLoading = false;
+      },
+      async getOrderList() {
+        var params = {
+          memberId: this.userInfo.memberId,
+          passportId: this.userInfo.id,
+          isReturn: false,
+          deviceType: null,
+          pageNumber: this.pageNumber,
+          pageSize: this.pageSize,
+          status: this.type,
+          systemType: 'B2C'
+        };
+        if (this.type === 'ALL') {
+          delete params.status;
+        }
+        let res = await fetchRecordList(params, {isLoading: this.pageNumber === 1});
+        this.list = this.list.concat(res.result);
+        // 判断数据是否全部加载完
+        if (res.result.length < this.pageSize) {
+          this.isEnd = true;
+          this.canDropDown = false;
+        } else {
+          this.canDropDown = true;
+          this.pageNumber++;
+        }
+        this.isLoading = false;
+      }
+    },
+    onShow() {
+      this.type = this.$root.$mp.query.type || 'ALL';
+      this.userInfo = this.$bridge.storage.get('userInfo');
+      if (this.type === 'EVALUATION') {
+        this.getReFundList();
+      } else {
+        this.getOrderList();
+      }
+    }
+  };
+</script>
+<style lang="stylus" rel="stylesheet/stylus">
+  @import "~public/stylus/mixin";
+
+  .m-navbar-items.m-navbar-item-on {
+    background-color: #fff;
+    color: #db384c;
+  }
+
+  .m-navbar-items.m-navbar-item-on::before {
+    content: " ";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    height: rpx(6);
+    border-bottom: rpx(6) solid #db384c;
+    color: #ccc;
+    -webkit-transform-origin: 0 100%;
+    transform-origin: 0 100%;
+    -webkit-transform: scaleY(0.5);
+    transform: scaleY(0.5);
+    z-index: 3;
+  }
+
+  .m-orderlist {
+    padding-top: rpx(90);
+    position: absolute;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+  }
+
+  .m-panel-hd label {
+    float: right;
+    color: #ea281a;
+  }
+
+  .m-panel-hda label {
+    float: right;
+    color: #333;
+    margin-top: rpx(42);
+  }
+
+  .m-product-name {
+    line-height: rpx(55);
+  }
+
+  .i-product-img {
+    padding: rpx(29);
+    float: left;
+    text-align: center;
+
+  }
+
+  .i-product-img image {
+    width: rpx(120);
+    height: rpx(120);
+  }
+
+  .m-product-item {
+    height: rpx(176);
+    overflow: hidden;
+    background-color: #f7f7fc;
+  }
+
+  .m-product-item:last-child .m-product-info::before {
+    content: "";
+    border: none;
+  }
+
+  .m-product-info {
+    width: 99%;
+    margin-top: rpx(60);
+  }
+
+  .m-product-list {
+    background-color: f8f8f8 !important;
+  }
+
+  .u-pa .m-product-list {
+    padding-top: rpx(68);
+  }
+
+  .m-product-info1 {
+    height: rpx(210);
+    width: rpx(538);
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex-flow: row wrap;
+    align-content: space-between;
+  }
+
+  .m-product-info1::before {
+    content: " ";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    height: rpx(1);
+    color: #ccc;
+    -webkit-transform-origin: 0 100%;
+    transform-origin: 0 100%;
+    -webkit-transform: scaleY(0.5);
+    transform: scaleY(0.5);
+    z-index: 3;
+  }
+
+  .m-total-info {
+    text-align: right;
+    padding: rpx(29);
+    font-size: rpx(24);
+  }
+
+  .m-total-info label {
+    font-size: rpx(28);
+    color: #333;
+  }
+
+  .m-total-btn {
+    text-align: right;
+    padding: rpx(20) rpx(20) rpx(20) rpx(20);
+    position: relative;
+  }
+
+  .m-total-btn::before {
+    content: " ";
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 1px;
+    border-top: 1px solid #d9d9d9;
+    color: #d9d9d9;
+    -webkit-transform-origin: 0 0;
+    transform-origin: 0 0;
+    -webkit-transform: scaleY(0.5);
+    transform: scaleY(0.5);
+  }
+
+  .m-total-btn .u-link-btn {
+    margin: 0 rpx(10);
+    vertical-align: middle;
+    display: inline-block;
+    line-height: rpx(52);
+    background-color: #fff;
+  }
+
+  .i-link-btn {
+    border: rpx(1) solid #ea281a;
+    color: #ea281a;
+  }
+
+  .m-navbar-items {
+    position: relative;
+    display: block;
+    -webkit-box-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
+    padding: rpx(26) 0;
+    text-align: center;
+    font-size: rpx(28);
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    z-index: 2;
+  }
+
+  .m-total-price {
+    position: relative;
+    top: 0;
+    font-weight: bold;
+  }
+
+  .m-navbar-items:after {
+    content: " ";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 1px;
+    bottom: 0;
+    color: #ccc;
+    -webkit-transform-origin: 100% 0;
+    transform-origin: 100% 0;
+    -webkit-transform: scaleX(0.5);
+    transform: scaleX(0.5);
+  }
+
+  .m-navbar-items:last-child:after {
+    display: none;
+  }
+
+  .shoppingcart {
+    padding-top: rpx(321);
+    padding-left: rpx(290);
+    height: rpx(171);
+    width: rpx(171);
+  }
+
+  .no-order-text {
+    padding-top: rpx(20);
+    padding-left: rpx(310);
+    color: #999999;
+    font-size: rpx(32);
+  }
+
+  .auth-box {
+    width: rpx(640);
+    background-color: #f4f4fb;
+    box-shadow: 0 rpx(10) rpx(30) rgba(0, 0, 0, 0.5);
+    height: rpx(515);
+    border-radius: rpx(4);
+    position: relative;
+    top: rpx(-222);
+  }
+
+  .auth-box-title {
+    margin-top: rpx(40);
+    font-size: rpx(32);
+    font-family: PingFangSC-Semibold;
+  }
+
+  .auth-box-meny {
+    margin-top: rpx(40);
+    font-size: rpx(72);
+  }
+
+  .content {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    float: left;
+    position: relative;
+    top: rpx(51);
+    left: rpx(26);
+    background: #fff;
+    border-radius: rpx(4);
+  }
+
+  .iptbox {
+    width: rpx(94.5);
+    height: rpx(94);
+    border: rpx(1) solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .ipt {
+    width: 0;
+    height: 0;
+  }
+
+  .btn-area {
+    width: 80%;
+    background-color: orange;
+    color: white;
+  }
+
+  .auth-box-img {
+    width: rpx(20);
+    height: rpx(20);
+    position: relative;
+    top: rpx(-355);
+    z-index: 2;
+  }
+
+  /*支付方式*/
+
+  .auth-box-zhi {
+    margin-top: rpx(27);
+    font-size: rpx(32);
+    color: #999;
+  }
+
+  .a-cell-con-img {
+    width: rpx(100);
+    height: rpx(100);
+  }
+
+  .a-cell-content {
+    display: flex;
+    flex-direction: row;
+    margin-left: rpx(47);
+    margin-top: rpx(28);
+  }
+
+  .a-cell-title {
+    font-size: rpx(35);
+    color: black;
+  }
+
+  .a-cell-tetx {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    line-height: rpx(54);
+    margin-left: rpx(26);
+    width: 72%;
+  }
+
+  .a-cells-te {
+    font-size: rpx(28);
+    color: #666;
+    width: 92%;
+  }
+
+  .m-panel-sp-listbox {
+    height: rpx(604);
+  }
+
+  .auth-box-imgs {
+    width: rpx(20);
+    height: rpx(20);
+    position: absolute;
+    top: rpx(38);
+    right: rpx(40);
+    z-index: 2;
+  }
+
+  .text {
+    position: relative;
+    top: rpx(180);
+    color: #999;
+    font-size: rpx(28);
+    text-align: center;
+  }
+
+  .auth-pop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    flex-wrap: wrap;
+    z-index: 999;
+  }
+
+  .auth-box {
+    width: rpx(640);
+    background-color: #f4f4fb;
+    box-shadow: 0 rpx(10) rpx(30) rgba(0, 0, 0, 0.5);
+    height: rpx(515);
+    border-radius: rpx(4);
+    position: relative;
+    top: rpx(-222);
+  }
+
+  .auth-box-title {
+    margin-top: rpx(40);
+    font-size: rpx(32);
+    font-family: PingFangSC-Semibold;
+  }
+
+  .auth-box-meny {
+    margin-top: rpx(40);
+    font-size: rpx(72);
+  }
+
+  .content {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    float: left;
+    position: relative;
+    top: rpx(51);
+    left: rpx(26);
+    background: #fff;
+    border-radius: rpx(4);
+  }
+
+  .iptbox {
+    width: rpx(94.5);
+    height: rpx(94);
+    border: rpx(1) solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .ipt {
+    width: 0;
+    height: 0;
+  }
+
+  .btn-area {
+    width: 80%;
+    background-color: orange;
+    color: white;
+  }
+
+  .auth-box-imgs {
+    width: rpx(20);
+    height: rpx(20);
+    position: absolute;
+    top: rpx(38);
+    right: rpx(40);
+    z-index: 2;
+  }
+
+  .m-panel-hda {
+    padding: rpx(28) rpx(30) rpx(20);
+    color: #999;
+    font-size: rpx(24);
+    position: relative;
+  }
+</style>

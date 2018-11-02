@@ -72,7 +72,6 @@
 </script>
 <style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
-  @import "~public/css/login";
   body {
     background-color: rgb(244, 244, 244);
   }

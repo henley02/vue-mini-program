@@ -11,7 +11,7 @@
       </div>
     </div>
     <scroll-view class='m-ordrelist' @scrolltolower="dropDown" scroll-y="true" style='height:100%;'>
-      <div class='y-img' v-for="(item,index) in list " @tap='tabIndex === 0 && goIndex()'>
+      <div class='y-img' v-for="(item,index) in list " :key="index" @tap='tabIndex === 0 && goIndex()'>
         <image :src='img0' v-if="tabIndex === 0"/>
         <image :src='img1' v-else/>
         <div class='y-con'>{{item.profitConfig.reliefAmount}}元</div>
@@ -28,8 +28,8 @@
       <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
       <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
 
-      <div v-if="list.length==0 && isEnd">
-        <image src='../../img/nocoupon.png' class='shoppingcart'></image>
+      <div v-if="list.length === 0 && isEnd">
+        <image :src='noDataImg' class='shoppingcart'></image>
         <div class='text'>暂无优惠券</div>
       </div>
     </scroll-view>
@@ -48,6 +48,7 @@
         tabIndex: 0,
         img0: require('public/images/user/copy.png'),
         img1: require('public/images/user/usedCoupon.png'),
+        noDataImg: require('public/images/user/nocoupon.png'),
         tabList: [
           {name: '待使用', index: 0},
           {name: '已使用', index: 1},
@@ -136,17 +137,8 @@
 </script>
 <style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
-  @import "~public/css/login";
   body {
     background-color: rgb(244, 244, 244);
-  }
-
-  .y-cell {
-    margin: 0 2.5%;
-    margin-top: rpx(10);
-    top: rpx(100);
-    position: relative;
-
   }
 
   .y-img {
@@ -252,20 +244,6 @@
     height: rpx(38);
     text-align: center;
     background-image: linear-gradient(89deg, #CCCCCC 0%, #999999 100%);
-  }
-
-  .button1 {
-    position: relative;
-    top: rpx(-244);
-    left: rpx(555);
-    font-size: rpx(24);
-    width: rpx(122);
-    color: white;
-    border-radius: rpx(4);
-    height: rpx(38);
-    line-height: rpx(38);
-    text-align: center;
-    background-image: linear-gradient(-269deg, #FF864C 0%, #E6464A 100%);
   }
 
   .shoppingcart {

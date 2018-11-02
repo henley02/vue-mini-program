@@ -59,7 +59,7 @@
          :style="{visibility:addressMenuIsShow ? 'visible':'hidden'}">
       <div style="height:10% ;width:95%;margin-top:10rpx">
         <text @tap="cityCancel">取消</text>
-        <text style="float: right" catchtap="citySure">确定</text>
+        <text style="float: right" @tap="citySure">确定</text>
       </div>
       <!--"可以显示默认的城市，使用后级联选择城市反应很慢就不使用了-->
       <picker-view style="width: 100%; height: 300px;" @change="cityChange" :value="value">
@@ -159,7 +159,6 @@
         let provinceIndex = value[0];
         let cityIndex = value[1];
         // 如果省份选择项和之前不一样，表示滑动了省份，此时市默认是省的第一组数据，
-        console.log(1);
         if (this.value[0] !== provinceIndex) {
           this.value = [provinceIndex, 0, 0];
           this.citys = await this.getAreaList({type: 'CITY', pid: this.provinces[provinceIndex].id});
@@ -231,7 +230,6 @@
           params.countryId = '86';
           params.countryName = '中国';
         }
-        console.log(params);
         if (this.id) {
           this.updateAddress(params);
         } else {
@@ -334,7 +332,8 @@
   };
 </script>
 <style lang="stylus" rel="stylesheet/stylus">
-  @import "~public/css/login";
+  @import "~public/stylus/mixin";
+
   input::-webkit-input-placeholder {
     /* placeholder颜色  */
     color: red;

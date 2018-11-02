@@ -17,19 +17,19 @@
     <div class="m-panel-bd">
       <div class="m-media-box m-media-box-small-appmsg">
         <div class="m-cells">
-          <div class="m-cell m-cell-access">
+          <navigator class="m-cell m-cell-access" url="/pages/user/order-list/main">
             <div class="m-cell-bd m-cell-primary">
               <div>全部订单</div>
             </div>
             <text class="m-cell-ft"></text>
-          </div>
+          </navigator>
         </div>
       </div>
     </div>
     <div class="">
       <div class="navs">
         <block v-for="(item,index) in orderItems" :key="index">
-          <div class="nav-item" catchtap="onToOrderTap">
+          <div class="nav-item" @tap="goOrderList(item)">
             <image :src="item.imageUrl" class="nav-image"/>
             <text>{{item.name}}</text>
           </div>
@@ -39,7 +39,8 @@
     <div class="m-panel-bd" style='margin-bottom:20rpx'>
       <div class="m-media-box m-media-box-small-appmsg">
         <div class="m-cells">
-          <navigator :url="item.url" class="m-cell m-cell-access" v-for="(item,index) in extendList" :key="index">
+          <navigator :url="item.url" class="m-cell m-cell-access"
+                     v-for="(item,index) in extendList" :key="index">
             <div class="m-cell-hd " style="color:#fd690c">
               <image :src="item.imageUrl" class='m-cell-img1'/>
             </div>
@@ -84,11 +85,10 @@
         point: 0, // 我的积分
         userInfo: {},
         extendList: [
-          {name: '积分', imageUrl: require('public/images/user/integrals.png'), value: 0, url: 'integral/integral'},
-          {name: '优惠券', imageUrl: require('public/images/user/coupon.png'), value: 0, url: 'coupon/coupon'}
+          {name: '积分', imageUrl: require('public/images/user/integrals.png'), value: 0, url: '/pages/user/integral/main'},
+          {name: '优惠券', imageUrl: require('public/images/user/coupon.png'), value: 0, url: '/pages/user/coupon/main'}
         ],
         list: [
-          {name: '消费记录', url: '/pages/user/consumption-records/main'},
           {name: '积分兑换记录', url: '/pages/user/points-record/main'},
           {name: '我的账户', url: '/pages/user/user-account/main'},
           {name: '资料.地址管理', url: '/pages/user/user-manage/main'},
@@ -119,31 +119,30 @@
           {
             status: 'UN_PAID',
             name: '待付款',
-            url: 'bill',
             imageUrl: require('public/images/paying.png')
           },
           {
             status: 'UN_SIGNED',
             name: '待收货',
-            url: 'bill',
             imageUrl: require('public/images/delivering.png')
           },
           {
             status: 'SIGNED',
             name: '待评价',
-            url: 'bill',
             imageUrl: require('public/images/evaluating.png')
           },
           {
             status: 'EVALUATION',
             name: '退售后',
-            url: 'bill',
             imageUrl: require('public/images/sold.png')
           }
         ]
       };
     },
     methods: {
+      goOrderList(item) {
+        this.$bridge.link.navigateTo(`/pages/user/order-list/main?type=${item.status}`);
+      },
       /**
        * 退出
        */
@@ -178,7 +177,6 @@
         } else {
           this.$bridge.dialog.alert(res.firstErrorMessage);
         }
-        console.log(res);
       },
       /**
        * 跳转到安全中心
@@ -222,7 +220,9 @@
        * @returns {Promise.<void>}
        */
       async getUserINfo(time) {
-        this.isLoading = true;
+        if (time === 1) {
+          this.isLoading = true;
+        }
         let operatingUnitId = this.$bridge.storage.get('operatingUnitId');
         let params = {
           passportId: this.userInfo.id,
@@ -240,9 +240,10 @@
           res.user.avatar = this.defaultHead;
         }
         this.memberUserInfo = res;
-        console.log(this.memberUserInfo);
         this.extendList.find(item => item.name === '优惠券').value = res.couponEntityNum;
-        this.isLoading = false;
+        if (time === 1) {
+          this.isLoading = false;
+        }
       }
     },
     async onShow() {
@@ -259,7 +260,6 @@
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
-  @import "~public/css/login";
 
   .container
     background-color: rgb(244, 244, 244)

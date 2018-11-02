@@ -168,11 +168,18 @@ export const updateAddress = (params) => fetch({method: 'api.master.membership.m
 export const getAreaListByPid = (params) => fetch({method: 'api.data.areaListByPid.get', ...params}, {isLoading: false});
 
 /**
- * 获取积分兑换记录
+ * 获取记录列表（积分兑换记录、全部订单记录、待付款记录、待发货、待收货、待评价）
  * @param params
  * @param config
  */
-export const fetchPointRecordList = (params, config) => fetch({method: 'api.ebusiness.orderNew.find', ...params}, config);
+export const fetchRecordList = (params, config) => fetch({method: 'api.ebusiness.orderNew.find', ...params}, config);
+
+/**
+ * 获取退售后记录列表
+ * @param params
+ * @param config
+ */
+export const fetchRefundList = (params, config) => fetch({method: 'api.ebusiness.refund.find', ...params}, config);
 
 /**
  * 积分确认收货按钮
@@ -181,7 +188,7 @@ export const fetchPointRecordList = (params, config) => fetch({method: 'api.ebus
 export const pointConfirmReceiving = (params) => fetch({method: 'api.ebusiness.order.sign', ...params}, {isLoading: true});
 
 /**
- * 获取消费记录
+ * 获取消费记录（消费记录、积分记录）
  * @param params
  * @param config
  */
@@ -199,3 +206,10 @@ export const fetchMembership = (params) => fetch({method: 'api.master.membership
  * @param params
  */
 export const fetchMemberBalance = (params) => fetch({method: 'api.membership.memberBalance.get', ...params}, {isLoading: true});
+
+/**
+ * 获取我的优惠券
+ * @param params
+ * @param config
+ */
+export const fetchCouponList = (params, config) => fetch({method: 'api.promotion.couponEntity.find', ...params}, config);

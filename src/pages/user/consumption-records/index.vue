@@ -51,7 +51,6 @@
        * 下拉加载
        */
       dropDown() {
-        console.log(this.isEnd || !this.canDropDown);
         if (this.isEnd || !this.canDropDown) {
           return false;
         }
@@ -85,7 +84,6 @@
           this.pageNumber++;
         }
         this.isLoading = false;
-        console.log(this.isEnd, !this.canDropDown);
       }
     },
     onShow() {
@@ -103,7 +101,6 @@
 </script>
 <style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
-  @import "~public/css/login";
 
   .c-records {
     background: #FFFFFF;
@@ -184,10 +181,4 @@
   .c-records .orderdetail:last-child {
     border-bottom: none;
   }
-
-  .drop-down-status
-    text-align: center;
-    font-size: rpx(24);
-    padding: rpx(20);
-    color: #ccc;
 </style>

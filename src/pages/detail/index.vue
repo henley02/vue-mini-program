@@ -138,7 +138,7 @@
           <div style="height:96rpx;width:100%;"></div>
         </scroll-div>
         <div class="m-m-panel-sp-btn">
-          <div class="m-m-panel-sp-rbtn" catchtap="closesp">关闭</div>
+          <div class="m-m-panel-sp-rbtn" @tap="closesp">关闭</div>
         </div>
       </div>
     </div>
@@ -203,8 +203,8 @@
     </div>
     <div class="m-footer-btn" v-else>
       <div class="m-m-panel-sp-btn">
-        <div class="m-m-panel-sp-rbtn" catchtap="buynow" v-if="tab==0">确定</div>
-        <div class="m-m-panel-sp-rbtn" catchtap="ckselectspbuynow" v-else>确定</div>
+        <div class="m-m-panel-sp-rbtn" @tap="buynow" v-if="tab==0">确定</div>
+        <div class="m-m-panel-sp-rbtn" @tap="ckselectspbuynow" v-else>确定</div>
       </div>
     </div>
 
@@ -232,7 +232,7 @@
             <div class="m-pstock" v-else>库存0件</div>
             <div class="p-pstock">请选择</div>
           </div>
-          <icon type="cancel" class="m-panel-sp-icon" color="#888" catchtap="closesp"/>
+          <icon type="cancel" class="m-panel-sp-icon" color="#888" @tap="closesp"/>
         </div>
         <scroll-div class="m-panel-sp-listbox" scroll-y="true">
           <div class="m-panel-sp-listbox-item">
@@ -240,7 +240,7 @@
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in ProductInfo.spec1AttrList" :key="index">
                 <label :class="{'m-panel-sp-sellabel':prduindex==i,'p-panel-sp':prduindex!=i}"
-                       catchtap="selectsp">{{item.valueName}}</label>
+                       @tap="selectsp">{{item.valueName}}</label>
               </block>
             </div>
           </div>
@@ -249,7 +249,7 @@
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in ProductInfo.spec2AttrList" :key="index">
                 <label :class="{'m-panel-sp-sellabel':spec2AttrList==i}"
-                       catchtap="spec2AttrList">{{item.valueName}}</label>
+                       @tap="spec2AttrList">{{item.valueName}}</label>
               </block>
             </div>
           </div>
@@ -258,7 +258,7 @@
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in ProductInfo.spec3AttrList" :key="index">
                 <label :class="{'m-panel-sp-sellabel':spec3AttrList==i}"
-                       catchtap="spec3AttrList">{{item.valueName}}</label>
+                       @tap="spec3AttrList">{{item.valueName}}</label>
               </block>
             </div>
           </div>
@@ -267,9 +267,9 @@
             </div>
             <div class="m-panel-sp-labellist">
               <div class="u-cart-num">
-                <div class="u-num-btn" catchtap="sub" :class="minusStatus">-</div>
+                <div class="u-num-btn" @tap="sub" :class="minusStatus">-</div>
                 <input type="number" v-model="numval" bindblur="writenum"/>
-                <div class="u-num-btn" catchtap="add">+</div>
+                <div class="u-num-btn" @tap="add">+</div>
               </div>
             </div>
           </div>

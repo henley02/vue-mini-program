@@ -16,7 +16,6 @@
     methods: {
       async init() {
         let res = await fetchRegisterAgreement({systemType: 'SMALL_PROGRAM'});
-        console.log(res);
         this.content = res.result[0].description;
       }
     },

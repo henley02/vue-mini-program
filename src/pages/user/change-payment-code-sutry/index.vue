@@ -74,7 +74,6 @@
           this.getFocus();
         } else {
           this.confirmPaymentCode = this.temporary;
-          console.log(this.confirmPaymentCode, this.paymentCode);
           if (this.confirmPaymentCode !== this.paymentCode) {
             this.$bridge.dialog.alert({content: '两次支付密码不一致'});
             return;
