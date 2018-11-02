@@ -34,6 +34,9 @@ function fetch(data, config) {
       },
       fail: error => {
         console.log(error);
+        if (error.errMsg.indexOf('timeout') > -1) {
+          this.$bridge.dialog.alert({content: '请求超时,稍后再试'});
+        }
       },
       complete: res => {
         if (config.isLoading) {
