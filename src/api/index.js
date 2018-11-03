@@ -213,3 +213,9 @@ export const fetchMemberBalance = (params) => fetch({method: 'api.membership.mem
  * @param config
  */
 export const fetchCouponList = (params, config) => fetch({method: 'api.promotion.couponEntity.find', ...params}, config);
+
+/**
+ * 获取退款详情
+ * @param params
+ */
+export const fetchRefundDetail = (params) => fetch({method: 'api.ebusiness.refundDetailNew.get', ...params}, {isLoading: true});

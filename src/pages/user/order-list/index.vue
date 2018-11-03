@@ -10,7 +10,7 @@
           </block>
         </div>
       </div>
-      <scroll-view scroll-y="true" class="m-orderlist" bindscrolltolower="scrollbottom">
+      <scroll-view scroll-y="true" class="m-orderlist" @scrolltolower="dropDown">
         <block v-for="(item,index1) in list" v-if="type=='EVALUATION'" :key="index1">
           <div class="m-panel m-panel-access">
             <div class="m-panel-hda" style='border-bottom:0;'>服务单号{{item.number}}
@@ -25,7 +25,7 @@
             <div class="m-panel-hda" style='border-top:0;'>订单编号：{{item.id}}</div>
 
             <div class="m-product-list">
-              <navigator class="m-product-item" url="../Detailsrefunds/Detailsrefunds?currentItemId=item.id">
+              <navigator class="m-product-item" :url="'/pages/user/refund-detail/main?id='+item.id">
                 <div class="i-product-img">
                   <image :src="item.refundLineList[0].pictureUrl"/>
                 </div>
@@ -107,7 +107,8 @@
             </div>
           </div>
         </block>
-
+        <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
+        <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
         <div v-if="list.length===0 && isEnd">
           <image :src='noDataImg' class='shoppingcart' mode='scaleToFill'/>
           <div class='no-order-text'>暂无订单</div>
@@ -211,11 +212,26 @@
       };
     },
     methods: {
+      /**
+       * 下拉加载
+       */
+      dropDown() {
+        if (this.isEnd || !this.canDropDown) {
+          return false;
+        }
+        this.canDropDown = false;
+        if (this.type === 'EVALUATION') {
+          this.getReFundList();
+        } else {
+          this.getOrderList();
+        }
+      },
       changeTab(item) {
         this.type = item.status;
         this.pageNumber = 1;
         this.isEnd = false;
         this.canDropDown = true;
+        this.list = [];
         if (this.type === 'EVALUATION') {
           this.getReFundList();
         } else {
@@ -286,6 +302,9 @@
 </script>
 <style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
+  body {
+    background-color: rgb(244, 244, 244);
+  }
 
   .m-navbar-items.m-navbar-item-on {
     background-color: #fff;
