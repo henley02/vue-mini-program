@@ -19,12 +19,8 @@
       this.$bridge.link.navigateTo('/pages/user/login/main');
     },
     onLoad() {
-      console.log('load');
       var passportId = wx.getStorageSync('passportId');
-      console.log(passportId);
-      console.log(!passportId);
       if (!passportId) {
-        console.log('1');
         this.$bridge.link.goLogin();
       } else {
         var pars = {

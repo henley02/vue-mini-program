@@ -219,3 +219,38 @@ export const fetchCouponList = (params, config) => fetch({method: 'api.promotion
  * @param params
  */
 export const fetchRefundDetail = (params) => fetch({method: 'api.ebusiness.refundDetailNew.get', ...params}, {isLoading: true});
+/**
+ * 获取订单详情
+ * @param params
+ */
+export const fetchOrderDetail = (params) => fetch({method: 'api.ebusiness.orderDetailNew.get', ...params}, {isLoading: true});
+
+/**
+ * 获取物流信息
+ * @param params
+ */
+export const fetchOrderLogistics = (params) => fetch({method: 'api.ebusiness.orderLogisticsNew.get', ...params}, {isLoading: true});
+
+/**
+ * 获取预退单信息
+ * @param params
+ */
+export const fetchOrderRefundInfo = (params) => fetch({method: 'api.ebusiness.refundOrder.pre', ...params}, {isLoading: true});
+
+/**
+ * 删除图片
+ * @param params
+ */
+export const deleteUploadFile = (params) => fetch({method: 'api.foundation.attachment.delete', ...params}, {isLoading: true});
+
+/**
+ * 申请退款
+ * @param params
+ */
+export const applyRefund = (params) => fetch({method: 'api.ebusiness.refund.commit', ...params}, {isLoading: true});
+
+/***
+ * 获取评论信息
+ * @param params
+ */
+export const fetchCommentDetail = (params) => fetch({method: 'api.ebusiness.order.get', ...params}, {isLoading: true});

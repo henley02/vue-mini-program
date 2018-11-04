@@ -46,7 +46,7 @@
               <navigator v-if="item.status == 'UN_APPROVED'" class="u-link-btn" bindtap="onCancelOrderTapdetail">取消退单
               </navigator>
               <navigator v-if="item.status == 'AGREED'" class="u-link-btn" bindtap="onCancelOrderTapInfo"
-                         style='width:181);'>填写物流信息
+                         style='width:181rpx;'>填写物流信息
               </navigator>
             </div>
           </div>
@@ -85,23 +85,23 @@
               <navigator v-if="order.status == 'UN_PAID'" class="u-link-btn" bindtap="onCancelOrderTap">取消订单</navigator>
               <navigator v-if="order.status == 'UN_PAID'" class="u-link-btn i-link-btn" catchtap='suitZhifu'>去付款
               </navigator>
-              <navigator v-if="order.status == 'SIGNED'" class="u-link-btn" bindtap='evaluation'>评价</navigator>
-              <navigator v-if="order.status == 'UN_SIGNED'" url='../Logisticsdetails/Logisticsdetails?prouId=order.id'
-                         class="u-link-btn" bindtap="looklogistics">查看物流
+              <navigator v-if="order.status == 'SIGNED'" class="u-link-btn":url="'/pages/user/order-comment/main?orderId='+order.id">评价</navigator>
+              <navigator v-if="order.status == 'UN_SIGNED'" :url="'/pages/user/logistics/main?orderId='+order.id"
+                         class="u-link-btn">查看物流
               </navigator>
               <div v-if="order.status == 'UN_SIGNED'" class="u-link-btn i-link-btn" bindtap="bindConfirmReceiptTap">
                 确认收货
               </div>
               <navigator v-if="order.status == 'UN_SHIPMENT' || order.status =='EVALUATION'"
-                         :url="'/pages/user/order-detail/main?order_id'+order.id" class="u-link-btn">订单详情
+                         :url="'/pages/user/order-detail/main?orderId='+order.id" class="u-link-btn">订单详情
               </navigator>
-              <navigator v-if="order.status == 'UN_SIGNED'" :url="'/pages/user/order-detail/main?order_id'+order.id"
+              <navigator v-if="order.status == 'UN_SIGNED'" :url="'/pages/user/order-detail/main?orderId='+order.id"
                          class="u-link-btn">订单详情
               </navigator>
-              <navigator v-if="order.status == 'SIGNED'" :url="'/pages/user/order-detail/main?order_id'+order.id"
+              <navigator v-if="order.status == 'SIGNED'" :url="'/pages/user/order-detail/main?orderId='+order.id"
                          class="u-link-btn">订单详情
               </navigator>
-              <navigator v-if="order.status == 'UN_PAID'" :url="'/pages/user/order-detail/main?order_id'+order.id"
+              <navigator v-if="order.status == 'UN_PAID'" :url="'/pages/user/order-detail/main?orderId='+order.id"
                          class="u-link-btn">订单详情
               </navigator>
             </div>
