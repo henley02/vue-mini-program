@@ -15,6 +15,7 @@
     "pages/user/change-payment-code-sutry/main",
     "pages/user/consumption-records/main",
     "pages/user/coupon/main",
+    "pages/user/fill-logistics/main",
     "pages/user/index/main",
     "pages/user/integral/main",
     "pages/user/login/main",

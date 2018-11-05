@@ -254,3 +254,27 @@ export const applyRefund = (params) => fetch({method: 'api.ebusiness.refund.comm
  * @param params
  */
 export const fetchCommentDetail = (params) => fetch({method: 'api.ebusiness.order.get', ...params}, {isLoading: true});
+
+/**
+ * 创建评论
+ * @param params
+ */
+export const createComment = (params) => fetch({method: 'api.ebusiness.createComment.batch', ...params}, {isLoading: true});
+
+/**
+ * 取消退款退货
+ * @param params
+ */
+export const cancelRefund = (params) => fetch({method: 'api.ebusiness.refund.cancel', ...params}, {isLoading: true});
+
+/**
+ * 填写物流信息
+ * @param params
+ */
+export const refundMemberReturn = (params) => fetch({method: 'api.ebusiness.refundMemberReturn.upload', ...params}, {isLoading: true});
+
+/**
+ * 取消订单
+ * @param params
+ */
+export const cancelOrder = (params) => fetch({method: 'api.ebusiness.order.cancel', ...params}, {isLoading: true});

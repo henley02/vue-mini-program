@@ -43,9 +43,9 @@
               </text>
             </div>
             <div class="m-total-btn">
-              <navigator v-if="item.status == 'UN_APPROVED'" class="u-link-btn" bindtap="onCancelOrderTapdetail">取消退单
-              </navigator>
-              <navigator v-if="item.status == 'AGREED'" class="u-link-btn" bindtap="onCancelOrderTapInfo"
+              <div v-if="item.status == 'UN_APPROVED'" class="u-link-btn" @tap="cancelRefund(item)">取消退单</div>
+              <navigator v-if="item.status == 'AGREED'" class="u-link-btn"
+                         :url="'/pages/user/fill-logistics/main?id='+item.id+'&rowVersion='+item.rowVersion"
                          style='width:181rpx;'>填写物流信息
               </navigator>
             </div>
@@ -66,7 +66,7 @@
 
             <div class="m-product-list">
               <navigator class="m-product-item"
-                         :url="'src/pages/detail/main?id='+order.orderLineList[0].commodityId">
+                         :url="'/pages/detail/main?id='+order.orderLineList[0].commodityId">
                 <div class="i-product-img">
                   <image :src="order.orderLineList[0].pictureUrl"/>
                 </div>
@@ -82,10 +82,12 @@
             </div>
 
             <div class="m-total-btn">
-              <navigator v-if="order.status == 'UN_PAID'" class="u-link-btn" bindtap="onCancelOrderTap">取消订单</navigator>
+              <navigator v-if="order.status == 'UN_PAID'" class="u-link-btn" @tap="cancelOrder(order)">取消订单</navigator>
               <navigator v-if="order.status == 'UN_PAID'" class="u-link-btn i-link-btn" catchtap='suitZhifu'>去付款
               </navigator>
-              <navigator v-if="order.status == 'SIGNED'" class="u-link-btn":url="'/pages/user/order-comment/main?orderId='+order.id">评价</navigator>
+              <navigator v-if="order.status == 'SIGNED'" class="u-link-btn"
+                         :url="'/pages/user/order-comment/main?orderId='+order.id">评价
+              </navigator>
               <navigator v-if="order.status == 'UN_SIGNED'" :url="'/pages/user/logistics/main?orderId='+order.id"
                          class="u-link-btn">查看物流
               </navigator>
@@ -172,7 +174,7 @@
   /*
   * 全部订单
   * */
-  import {fetchRecordList, fetchRefundList} from 'api/index';
+  import {fetchRecordList, fetchRefundList, cancelRefund, cancelOrder} from 'api/index';
 
   export default {
     name: 'consumption-records',
@@ -212,6 +214,62 @@
       };
     },
     methods: {
+      /**
+       * 取消订单
+       */
+      async cancelOrder(item) {
+        let params = {
+          id: item.id,
+          type: 'MEMBER',
+          rowVersion: item.rowVersion,
+          passportId: this.userInfo.id
+        };
+        let res = await cancelOrder(params);
+        if (res.firstErrorMessage === '') {
+          if (!res.result) {
+            this.$bridge.dialog.alert({content: '取消订单失败，请重试！'});
+          } else {
+            this.$bridge.dialog.alert({
+              content: '取消订单成功！',
+              confirmCallback: () => {
+                this.pageNumber = 1;
+                this.isEnd = false;
+                this.canDropDown = true;
+                this.list = [];
+                this.getOrderList();
+              }
+            });
+          }
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+      },
+      /**
+       * 取消退貨
+       */
+      async cancelRefund(item) {
+        let param = {
+          id: item.id,
+          type: 'MEMBER',
+          rowVersion: item.rowVersion,
+          passportId: this.userInfo.id
+        };
+        let res = await cancelRefund(param);
+        if (res.firstErrorMessage === '') {
+          this.$bridge.dialog.alert({
+            content: '取消成功',
+            confirmCallback: () => {
+              this.pageNumber = 1;
+              this.isEnd = false;
+              this.canDropDown = true;
+              this.list = [];
+              this.getReFundList();
+            }
+          });
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+      },
       /**
        * 下拉加载
        */

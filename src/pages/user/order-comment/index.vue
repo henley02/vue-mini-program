@@ -55,7 +55,7 @@
   /*
   * 订单评论
   * */
-  import {fetchCommentDetail, loginnewId, deleteUploadFile} from 'api/index';
+  import {fetchCommentDetail, loginnewId, deleteUploadFile, createComment} from 'api/index';
   import star from 'components/star/star.vue';
   import config from 'public/config/index.js';
 
@@ -77,7 +77,7 @@
       star
     },
     methods: {
-      submit() {
+      async submit() {
         let values = [];
         for (let i = 0; i < this.goods.length; i++) {
           if (this.goods[i].score === 0) {
@@ -126,26 +126,21 @@
           }
           values.push(val);
           console.log(values);
-          var params = {
-            method: 'orders.comments.store',
-            commodityEvaluationCreates: values
-          };
-          requestService.request(params, function(res) {
-            if (res.firstErrorMessage === '') {
-              if (res.resultCount > 0) {
-                this.$bridge.dialog.alert({
-                  content: '评论发布成功',
-                  confirmCallback: () => {
-                    wx.navigateBack({
-                      delta: -1
-                    });
-                  }
-                });
-              }
-            } else {
-              this.$bridge.dialog.alert({content: '评论发布失败！'});
+          let res = await createComment({commodityEvaluationCreates: values, passportId: this.userInfo.id});
+          if (res.firstErrorMessage === '') {
+            if (res.resultCount > 0) {
+              this.$bridge.dialog.alert({
+                content: '评论发布成功',
+                confirmCallback: () => {
+                  wx.navigateBack({
+                    delta: -1
+                  });
+                }
+              });
             }
-          });
+          } else {
+            this.$bridge.dialog.alert({content: '评论发布失败！'});
+          }
         }
       },
       /**
