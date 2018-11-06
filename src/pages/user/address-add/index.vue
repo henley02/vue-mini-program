@@ -20,7 +20,7 @@
         </div>
 
       </div>
-      <div class="m-cell m-cell-select-before" @tap="showbox">
+      <div class="m-cell m-cell-select-before" @tap="toggleShowAreaSelect">
         <div class="m-cell-hd">
           <label class="u-label">所在地区</label>
         </div>
@@ -54,33 +54,9 @@
     <div class='b-btn-sty'>
       <button class='btn' @tap='submitBtn'>保存</button>
     </div>
-
-    <div class="picker-view" :animation="animationAddressMenu"
-         :style="{visibility:addressMenuIsShow ? 'visible':'hidden'}">
-      <div style="height:10% ;width:95%;margin-top:10rpx">
-        <text @tap="cityCancel">取消</text>
-        <text style="float: right" @tap="citySure">确定</text>
-      </div>
-      <!--"可以显示默认的城市，使用后级联选择城市反应很慢就不使用了-->
-      <picker-view style="width: 100%; height: 300px;" @change="cityChange" :value="value">
-        <picker-view-column>
-          <div v-for="(item,index) in provinces" :key="index" class="picker-item">
-            {{item.name}}
-          </div>
-        </picker-view-column>
-        <picker-view-column>
-          <div v-for="(item,index) in citys" :key="index" class="picker-item">
-            {{item.name}}
-          </div>
-        </picker-view-column>
-        <picker-view-column>
-          <div v-for="(item,index) in areas" :key="index" class="picker-item">
-            {{item.name}}
-          </div>
-        </picker-view-column>
-      </picker-view>
-    </div>
-
+    <area-select v-if="isShowAreaSelect" :visible="isShowAreaSelect" :provinceId="form.provinceId" :cityId="form.cityId"
+                 :districtId="form.districtId"
+                 @close="toggleShowAreaSelect" @changeArea="changeArea" @confirm="confirm"></area-select>
   </div>
 </template>
 
@@ -88,16 +64,14 @@
   /**
    * 收货地址添加、修改
    */
-  import {fetchAddressById, addAddress, updateAddress, getAreaListByPid} from 'api/index';
+  import {fetchAddressById, addAddress, updateAddress} from 'api/index';
+  import areaSelect from 'components/area-select/area-select.vue';
 
   export default {
     data() {
       return {
         addressMenuIsShow: false,
-        value: [0, 0, 0],
-        provinces: [],
-        citys: [],
-        areas: [],
+        isShowAreaSelect: false,
         areaInfo: '',
 
         id: '', // 收货地址id
@@ -132,6 +106,9 @@
         }
       };
     },
+    components: {
+      areaSelect
+    },
     computed: {
       area() {
         let str = this.form.provinceName + this.form.cityName + this.form.districtName;
@@ -143,49 +120,17 @@
       }
     },
     methods: {
-      showbox() {
-        this.startAddressAnimation(true);
+      changeArea(provinces, city, district) {
+        this.form.provinceId = provinces.id;
+        this.form.provinceName = provinces.name;
+        this.form.cityId = city.id;
+        this.form.cityName = city.name;
+        this.form.districtId = district.id;
+        this.form.districtName = district.name;
+        this.isShowAreaSelect = false;
       },
-      cityCancel(e) {
-        this.startAddressAnimation(false);
-      },
-      // 执行动画
-      startAddressAnimation(isShow) {
-        this.addressMenuIsShow = isShow;
-      },
-      // 处理省市县联动逻辑
-      async cityChange(e) {
-        let value = e.target.value;
-        let provinceIndex = value[0];
-        let cityIndex = value[1];
-        // 如果省份选择项和之前不一样，表示滑动了省份，此时市默认是省的第一组数据，
-        if (this.value[0] !== provinceIndex) {
-          this.value = [provinceIndex, 0, 0];
-          this.citys = await this.getAreaList({type: 'CITY', pid: this.provinces[provinceIndex].id});
-          this.areas = await this.getAreaList({type: 'DISTRICT', pid: this.citys[0].id});
-        } else if (this.value[1] !== cityIndex) {
-          // 滑动选择了第二项数据，即市，此时区显示省市对应的第一组数据
-          this.value = [provinceIndex, cityIndex, 0];
-          this.areas = await this.getAreaList({type: 'DISTRICT', pid: this.citys[cityIndex].id});
-        } else {
-          // 滑动选择了区
-          this.value = e.target.value;
-        }
-      },
-      async getData() {
-        this.provinces = await this.getAreaList({type: 'PROVINCE', pid: 86});
-        this.citys = await this.getAreaList({type: 'CITY', pid: this.provinces[0].id});
-        this.areas = await this.getAreaList({type: 'DISTRICT', pid: this.citys[0].id});
-      },
-      getAreaList(params) {
-        return new Promise(async (resolve, reject) => {
-          let res = await getAreaListByPid(params);
-          if (res.firstErrorMessage === '') {
-            resolve(res.areaList);
-          } else {
-            resolve([]);
-          }
-        });
+      toggleShowAreaSelect() {
+        this.isShowAreaSelect = !this.isShowAreaSelect;
       },
       submitBtn() {
         let regEn = /[`~!@#$%^&*()_+<>?:"{},./\\;'[\]]/im;
@@ -224,6 +169,7 @@
           return false;
         }
         let params = this.form;
+        params.address = this.form.receiptAddress;
         params.memberId = this.userInfo.memberId;
         params.passportId = this.userInfo.id;
         if (params.countryId === '') {
@@ -299,8 +245,8 @@
       }
     },
     onShow() {
-      this.getData();
       this.id = this.$root.$mp.query.id || '';
+      this.isShowAreaSelect = false;
       this.form = {
         countryId: '',
         countryName: '',
@@ -464,27 +410,5 @@
     top: rpx(6)
     &.active
       background-image: url("../../../public/images/address/selected.png");
-
-  .picker-view {
-    width: 100%;
-    display: flex;
-    z-index: 12;
-    background-color: #fff;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    position: fixed;
-    bottom: 0 rpx;
-    left: 0 rpx;
-    height: 40vh;
-  }
-
-  .picker-item {
-    line-height: rpx(70);
-    margin-left: rpx(5);
-    margin-right: rpx(5);
-    text-align: center;
-    font-size: rpx(24);
-  }
 </style>
 

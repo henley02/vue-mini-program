@@ -58,9 +58,6 @@
                 <div class="extra">
                   <span class='many'>{{item.saleQuantity}}条成交</span>
                 </div>
-                <!--<div class="cart_control_wrapper">
-                  <div @tap.stop="addToCart(item)" class="add_to_card"></div>
-                </div>-->
               </div>
             </li>
           </ul>
@@ -123,7 +120,6 @@
         this.isShowSynthesizeMore = !this.isShowSynthesizeMore;
       },
       sort(type, sort) {
-        console.log(type, sort);
         this.selectedFilterType = type;
         this.selectedFilterSort = sort;
         this.data.pageNumber = 1;
@@ -140,19 +136,12 @@
         }
         this.canDropDown = false;
         this.fetchGoodList();
-        console.log(e);
       },
       /**
        * 跳转到商品详情
        */
       goDetail(id) {
         this.$bridge.link.goProductDetail(id);
-      },
-      /**
-       * 添加到购物车
-       */
-      addToCart(item) {
-        console.log('添加到购物车');
       },
       /**
        * 左侧商品分类点击

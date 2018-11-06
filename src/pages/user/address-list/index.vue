@@ -1,6 +1,6 @@
 <template>
   <div class="wrapper">
-    <div class='adds-list'>
+    <scroll-view class='adds-list' @scrolltolower="dropDown" scroll-y="true" :style="{height:scrollHeight}">
       <div class="m-ad-item" v-for="(item,index) in list" :key="index" v-if="list.length">
         <div class="m-ad-l" @tap="SelectAddress(item)">
           <div class="m-ad-i-top">
@@ -17,12 +17,14 @@
           <label class="iconfont icon-delete" @tap="del(item.id,index)"></label>
         </div>
       </div>
+      <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
+      <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
       <!-- 无数据时展示 -->
-      <div v-if="list.length==0" class="no-data">
+      <div v-if="list.length==0 && isEnd" class="no-data">
         <image :src="noData"></image>
         <div class='text'>暂无收货地址</div>
       </div>
-    </div>
+    </scroll-view>
     <div class="u-btn-sty" @tap="add">
       <image :src="addImg" class='addNew'></image>
       <div>新增地址</div>
@@ -39,34 +41,57 @@
   export default {
     data() {
       return {
+        scrollHeight: '0px',
         noData: require('public/images/address/address.png'),
         addImg: require('public/images/address/add.png'),
         type: '', // 1 选择收货地址 2
         list: [],
-        pageNumber: 1,
-        pageSize: 10,
-        userInfo: {}
+        userInfo: {},
+        isLoading: false,
+        pageSize: 10, // 页数
+        pageNumber: 1, // 页码
+        isEnd: false,
+        canDropDown: true // 是否可以下拉加载
       };
     },
     components: {},
     methods: {
+      /**
+       * 下拉加载
+       */
+      dropDown() {
+        if (this.isEnd || !this.canDropDown) {
+          return false;
+        }
+        this.canDropDown = false;
+        this.getData();
+      },
       editAddress(id) {
         this.$bridge.link.navigateTo(`/pages/user/address-add/main?id=${id}`);
       },
       async getData() {
+        this.isLoading = true;
         let params = {
           passportId: this.userInfo.id,
           memberId: this.userInfo.memberId,
           pageSize: this.pageSize,
           pageNumber: this.pageNumber
         };
+        if (this.pageNumber === 1) {
+          this.list = [];
+        }
         let res = await fetchAddressList(params, {isLoading: this.pageNumber === 1});
         if (res.firstErrorMessage === '') {
-          if (this.pageNumber === 1) {
-            this.list = res.result;
+          this.list = this.list.concat(res.result);
+          // 判断数据是否全部加载完
+          if (res.result.length < this.pageSize) {
+            this.isEnd = true;
+            this.canDropDown = false;
           } else {
-            this.list = this.list.concat(res.result);
+            this.canDropDown = true;
+            this.pageNumber++;
           }
+          this.isLoading = false;
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
@@ -97,10 +122,20 @@
     created() {
     },
     onShow() {
+      this.tabIndex = 0;
+      this.list = [];
+      this.pageNumber = 1;
+      this.isEnd = false;
+      this.canDropDown = true;
       this.userInfo = this.$bridge.storage.get('userInfo');
       this.getData();
     },
     onLoad(options) {
+      wx.getSystemInfo({
+        success: (res) => {
+          this.scrollHeight = res.windowHeight - 50 + 'px';
+        }
+      });
       this.type = options.type;
       if (this.type === 1) {
       } else if (this.type === 2) {

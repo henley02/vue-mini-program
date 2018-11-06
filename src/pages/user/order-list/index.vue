@@ -91,7 +91,7 @@
               <navigator v-if="order.status == 'UN_SIGNED'" :url="'/pages/user/logistics/main?orderId='+order.id"
                          class="u-link-btn">查看物流
               </navigator>
-              <div v-if="order.status == 'UN_SIGNED'" class="u-link-btn i-link-btn" bindtap="bindConfirmReceiptTap">
+              <div v-if="order.status == 'UN_SIGNED'" class="u-link-btn i-link-btn" @tap="confirmReceipt(order)">
                 确认收货
               </div>
               <navigator v-if="order.status == 'UN_SHIPMENT' || order.status =='EVALUATION'"
@@ -174,7 +174,7 @@
   /*
   * 全部订单
   * */
-  import {fetchRecordList, fetchRefundList, cancelRefund, cancelOrder} from 'api/index';
+  import {fetchRecordList, fetchRefundList, cancelRefund, cancelOrder, orderSign} from 'api/index';
 
   export default {
     name: 'consumption-records',
@@ -214,6 +214,40 @@
       };
     },
     methods: {
+      /**
+       * 确认收货
+       */
+      async confirmReceipt(item) {
+        if (!item.id) {
+          this.$bridge.dialog.alert({content: '订单信息异常！'});
+        } else {
+          let params = {
+            id: item.id,
+            type: 'MEMBER',
+            rowVersion: item.rowVersion,
+            passportId: this.userInfo.id
+          };
+          let res = await orderSign(params);
+          if (res.firstErrorMessage === '') {
+            if (!res.result) {
+              this.$bridge.dialog.alert({content: '确认收货失败，请重试！'});
+            } else {
+              this.$bridge.dialog.alert({
+                content: '确认收货成功！',
+                confirmCallback: () => {
+                  this.pageNumber = 1;
+                  this.isEnd = false;
+                  this.canDropDown = true;
+                  this.list = [];
+                  this.getOrderList();
+                }
+              });
+            }
+          } else {
+            this.$bridge.dialog.alert({content: res.firstErrorMessage});
+          }
+        }
+      },
       /**
        * 取消订单
        */

@@ -33,7 +33,7 @@
   /*
   * 积分兑换记录
   * */
-  import {fetchRecordList, pointConfirmReceiving} from 'api/index.js';
+  import {fetchRecordList, orderSign} from 'api/index.js';
 
   export default {
     name: 'points-record',
@@ -56,7 +56,7 @@
           signType: 'MANUAL',
           rowVersion: item.rowVersion
         };
-        let res = await pointConfirmReceiving(params);
+        let res = await orderSign(params);
         if (res.firstErrorMessage === '' && res.result) {
           this.$bridge.dialog.alert({content: '收货成功'});
           this.init();

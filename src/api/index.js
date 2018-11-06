@@ -17,6 +17,18 @@ export const getProductClassify = (params) => fetch({
 export const getGoodList = (params, config) => fetch({method: 'api.ebusiness.findCommodityExtend.advanced', ...params}, config);
 
 /**
+ * 获取商品详情
+ * @param params
+ */
+export const fetchProductDetail = (params) => fetch({method: 'api.ebusiness.commodityNew.get', ...params}, {isLoading: true});
+
+/**
+ * 设置定位
+ * @param params
+ */
+export const setLocation = (params) => fetch({method: 'api.temp.addressByLatitude.find', ...params}, {isLoading: false});
+
+/**
  * 获取电商承租人设置
  * @param params
  */
@@ -182,10 +194,10 @@ export const fetchRecordList = (params, config) => fetch({method: 'api.ebusiness
 export const fetchRefundList = (params, config) => fetch({method: 'api.ebusiness.refund.find', ...params}, config);
 
 /**
- * 积分确认收货按钮
+ * 确认收货(积分、订单列表)
  * @param params
  */
-export const pointConfirmReceiving = (params) => fetch({method: 'api.ebusiness.order.sign', ...params}, {isLoading: true});
+export const orderSign = (params) => fetch({method: 'api.ebusiness.order.sign', ...params}, {isLoading: true});
 
 /**
  * 获取消费记录（消费记录、积分记录）
@@ -278,3 +290,9 @@ export const refundMemberReturn = (params) => fetch({method: 'api.ebusiness.refu
  * @param params
  */
 export const cancelOrder = (params) => fetch({method: 'api.ebusiness.order.cancel', ...params}, {isLoading: true});
+
+/**
+ * 获取默认收货地址
+ * @param params
+ */
+export const fetchDefaultAddress = (params) => fetch({method: 'api.ebusiness.memberDefalutLocation.get', ...params}, {isLoading: true});
