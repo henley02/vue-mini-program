@@ -9,11 +9,11 @@
       <!-- 商品 -->
       <div v-if="currentTab==0">
         <div class='m-picture-number'>
-          <text>{{index}} / {{ProductInfo.pictureList.length}}</text>
+          <text>{{sliderIndex}} / {{pictureList.length}}</text>
         </div>
         <div class="m-banner-ad">
-          <swiper autoplay="false" interval="3000" duration="300" current="0" bindchange='onSlideChangeEnd'>
-            <swiper-item v-for="(item,index) in ProductInfo.pictureList" :key="index">
+          <swiper autoplay="false" interval="3000" duration="300" current="0" @change='changeSlider'>
+            <swiper-item v-for="(item,index) in pictureList" :key="index">
               <image class="slide-image" :src="item.url"/>
             </swiper-item>
           </swiper>
@@ -21,11 +21,11 @@
         <div class="m-cells">
           <div class="m-info-box">
             <div>
-              <div class='p-info'>{{ProductInfo.commodity.name}}</div>
+              <div class='p-info'>{{commodity.name}}</div>
               <div class='p-info-price'>
                 <div class='p-price-text'>
                   <div class="m-info-price">￥
-                    <text v-if="!According">{{Salespromotion ? Salespromotion : showPriceone}}</text>
+                    <text>{{Salespromotion ? Salespromotion : showPriceone}}</text>
                   </div>
                   <div class='p-info-text' v-if="Salespromotion < showPriceone || showPrice < showPriceone">促销价</div>
                 </div>
@@ -211,15 +211,15 @@
       </div>
     </div>
     <!-- 筛选规格 -->
-    <div class="m-panel-sp" :class="{'hide':selectsp==0}" bindtap="closesp" v-if="!conponflag">
+    <!--<div class="m-panel-sp" :class="{'hide':selectsp==0}" bindtap="closesp" v-if="!conponflag">
       <div class="m-panel-sp-content"
            :class="{'bounceOutDown animated':selectct==0,'bozunceInUp animated':selectct!=0}">
         <div class="m-panel-sp-pinfo">
           <div class="m-panel-sp-pimg">
-            <image :src="ProductInfo.commodity.pictureUrl"/>
+            <image :src="commodity.pictureUrl"/>
           </div>
           <div class="m-panel-sp-pname">
-            <!-- <div class='m-pprice'>¥{{showPrice}}</div> -->
+            &lt;!&ndash; <div class='m-pprice'>¥{{showPrice}}</div> &ndash;&gt;
             <div class='m-pprice'>¥{{Salespromotion ? Salespromotion : showPrice}}</div>
             <div class="m-pstock" v-if="repertoryquantity>0">库存{{repertoryquantity}}件</div>
             <div class="m-pstock" v-else>库存0件</div>
@@ -229,9 +229,9 @@
         </div>
         <scroll-div class="m-panel-sp-listbox" scroll-y="true">
           <div class="m-panel-sp-listbox-item">
-            <div class="m-cells-title">{{ProductInfo.spec1AttrList[0].attributeName}} </div>
+            <div class="m-cells-title">{{spec1AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
-              <block v-for="(item,index) in ProductInfo.spec1AttrList" :key="index">
+              <block v-for="(item,index) in spec1AttrList" :key="index">
                 <label :class="{'m-panel-sp-sellabel':prduindex==i,'p-panel-sp':prduindex!=i}"
                        @tap="selectsp">{{item.valueName}}</label>
               </block>
@@ -269,7 +269,7 @@
           <div style="height:163rpx;width:100%;"></div>
         </scroll-div>
       </div>
-    </div>
+    </div>-->
   </div>
 
 </template>
@@ -278,17 +278,21 @@
   /**
    * 商品详情
    */
-  import {fetchProductDetail, setLocation, fetchDefaultAddress} from 'api/index.js';
+  import {fetchProductDetail, setLocation, fetchDefaultAddress, fetchCommoditySkuInfo} from 'api/index.js';
 
   export default {
     data() {
       return {
         userInfo: {},
+        pictureList: [], // 轮播图
+        sliderIndex: 1, // 轮播图的索引
+        commodity: {},
+        spec1AttrList: [],
+
         isShowToast: false,
         pictureEvaluationNumber: 0,
         evaluationNumber: 0,
         comments: [],
-        operatingUnitId: 0,
         numval: 1, // 购买数量
         minusStatus: 'disabled ', // 购买数量少于1时不能点击
         selectsp: 0,
@@ -313,7 +317,7 @@
         btn: 0, // 区别立即购买和加入购物车
         memberDefalutLocationInfo: [], // 会员地址
         commodityPartscount: 0, // 获取商品配件
-        index: 1,
+
         spec3AttributeId: '',
         itemId: '',
         navbar: ['商品', '详情', '评价'],
@@ -341,26 +345,98 @@
         inputval: 0,
         showPriceone: 0,
         Therichtext: '',
-        According: false,
         tab: 0
       };
     },
     components: {},
     computed: {},
     methods: {
+      /**
+       * 获取商品物料的优惠券
+       */
+      async inventory() {
+        console.log(2);
+        let params = {
+          id: this.id,
+          operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
+          systemType: 'B2C',
+          deviceType: 'MOBILE'
+        };
+        if (this.userInfo) {
+          params.passportId = this.userInfo.id;
+          params.memberId = this.userInfo.memberId;
+        }
+        let res = await fetchCommoditySkuInfo(params);
+        if (res.firstErrorMessage === '') {
+          this.repertory = res.balanceList;
+          this.repertoryquantity = res.balanceList[0].quantity;
+          for (let x in res.itemOuList) {
+            this.originalprice = parseFloat(res.itemOuList[0].unitPrice);
+            this.Salespromotion = parseFloat(res.itemOuList[0].currentPrice);
+            if (res.itemOuList[x].itemId === this.id) {
+              this.couponDefinition = res.itemOuList[x].couponDefinitionList;
+              for (let j in res.itemOuList[x].couponDefinitionList) {
+                if (res.itemOuList[x].couponDefinitionList[j] !== '') {
+                  this.textIndex++;
+                }
+              }
+            }
+          }
+        }
+      },
+      /**
+       * 滚动大图
+       */
+      changeSlider(e) {
+        this.sliderIndex = e.target.current + 1;
+      },
+      /**
+       * 获取商品详情
+       */
       async init() {
         let params = {
           id: this.id,
           operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
           systemType: 'B2C',
-          deviceType: 'MOBILE',
-          passportId: this.userInfo.id
+          deviceType: 'MOBILE'
         };
+        if (this.userInfo) {
+          params.passportId = this.userInfo.id;
+        }
         let res = await fetchProductDetail(params);
-        if (res.firstErrorMessage === '') {
-          this.point = res.point;
+        if (res.firstErrorMessage !== '') {
+          this.$bridge.dialog.alert({
+            content: res.firstErrorMessage,
+            confirmCallback: () => {
+              wx.navigateBack();
+            }
+          });
         } else {
-          this.$bridge.dialog.alert(res.firstErrorMessage);
+          let {pictureList, commodity, spec1AttrList} = {...res};
+          this.pictureList = pictureList;
+          this.commodity = commodity;
+          this.spec1AttrList = spec1AttrList;
+
+          this.ProductInfo = res;
+          this.showPrice = res.itemList[0].unitPrice;
+          this.showPriceone = res.commodity.showPrice;
+          let content = this.ProductInfo.commodityText.replace(/\\<img/gi, '<img class="rich-img" '); // 防止富文本图片过大
+          this.Therichtext = content;
+          if (this.spec1AttrList && this.spec1AttrList.length > 0) {
+            this.spec1ValueName = res.spec1AttrList[0].valueName || '';
+            this.attributeId = res.spec1AttrList[0].valueId || 0;
+          } else {
+            this.itemId = res.itemList[0].itemEbusiness.detailList[0].itemId;
+          }
+          if (res.spec2AttrList && res.spec2AttrList.length > 0) {
+            this.spec2ValueName = res.spec2AttrList[0].valueName || '';
+            this.spec2AttrListId = res.spec2AttrList[0].valueId || 0;
+          }
+          if (res.spec3AttrList && res.spec3AttrList.length > 0) {
+            this.spec3ValueName = res.spec3AttrList[0].valueName;
+            this.spec3AttrListId = res.spec3AttrList[0].valueId;
+            this.spec3AttributeId = res.spec3AttrList[0].valueId;
+          }
         }
       },
       /**
@@ -401,6 +477,7 @@
       this.id = this.$root.$mp.query.id || '';
       this.init();
       this.userInfo = this.$bridge.storage.get('userInfo');
+      this.inventory();
       if (!this.userInfo) {
         this.getLocation();
       } else {

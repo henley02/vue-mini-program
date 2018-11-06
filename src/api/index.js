@@ -296,3 +296,9 @@ export const cancelOrder = (params) => fetch({method: 'api.ebusiness.order.cance
  * @param params
  */
 export const fetchDefaultAddress = (params) => fetch({method: 'api.ebusiness.memberDefalutLocation.get', ...params}, {isLoading: true});
+
+/**
+ * 获取商品物料的价格、库存及促销信息
+ * @param params
+ */
+export const fetchCommoditySkuInfo = (params) => fetch({method: 'api.ebusiness.commoditySkuInfo.find', ...params}, {isLoading: true});
