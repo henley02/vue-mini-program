@@ -308,6 +308,14 @@ export const fetchCommoditySkuInfo = (params) => fetch({method: 'api.ebusiness.c
  * @param params
  */
 export const fetchCommodityEvaluationNumber = (params) => fetch({method: 'api.ebusiness.commodityEvaluationNumber.find', ...params}, {isLoading: true});
+
+/**
+ * 获取评论列表
+ * @param params
+ * @param config
+ */
+export const fetchEvaluateList = (params, config) => fetch({method: 'api.ebusiness.evaluationNew.find', ...params}, config);
+
 /**
  * 搜索商品
  * @param params

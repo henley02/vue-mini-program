@@ -76,7 +76,6 @@
 </template>
 
 <script>
-  import card from '@/components/card';
   import {getProductClassify, getGoodList, getMerchant} from 'api/index';
 
   export default {
@@ -109,12 +108,6 @@
         noData: require('public/images/no-data.png') // 没有商品列表的默认图片
       };
     },
-
-    components: {
-      card
-    },
-    computed: {},
-    watch: {},
     methods: {
       toggleSynthesizeMore() {
         this.isShowSynthesizeMore = !this.isShowSynthesizeMore;

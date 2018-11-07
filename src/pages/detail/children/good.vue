@@ -57,17 +57,17 @@
     </div>
     <div class="m-panel-ft">
       <div class="m-cell-access">
-        <div class="m-cell-bd" v-if="commodityEvaluationNumberpice.evaluationNumber!==0">
-          <div class='p-cell-evaluate'>评价({{commodityEvaluationNumberpice.evaluationNumber}})</div>
-          <text class='p-evaluate-bd' bindtap='Lookatall'>查看全部</text>
+        <div class="m-cell-bd" v-if="evaluate.evaluationNumber!==0">
+          <div class='p-cell-evaluate'>评价({{evaluate.evaluationNumber}})</div>
+          <text class='p-evaluate-bd' @tap='changeTab(2)'>查看全部</text>
           <text class="m-cell-ft"></text>
         </div>
-        <div class="m-cell m-cell-access m-cell-links" v-if="commodityEvaluationNumberpice.evaluationNumber==0">
+        <div class="m-cell m-cell-access m-cell-links" v-if="evaluate.evaluationNumber==0">
           <div class="m-cell-content">暂无评价</div>
         </div>
       </div>
     </div>
-    <div class='p-panel' bindtap='ClickelseInfo'>查看全部图文详情</div>
+    <div class='p-panel' @tap='changeTab(1)'>查看全部图文详情</div>
   </div>
 </template>
 <script type="text/ecmascript-6">
@@ -78,7 +78,7 @@
       commodity: {type: Object},
       textIndex: {},
       address: {},
-      commodityEvaluationNumberpice: {},
+      evaluate: {},
       spec1ValueName: {},
       spec2ValueName: {},
       spec3ValueName: {},
@@ -97,6 +97,9 @@
        */
       changeSlider(e) {
         this.sliderIndex = e.target.current + 1;
+      },
+      changeTab(index) {
+        this.$emit('changeTab', index);
       }
     }
   };

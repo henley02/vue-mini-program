@@ -72,4 +72,16 @@
           background-image: url("on.png")
         &.off
           background-image: url("off.png")
+    &.star-12
+      .star-item
+        width: 12px
+        height: 12px
+        margin-right: 3px
+        background-size: 12px 12px
+        &:last-child
+          margin-right: 0
+        &.on
+          background-image: url("on.png")
+        &.off
+          background-image: url("off.png")
 </style>

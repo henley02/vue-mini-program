@@ -8,12 +8,16 @@
     <div class="s-container">
       <!-- 商品 -->
       <good v-if="currentIndex==0" :pictureList="pictureList" :commodity="commodity" :textIndex="textIndex"
-            :address="address" :commodityEvaluationNumberpice="commodityEvaluationNumberpice"
+            :address="address" :evaluate="evaluate"
             :spec1ValueName="spec1ValueName" :spec2ValueName="spec2ValueName" :spec3ValueName="spec3ValueName"
-            :Salespromotion="Salespromotion" :showPriceone="showPriceone" :showPrice="showPrice"></good>
+            :Salespromotion="Salespromotion" :showPriceone="showPriceone" :showPrice="showPrice"
+            @changeTab="changeTab"></good>
       <!-- 详情 -->
       <detail v-if="currentIndex==1" :commonAttrLis="commonAttrLis" :Therichtext="Therichtext"
               :tabIndex.sync="detailTableIndex"></detail>
+      <!-- 评价 -->
+      <evaluate v-if="currentIndex==2" :evaluateTableIndex="evaluateTableIndex" :evaluate="evaluate"
+                :id="id"></evaluate>
     </div>
     <!-- 优惠券 -->
     <div class="m-panel-sp" v-if="conponflag" style='z-index:999;'>
@@ -47,47 +51,6 @@
         <div class="m-m-panel-sp-btn">
           <div class="m-m-panel-sp-rbtn" @tap="closesp">关闭</div>
         </div>
-      </div>
-    </div>
-    <!-- 评价 -->
-    <div v-if="currentIndex==2">
-      <div class='e-cell'>
-        <div class='e-btn'>
-          <div :class="{'e-btn-a':allindex==1,'e-btn-b':allindex!=1}" bindtap='all' style='margin-right:20rpx'>全部 {{evaluationNumber}}</div>
-          <div :class="{'e-btn-a':allindex==2,'e-btn-b':allindex!=2}" bindtap='withpicture'>有图 {{pictureEvaluationNumber}}</div>
-        </div>
-        <!-- 评价信息 -->
-        <scroll-div scroll-y="true" class="m-panel-bd m-orderlist" bindscrolltolower="scrollPage">
-          <block v-for="(item,index) in comments" :key="index">
-            <div class="m-media-box m-media-box-appmsg" v-if="!comment.isHide">
-              <div class="m-media-box-bd" v-if="!comment.isHide">
-                <div class='p-media'>
-                  <label class="m-media-box-title" v-if="comment.isAnonymous == false">{{comment.memberName}}</label>
-                  <label class="m-media-box-title" v-else>***</label>
-                  <div class="m-time">{{filter.formatDay(comment.evaluationTime)}}</div>
-                </div>
-                <div class="m-media-box-desc">
-                  <div class="m-media-box-info" style='width:144rpx'>
-                    <div class="m-media-box-info-meta m-start" v-for="(item ,i) in [1, 2, 3, 4, 5]" :key="i">
-                      <label class="iconfont icon-start" :class="{'sel':itemIndex<=comment.score}"></label>
-                    </div>
-                  </div>
-                  <div style='padding-top:25rpx;color:#000000;font-size:28rpx;'>{{comment.content}}</div>
-                  <div v-if="comment.attachmentList" class="m-media-list">
-                    <image bindtap="onShowBigImageTap" v-for="(item,i) in comment.attachmentList" :src="item.filePath"
-                           :key="i"/>
-                  </div>
-                  <div style='color:#000000;font-size:28rpx;margin-top:300rpx' v-for='(item,i) in comment.replyList'
-                       :key="i">
-                    <text>{{item.replyUserName}}:</text>
-                    <text style='color:#666666'>{{item.replyContent}}</text>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </block>
-          <div class='show'></div>
-        </scroll-div>
       </div>
     </div>
 
@@ -200,15 +163,20 @@
   export default {
     data() {
       return {
-        userInfo: {},
+        userInfo: {}, // 用户信息
         pictureList: [], // 轮播图
-        tabList: ['商品', '详情', '评价'],
-        currentIndex: 0,
-        detailTableIndex: 0,
-        commodity: {},
+        tabList: ['商品', '详情', '评价'], // tab信息
+        currentIndex: 0, // 当前tab的索引
+        detailTableIndex: 0, // 详情页面tab的索引
+        evaluateTableIndex: 0, // 评论页面tab的索引
+        commodity: {}, // 商品信息
+        evaluate: { // 评论相关数据
+          evaluationNumber: 0, // 评论数总和
+          pictureEvaluationNumber: 0, // 有图评论的总和
+          list: [] // 评论列表
+        },
         spec1AttrList: [],
         commonAttrLis: [],
-        commodityEvaluationNumberpice: [], // 获取评价的数量
         isShowToast: false,
         pictureEvaluationNumber: 0,
         evaluationNumber: 0,
@@ -287,7 +255,9 @@
         }
         let res = await fetchCommodityEvaluationNumber(params);
         if (res.firstErrorMessage === '') {
-          this.commodityEvaluationNumberpice = res;
+          let {evaluationNumber, pictureEvaluationNumber} = res;
+          this.evaluate.evaluationNumber = evaluationNumber;
+          this.evaluate.pictureEvaluationNumber = pictureEvaluationNumber;
         }
       },
       /**
@@ -409,7 +379,10 @@
         });
       }
     },
-    onShow() {
+    onLoad() {
+      this.currentIndex = 0;
+      this.detailTableIndex = 0;
+      this.evaluateTableIndex = 0;
       this.id = this.$root.$mp.query.id || '';
       this.getProductDetail();
       this.userInfo = this.$bridge.storage.get('userInfo');
@@ -894,114 +867,13 @@
     color: #fff;
   }
 
-  .e-cell {
-    position: relative;
-    top: rpx(97);
-  }
-
-  .e-btn {
-    display: flex;
-    padding: rpx(30);
-    background: #fff;
-    border-bottom: rpx(1) solid #eee;
-    border-top: rpx(1) solid #eee;
-    padding-left: rpx(30);
-  }
-
-  .e-btn-a {
-    background-color: #ea281a;
-    color: #fff;
-    text-align: center;
-    font-size: rpx(24);
-    flex-direction: row;
-    margin: 0;
-    border-radius: rpx(8);
-    padding: rpx(11) rpx(30);
-  }
-
-  .e-btn-b {
-    background-color: #fdeeee;
-    color: #333333;
-    text-align: center;
-    font-size: rpx(24);
-    flex-direction: row;
-    margin: 0;
-    border-radius: rpx(8);
-    padding: rpx(11) rpx(30);
-  }
-
-  .m-media-box-title {
-    font-size: rpx(28);
-  }
-
-  .scroll-box {
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-    padding: rpx(30) rpx(30) 0 rpx(30);
-    margin-bottom: rpx(20);
-  }
-
-  .m-media-box-info-meta {
-    padding-right: rpx(5);
-  }
-
-  .m-media-box-appmsg {
-    background-color: #fff;
-    margin-bottom: rpx(20);
-    padding: rpx(40) rpx(30);
-  }
-
-  .m-comment .m-media-box-hd {
-    border-radius: 100%;
-    overflow: hidden;
-    vertical-align: top;
-  }
-
-  .m-media-box-thumb {
-    border-radius: 100%;
-  }
-
-  .m-media-box-desc {
-    display: block;
-    overflow: visible;
-    text-overflow: clip;
-  }
-
-  .m-comment .m-media-box-info-meta {
-    font-size: rpx(24);
-    font-weight: 100;
-  }
-
   .m-start label {
     font-size: rpx(24);
-  }
-
-  .m-tiem {
-    float: right;
   }
 
   .sel {
     color: #db384c;
     font-size: rpx(24);
-  }
-
-  .m-media-list {
-    float: left;
-    width: 100%;
-  }
-
-  .m-media-list image {
-    width: rpx(200);
-    height: rpx(200);
-    box-sizing: border-box;
-    margin: rpx(20) rpx(20) 0 0;
-    border: rpx(1) solid #eee;
-  }
-
-  .p-media {
-    display: flex;
-    justify-content: space-between;
   }
 
   .m-time {
@@ -1012,27 +884,6 @@
 
   .g-flex-fott {
     margin-top: rpx(122);
-  }
-
-  .table {
-    margin: rpx(23);
-  }
-
-  .tr {
-    display: flex;
-    width: 100%;
-  }
-
-  .td {
-    width: rpx(234);
-    padding-left: rpx(31);
-    border: rpx(1) solid #EEEEEE;
-    height: rpx(80);
-    line-height: rpx(80);
-    font-size: rpx(24);
-    border-right: 0;
-    border-bottom: 0;
-    color: #666666;
   }
 
   .bg-g {
