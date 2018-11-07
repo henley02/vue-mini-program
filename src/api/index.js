@@ -302,3 +302,14 @@ export const fetchDefaultAddress = (params) => fetch({method: 'api.ebusiness.mem
  * @param params
  */
 export const fetchCommoditySkuInfo = (params) => fetch({method: 'api.ebusiness.commoditySkuInfo.find', ...params}, {isLoading: true});
+
+/**
+ * 获取商品评价总数和平均评分
+ * @param params
+ */
+export const fetchCommodityEvaluationNumber = (params) => fetch({method: 'api.ebusiness.commodityEvaluationNumber.find', ...params}, {isLoading: true});
+/**
+ * 搜索商品
+ * @param params
+ */
+export const fetchSearchProductList = (params, config) => fetch({method: 'api.ebusiness.findCommodityExtend.advanced', ...params}, config);

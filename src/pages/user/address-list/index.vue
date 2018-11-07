@@ -2,7 +2,7 @@
   <div class="wrapper">
     <scroll-view class='adds-list' @scrolltolower="dropDown" scroll-y="true" :style="{height:scrollHeight}">
       <div class="m-ad-item" v-for="(item,index) in list" :key="index" v-if="list.length">
-        <div class="m-ad-l" @tap="SelectAddress(item)">
+        <div class="m-ad-l" @tap="selectAddress(item)">
           <div class="m-ad-i-top">
             <text>{{item.contactName}}</text>
             <label>{{item.contactPhone}}</label>
@@ -44,7 +44,7 @@
         scrollHeight: '0px',
         noData: require('public/images/address/address.png'),
         addImg: require('public/images/address/add.png'),
-        type: '', // 1 选择收货地址 2
+        type: '', // 1 选择收货地址 2 点击回退
         list: [],
         userInfo: {},
         isLoading: false,
@@ -56,6 +56,13 @@
     },
     components: {},
     methods: {
+      selectAddress(item) {
+        if (this.type === '2') {
+          wx.navigateBack({
+            delta: -1
+          });
+        }
+      },
       /**
        * 下拉加载
        */
@@ -131,6 +138,7 @@
       this.getData();
     },
     onLoad(options) {
+      console.log(options);
       wx.getSystemInfo({
         success: (res) => {
           this.scrollHeight = res.windowHeight - 50 + 'px';

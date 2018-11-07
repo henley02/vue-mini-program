@@ -1,113 +1,20 @@
 <template>
   <div class="container">
     <div class="navbar">
-      <text v-for="(item,index) in navbar" :key="index" :class="{'active':currentTab==index}" class="item"
-            bindtap="navbarTap">{{item}}
+      <text v-for="(item,index) in tabList" :key="index" :class="{'active':currentIndex==index}" class="item"
+            @tap="changeTab(index)">{{item}}
       </text>
     </div>
-    <scroll-div scroll-y="true" class="s-container">
+    <div class="s-container">
       <!-- 商品 -->
-      <div v-if="currentTab==0">
-        <div class='m-picture-number'>
-          <text>{{sliderIndex}} / {{pictureList.length}}</text>
-        </div>
-        <div class="m-banner-ad">
-          <swiper autoplay="false" interval="3000" duration="300" current="0" @change='changeSlider'>
-            <swiper-item v-for="(item,index) in pictureList" :key="index">
-              <image class="slide-image" :src="item.url"/>
-            </swiper-item>
-          </swiper>
-        </div>
-        <div class="m-cells">
-          <div class="m-info-box">
-            <div>
-              <div class='p-info'>{{commodity.name}}</div>
-              <div class='p-info-price'>
-                <div class='p-price-text'>
-                  <div class="m-info-price">￥
-                    <text>{{Salespromotion ? Salespromotion : showPriceone}}</text>
-                  </div>
-                  <div class='p-info-text' v-if="Salespromotion < showPriceone || showPrice < showPriceone">促销价</div>
-                </div>
-                <div class="m-info-delprice">价格
-                  <text>￥{{showPriceone}}</text>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="m-panel-ft" bindtap='ckselectsp2'>
-          <navigator class="m-cell m-cell-access m-cell-links">
-            <div class="m-cell-bd">
-              <div class='p-cell-content'>规格</div>
-              <text class='m-cell-content'>{{spec1ValueName}} {{spec2ValueName}} {{spec3ValueName}}</text>
-            </div>
-            <text class="m-cell-ft"></text>
-          </navigator>
-        </div>
-        <div class="m-panel-ft">
-          <navigator class="m-cell m-cell-access m-cell-links" bindtap='coupon'>
-            <div class="m-cell-bd">
-              <div class='p-cell-content'>优惠券</div>
-              <text> {{textIndex}}张可领取</text>
-            </div>
-            <text class="m-cell-ft"></text>
-          </navigator>
-        </div>
-        <div class="m-panel-ft" style='margin-bottom:20rpx'>
-          <navigator url="../addresslist/addresslist" class="m-cell m-cell-access m-cell-links">
-            <div class="m-cell-bd">
-              <div class='p-cell-content'>送至</div>
-              <text class='m-cell-content' v-if="address!=null&& address != 'undefined'">{{address}}</text>
-            </div>
-            <text class="m-cell-ft"></text>
-          </navigator>
-        </div>
-        <div class="m-panel-ft">
-          <div class="m-cell-access">
-            <div class="m-cell-bd" v-if="commodityEvaluationNumberpice.evaluationNumber!==0">
-              <div class='p-cell-evaluate'>评价({{commodityEvaluationNumberpice.evaluationNumber}})</div>
-              <text class='p-evaluate-bd' bindtap='Lookatall'>查看全部</text>
-              <text class="m-cell-ft"></text>
-
-            </div>
-            <div class="m-cell m-cell-access m-cell-links" v-if="commodityEvaluationNumberpice.evaluationNumber==0">
-              <div class="m-cell-content">暂无评价</div>
-            </div>
-          </div>
-        </div>
-        <div class='p-panel' bindtap='ClickelseInfo'>查看全部图文详情</div>
-      </div>
+      <good v-if="currentIndex==0" :pictureList="pictureList" :commodity="commodity" :textIndex="textIndex"
+            :address="address" :commodityEvaluationNumberpice="commodityEvaluationNumberpice"
+            :spec1ValueName="spec1ValueName" :spec2ValueName="spec2ValueName" :spec3ValueName="spec3ValueName"
+            :Salespromotion="Salespromotion" :showPriceone="showPriceone" :showPrice="showPrice"></good>
       <!-- 详情 -->
-      <div v-if="currentTab==1">
-        <div class="p-tab">
-          <div class='p-show'></div>
-          <div class="m-navbar">
-            <div class="m-navbar-item" :class="{'m-navbar-item-on':tapindex==1}" bindtap="picDetail">
-              商品介绍
-            </div>
-            <div class='p-navbar'></div>
-            <div class="m-navbar-item" :class="{'m-navbar-item-on': tapindex==2}" bindtap="spcParam">
-              规格参数
-            </div>
-          </div>
-          <div :class="{'hide':tapindex!=1}">
-            <rich-text :nodes="Therichtext"></rich-text>
-          </div>
-          <div class="g-flex-fott" :class="{'hide':tapindex != 2}">
-            <div class="table">
-              <block v-for="(item,index) in ProductInfo.commonAttrLis" :key="index">
-                <div class="tr bg-g">
-                  <div class="td">{{item.attributeName}}</div>
-                  <div class="r-td">{{item.valueName}}</div>
-                </div>
-              </block>
-            </div>
-          </div>
-          <div class='show'></div>
-        </div>
-      </div>
-    </scroll-div>
+      <detail v-if="currentIndex==1" :commonAttrLis="commonAttrLis" :Therichtext="Therichtext"
+              :tabIndex.sync="detailTableIndex"></detail>
+    </div>
     <!-- 优惠券 -->
     <div class="m-panel-sp" v-if="conponflag" style='z-index:999;'>
       <div class="m-panel-sp-content">
@@ -143,7 +50,7 @@
       </div>
     </div>
     <!-- 评价 -->
-    <div v-if="currentTab==2">
+    <div v-if="currentIndex==2">
       <div class='e-cell'>
         <div class='e-btn'>
           <div :class="{'e-btn-a':allindex==1,'e-btn-b':allindex!=1}" bindtap='all' style='margin-right:20rpx'>全部 {{evaluationNumber}}</div>
@@ -270,25 +177,38 @@
         </scroll-div>
       </div>
     </div>-->
+    <btn-home></btn-home>
   </div>
-
 </template>
 
 <script>
   /**
    * 商品详情
    */
-  import {fetchProductDetail, setLocation, fetchDefaultAddress, fetchCommoditySkuInfo} from 'api/index.js';
+  import detail from './children/detail.vue';
+  import evaluate from './children/evaluate.vue';
+  import good from './children/good.vue';
+
+  import {
+    fetchProductDetail,
+    setLocation,
+    fetchDefaultAddress,
+    fetchCommoditySkuInfo,
+    fetchCommodityEvaluationNumber
+  } from 'api/index.js';
 
   export default {
     data() {
       return {
         userInfo: {},
         pictureList: [], // 轮播图
-        sliderIndex: 1, // 轮播图的索引
+        tabList: ['商品', '详情', '评价'],
+        currentIndex: 0,
+        detailTableIndex: 0,
         commodity: {},
         spec1AttrList: [],
-
+        commonAttrLis: [],
+        commodityEvaluationNumberpice: [], // 获取评价的数量
         isShowToast: false,
         pictureEvaluationNumber: 0,
         evaluationNumber: 0,
@@ -313,15 +233,10 @@
         spec2ValueName: '',
         spec3ValueName: '',
         list: [],
-        commodityEvaluationNumberpice: [], // 获取评价的数量
         btn: 0, // 区别立即购买和加入购物车
-        memberDefalutLocationInfo: [], // 会员地址
         commodityPartscount: 0, // 获取商品配件
-
         spec3AttributeId: '',
         itemId: '',
-        navbar: ['商品', '详情', '评价'],
-        currentTab: 0,
         btnflag: false,
         materialId: [],
         randId: '',
@@ -348,14 +263,37 @@
         tab: 0
       };
     },
-    components: {},
+    components: {
+      detail, evaluate, good
+    },
     computed: {},
     methods: {
+      changeTab(index) {
+        this.currentIndex = index;
+      },
+      /**
+       * 获取商品评价总数和平均评分
+       */
+      async fetchCommodityEvaluationNumber() {
+        let params = {
+          systemType: 'B2C',
+          deviceType: 'MOBILE',
+          operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
+          id: this.id
+        };
+        if (this.userInfo) {
+          params.passportId = this.userInfo.id;
+          params.memberId = this.userInfo.memberId;
+        }
+        let res = await fetchCommodityEvaluationNumber(params);
+        if (res.firstErrorMessage === '') {
+          this.commodityEvaluationNumberpice = res;
+        }
+      },
       /**
        * 获取商品物料的优惠券
        */
       async inventory() {
-        console.log(2);
         let params = {
           id: this.id,
           operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
@@ -385,15 +323,9 @@
         }
       },
       /**
-       * 滚动大图
-       */
-      changeSlider(e) {
-        this.sliderIndex = e.target.current + 1;
-      },
-      /**
        * 获取商品详情
        */
-      async init() {
+      async getProductDetail() {
         let params = {
           id: this.id,
           operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
@@ -412,10 +344,11 @@
             }
           });
         } else {
-          let {pictureList, commodity, spec1AttrList} = {...res};
+          let {pictureList, commodity, spec1AttrList, commonAttrLis} = {...res};
           this.pictureList = pictureList;
           this.commodity = commodity;
           this.spec1AttrList = spec1AttrList;
+          this.commonAttrLis = commonAttrLis;
 
           this.ProductInfo = res;
           this.showPrice = res.itemList[0].unitPrice;
@@ -449,9 +382,12 @@
           passportId: this.userInfo.id
         });
         if (res.firstErrorMessage === '') {
-          this.address = res.address;
-          this.memberDefalutLocationInfo = res;
-          this.address = res.location.provinceName + res.location.cityName + res.location.districtName;
+          // 获取不到会员默认地址就去定位物理地址
+          if (res.location.provinceName) {
+            this.address = res.location.provinceName + res.location.cityName + res.location.districtName;
+          } else {
+            this.getLocation();
+          }
         }
       },
       /**
@@ -475,9 +411,10 @@
     },
     onShow() {
       this.id = this.$root.$mp.query.id || '';
-      this.init();
+      this.getProductDetail();
       this.userInfo = this.$bridge.storage.get('userInfo');
       this.inventory();
+      this.fetchCommodityEvaluationNumber();
       if (!this.userInfo) {
         this.getLocation();
       } else {
@@ -487,7 +424,7 @@
   };
 </script>
 
-<style scoped lang="stylus" rel="stylesheet/stylus">
+<style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
   body {
     background-color: rgb(244, 244, 244)
@@ -589,33 +526,6 @@
     font-size: 18px;
   }
 
-  .m-banner-ad {
-    width: rpx(750);
-    height: rpx(750);
-  }
-
-  .m-banner-ad swiper {
-    width: 100%;
-    height: 100%;
-  }
-
-  .slide-image {
-    width: 100%;
-    height: 100%;
-  }
-
-  .m-cells {
-    height: rpx(175);
-    width: 100%;
-    padding: rpx(25) 0 rpx(25) rpx(30);
-    background: #fff;
-    margin-bottom: rpx(20);
-  }
-
-  .p-cell-content {
-    width: 70px;
-  }
-
   .m-cell-bd {
     font-size: 14px;
     color: #666666;
@@ -633,21 +543,6 @@
     margin-left: rpx(460);
     line-height: rpx(78);
 
-  }
-
-  .p-info {
-    font-family: PingFangSC-Regular;
-    font-size: rpx(30);
-    color: #000;
-    line-height: rpx(0);
-    min-height: 30px;
-    text-align: left;
-  }
-
-  .m-info-box label {
-    color: #EA281A;
-    display: block;
-    font-size: rpx(28);
   }
 
   .m-footer-btn {
@@ -673,63 +568,6 @@
     top: rpx(8);
   }
 
-  .p-price-text {
-    display: flex;
-  }
-
-  .p-info-text {
-    width: rpx(66);
-    height: rpx(22);
-    line-height: rpx(22);
-    text-align: center;
-    font-size: rpx(20);
-    color: #ea281a;
-    border: rpx(1) solid #EA281A;
-    border-radius: rpx(4);
-    margin: 14px 0 0 10px;
-
-  }
-
-  .m-info-price {
-    color: #EA281A;
-    font-size: rpx(32);
-  }
-
-  .m-info-price text {
-    font-size: rpx(48);
-    font-weight: bold;
-  }
-
-  .m-info-delprice {
-    font-size: rpx(24);
-    color: #999999;
-    padding-left: rpx(6);
-
-  }
-
-  .m-info-delprice text {
-    text-decoration: line-through;
-    font-size: rpx(24);
-
-  }
-
-  .m-panel-ft {
-    background: #fff;
-  }
-
-  .m-cell::before {
-    border-top: 0 solid #d9d9d9;
-  }
-
-  .m-cell-content {
-    color: #000000;
-    text-align: left;
-  }
-
-  .m-cell-ft {
-    padding-top: rpx(8);
-  }
-
   .p-show {
     width: 100%;
     height: rpx(2);
@@ -738,7 +576,6 @@
   .p-tab {
     width: 100%;
     z-index: 6;
-
   }
 
   .m-navbar {
@@ -1173,29 +1010,12 @@
     color: #999999;
   }
 
-  .p-panel {
-    background: #ffffff;
-    width: 100%;
-    height: rpx(98);
-    margin-bottom: rpx(147);
-    margin-top: rpx(20);
-    font-size: rpx(28);
-    text-align: center;
-    line-height: rpx(98);
-  }
-
-  .m-cell-links {
-    border-top: rpx(1) solid #eeeeee;
-
-  }
-
   .g-flex-fott {
     margin-top: rpx(122);
   }
 
   .table {
     margin: rpx(23);
-
   }
 
   .tr {
@@ -1218,7 +1038,6 @@
   .bg-g {
     background: #fff;
     font-size: rpx(24);
-
   }
 
   .r-td {
@@ -1275,22 +1094,6 @@
   .show {
     height: rpx(105);
     width: 100%;
-  }
-
-  .m-picture-number {
-    width: rpx(117);
-    height: rpx(63);
-    background-color: #333;
-    position: absolute;
-    z-index: 2;
-    right: rpx(30);
-    top: rpx(600);
-    opacity: 0.5;
-    border-radius: rpx(30);
-    text-align: center;
-    color: #fff;
-    line-height: rpx(58);
-    font-size: rpx(30);
   }
 
   rich-text .rich-img {

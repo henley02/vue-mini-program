@@ -19,7 +19,7 @@
    * 用户登录
    */
   import authorization from 'public/components/authorization/authorization.vue';
-  import btnHome from 'public/components/btn-home/btn-home.vue';
+
   import MD5 from 'public/js/util/md5';
   import {login} from 'api/index.js';
 
@@ -32,7 +32,7 @@
       };
     },
     components: {
-      btnHome, authorization
+      authorization
     },
     computed: {
       hasValue() {
