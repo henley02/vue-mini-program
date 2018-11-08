@@ -1,17 +1,17 @@
 <template>
-  <div class="container">
+  <div class="wrapper">
     <div class="navbar">
       <text v-for="(item,index) in tabList" :key="index" :class="{'active':currentIndex==index}" class="item"
             @tap="changeTab(index)">{{item}}
       </text>
     </div>
-    <div class="s-container">
+    <div class="container">
       <!-- 商品 -->
       <good v-if="currentIndex==0" :pictureList="pictureList" :commodity="commodity" :textIndex="textIndex"
             :address="address" :evaluate="evaluate"
             :spec1ValueName="spec1ValueName" :spec2ValueName="spec2ValueName" :spec3ValueName="spec3ValueName"
             :Salespromotion="Salespromotion" :showPriceone="showPriceone" :showPrice="showPrice"
-            @changeTab="changeTab"></good>
+            @changeTab="changeTab" @goAddressList="goAddressList" @goCouponList="goCouponList"></good>
       <!-- 详情 -->
       <detail v-if="currentIndex==1" :commonAttrLis="commonAttrLis" :Therichtext="Therichtext"
               :tabIndex.sync="detailTableIndex"></detail>
@@ -20,14 +20,13 @@
                 :id="id"></evaluate>
     </div>
     <!-- 优惠券 -->
-    <div class="m-panel-sp" v-if="conponflag" style='z-index:999;'>
+    <div class="m-panel-sp" v-if="isShowCouponList" style='z-index:999;'>
       <div class="m-panel-sp-content">
-        <!-- <icon type="cancel" class="m-panel-sp-icon" color="#888" catchtap="closesp" /> -->
         <div class="m-panel-sp-listbox-item">
           <div class="m-cells-title">领取优惠券</div>
         </div>
         <div v-if="textIndex<=0">
-          <image src='../../img/nocoupon.png' class='shoppingcart'></image>
+          <image :src='noCouponImg' class='shoppingcart'/>
           <div class='text'>无可用优惠券</div>
         </div>
         <scroll-div class="m-panel-sp-listbox" scroll-y="true">
@@ -35,21 +34,20 @@
             <block>
               <div class='y-cell'>
                 <div class='y-img'>
-                  <image src='../../img/couponquan.png'></image>
+                  <image :src='couponBg'/>
                   <div class='y-con' bindtap="onReceiveCouponTap">领取</div>
                   <div class='y-juan'>
                     <div>{{items.name}}</div>
                     <div>有效期至：{{filter.formatDay(items.endGetTime)}}</div>
                   </div>
                 </div>
-                <!-- <div class='p-line'></div> -->
               </div>
             </block>
           </block>
           <div style="height:96rpx;width:100%;"></div>
         </scroll-div>
         <div class="m-m-panel-sp-btn">
-          <div class="m-m-panel-sp-rbtn" @tap="closesp">关闭</div>
+          <div class="m-m-panel-sp-rbtn" @tap="closeCouponList()">关闭</div>
         </div>
       </div>
     </div>
@@ -163,6 +161,8 @@
   export default {
     data() {
       return {
+        couponBg: require('public/images/user/coupon-bg.png'),
+        noCouponImg: require('public/images/user/nocoupon.png'),
         userInfo: {}, // 用户信息
         pictureList: [], // 轮播图
         tabList: ['商品', '详情', '评价'], // tab信息
@@ -175,7 +175,11 @@
           pictureEvaluationNumber: 0, // 有图评论的总和
           list: [] // 评论列表
         },
+        isShowCouponList: false,
+        itemList: [],
         spec1AttrList: [],
+        spec2AttrList: [],
+        spec3AttrList: [],
         commonAttrLis: [],
         isShowToast: false,
         pictureEvaluationNumber: 0,
@@ -186,13 +190,9 @@
         selectsp: 0,
         selectct: 0,
         flag: false,
-        ProductInfo: [], // 商品信息
-        itemid: 0,
         inventoryInfo: [],
         prduindex: 0,
         quantity: 0, // 库存数量
-        spec2AttrList: 0,
-        spec3AttrList: 0,
         attributeId: 0, //  类型id
         spec2AttrListId: 0, //  类型id
         spec3AttrListId: 0, // 类型id
@@ -202,7 +202,6 @@
         spec3ValueName: '',
         list: [],
         btn: 0, // 区别立即购买和加入购物车
-        commodityPartscount: 0, // 获取商品配件
         spec3AttributeId: '',
         itemId: '',
         btnflag: false,
@@ -236,6 +235,63 @@
     },
     computed: {},
     methods: {
+      closeCouponList() {
+        this.isShowCouponList = false;
+      },
+      goCouponList() {
+        if (this.userInfo) {
+          this.isShowCouponList = true;
+        } else {
+          this.$bridge.link.goLogin();
+        }
+      },
+      goAddressList() {
+        if (this.userInfo) {
+          this.$bridge.link.navigateTo('/pages/user/address-list/main?type=2');
+        } else {
+          this.$bridge.link.goLogin();
+        }
+      },
+      Todealwith() {
+        let itemId;
+        this.itemList.forEach((item) => {
+          if (this.attributeId === item.spec1ValueId) {
+            itemId = item.itemEbusiness.detailList[0].itemId;
+            this.showPrice = item.unitPrice;
+          }
+          if (item.spec2AttributeId && item.spec2AttributeId !== '') {
+            itemId = item.itemEbusiness.detailList[0].itemId;
+            this.showPrice = item.unitPrice;
+            if (this.spec2AttrListId === item.spec2ValueId) {
+              itemId = item.itemEbusiness.detailList[0].itemId;
+              this.showPrice = item.unitPrice;
+              if (item.spec3AttributeId && item.spec3AttributeId !== '') {
+                if (this.spec3AttrListId === item.spec3ValueId) {
+                  itemId = item.itemEbusiness.detailList[0].itemId;
+                  this.showPrice = item.unitPrice;
+                }
+              }
+            } else {
+              itemId = item.itemEbusiness.detailList[0].itemId;
+              this.showPrice = item.unitPrice;
+            }
+          } else {
+            itemId = item.itemEbusiness.detailList[0].itemId;
+            this.showPrice = item.unitPrice;
+          }
+        });
+
+        if (itemId) {
+          this.itemId = itemId;
+        } else {
+
+        }
+        for (let o in this.repertory) {
+          if (this.repertory[o].itemId === this.itemId) {
+            this.repertoryquantity = this.repertory[o].quantity; // 商品库存
+          }
+        }
+      },
       changeTab(index) {
         this.currentIndex = index;
       },
@@ -278,18 +334,18 @@
         if (res.firstErrorMessage === '') {
           this.repertory = res.balanceList;
           this.repertoryquantity = res.balanceList[0].quantity;
-          for (let x in res.itemOuList) {
-            this.originalprice = parseFloat(res.itemOuList[0].unitPrice);
-            this.Salespromotion = parseFloat(res.itemOuList[0].currentPrice);
-            if (res.itemOuList[x].itemId === this.id) {
-              this.couponDefinition = res.itemOuList[x].couponDefinitionList;
-              for (let j in res.itemOuList[x].couponDefinitionList) {
-                if (res.itemOuList[x].couponDefinitionList[j] !== '') {
+          this.originalprice = parseFloat(res.itemOuList[0].unitPrice);
+          this.Salespromotion = parseFloat(res.itemOuList[0].currentPrice);
+          res.itemOuList.forEach(item => {
+            if (item.itemId === this.id) {
+              this.couponDefinition = item.couponDefinitionList;
+              for (let j in item.couponDefinitionList) {
+                if (item.couponDefinitionList[j] !== '') {
                   this.textIndex++;
                 }
               }
             }
-          }
+          });
         }
       },
       /**
@@ -314,17 +370,17 @@
             }
           });
         } else {
-          let {pictureList, commodity, spec1AttrList, commonAttrLis} = {...res};
+          let {pictureList, commodity, spec1AttrList, commonAttrLis, itemList, spec2AttrList, spec3AttrList} = {...res};
           this.pictureList = pictureList;
           this.commodity = commodity;
-          this.spec1AttrList = spec1AttrList;
           this.commonAttrLis = commonAttrLis;
-
-          this.ProductInfo = res;
+          this.itemList = itemList;
+          this.spec1AttrList = spec1AttrList;
+          this.spec2AttrList = spec2AttrList;
+          this.spec3AttrList = spec3AttrList;
           this.showPrice = res.itemList[0].unitPrice;
           this.showPriceone = res.commodity.showPrice;
-          let content = this.ProductInfo.commodityText.replace(/\\<img/gi, '<img class="rich-img" '); // 防止富文本图片过大
-          this.Therichtext = content;
+          this.Therichtext = res.commodityText.replace(/\\<img/gi, '<img class="rich-img" '); // 防止富文本图片过大
           if (this.spec1AttrList && this.spec1AttrList.length > 0) {
             this.spec1ValueName = res.spec1AttrList[0].valueName || '';
             this.attributeId = res.spec1AttrList[0].valueId || 0;
@@ -340,6 +396,7 @@
             this.spec3AttrListId = res.spec3AttrList[0].valueId;
             this.spec3AttributeId = res.spec3AttrList[0].valueId;
           }
+          this.Todealwith();
         }
       },
       /**
@@ -403,15 +460,40 @@
     background-color: rgb(244, 244, 244)
   }
 
-  .m-orderlist {
-    position: absolute;
-    box-sizing: border-box;
+  .navbar {
+    top: 0;
+    display: flex;
+    background: #fff;
+    justify-content: center;
+    font-size: 15px;
+    position: fixed;
+    z-index: 11;
     width: 100%;
-    height: 500px;
+    padding-left: 13px;
   }
 
-  .s-container {
-    margin-top: 48px;
+  .navbar .item {
+    position: relative;
+    text-align: center;
+    line-height: 48px;
+    margin-right: 23px;
+  }
+
+  .navbar .item.active:after {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 7px;
+    right: 0;
+    height: 4px;
+    width: 19px;
+    background: #ea281a;
+    border-radius: 10px;
+  }
+
+  .container {
+    padding-top: rpx(96);
   }
 
   .toast_mask {
@@ -457,37 +539,6 @@
     color: #fff;
     font-size: 14px;
     text-align: center;
-  }
-
-  .navbar {
-    display: flex;
-    background: #fff;
-    justify-content: center;
-    font-size: 15px;
-    position: fixed;
-    z-index: 11;
-    width: 100%;
-    padding-left: 13px;
-  }
-
-  .navbar .item {
-    position: relative;
-    text-align: center;
-    line-height: 48px;
-    margin-right: 23px;
-  }
-
-  .navbar .item.active:after {
-    content: "";
-    display: block;
-    position: absolute;
-    bottom: 0;
-    left: 7px;
-    right: 0;
-    height: 4px;
-    width: 19px;
-    background: #ea281a;
-    border-radius: 10px;
   }
 
   .p-pstock {

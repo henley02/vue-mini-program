@@ -9,7 +9,7 @@
       </div>
     </div>
     <!-- 评价信息 -->
-    <scroll-div scroll-y="true" class="m-panel-bd m-orderlist" bindscrolltolower="scrollPage">
+    <scroll-view scroll-y="true" class="m-orderlist" @scrolltolower="dropDown" :style="{height:scrollHeight}">
       <block v-for="(comment,index) in list" :key="index">
         <div class="m-media-box m-media-box-appmsg" v-if="!comment.isHide">
           <div class="m-media-box-bd">
@@ -37,7 +37,7 @@
       </block>
       <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
       <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
-    </scroll-div>
+    </scroll-view>
   </div>
 </template>
 <script type="text/ecmascript-6">
@@ -48,13 +48,7 @@
     name: 'evaluate',
     props: {
       id: {},
-      evaluate: {type: Object},
-      list: [],
-      isLoading: false,
-      pageSize: 10, // 页数
-      pageNumber: 1, // 页码
-      isEnd: false,
-      canDropDown: true // 是否可以下拉加载
+      evaluate: {type: Object}
     },
     components: {
       star
@@ -62,15 +56,19 @@
     data() {
       return {
         evaluateTableIndex: 0,
-        list: []
+        scrollHeight: '0px',
+        list: [],
+        isLoading: false,
+        pageSize: 10, // 页数
+        pageNumber: 1, // 页码
+        isEnd: false,
+        canDropDown: true // 是否可以下拉加载
       };
     },
     methods: {
       showBigImg(e) {
         let src = e.target.dataset.src; // 获取data-src
-        console.log(src);
         let imgList = e.target.dataset.list; // 获取data-list
-        console.log(imgList);
         let imgArray = [];
         for (let x in imgList) {
           imgArray.push(imgList[x].filePath);
@@ -100,9 +98,6 @@
           params.hasAttachment = true;
         }
         let res = await fetchEvaluateList(params, {isLoading: this.pageNumber === 1});
-        if (this.pageNumber === undefined) {
-          this.pageNumber = 1;
-        }
         res.result.forEach((item) => {
           item.evaluationTime = this._dateFormat(item.evaluationTime, 'yyyy-MM-dd');
         });
@@ -130,6 +125,25 @@
         }
         this.canDropDown = false;
         this.fetchList();
+      },
+      /**
+       * 设置评论区域的高度
+       * @returns {Promise.<void>}
+       */
+      async setHeight() {
+        wx.getSystemInfo({
+          success: async (res) => {
+            let navBarEl = await this.$bridge.system.getElementInfo('.navbar');
+            let navBarHeight = navBarEl.height;
+            let footerEl = await this.$bridge.system.getElementInfo('.m-footer-btn');
+            let footerHeight = footerEl.height;
+            setTimeout(async() => {
+              let tabEl = await this.$bridge.system.getElementInfo('.e-btn');
+              let tabHeight = tabEl.height;
+              this.scrollHeight = (res.windowHeight - navBarHeight - tabHeight - footerHeight) + 'px';
+            }, 100);
+          }
+        });
       }
     },
     created() {
@@ -138,11 +152,17 @@
       this.isEnd = false;
       this.canDropDown = true;
       this.fetchList();
+      this.setHeight();
     }
   };
 </script>
 <style lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
+  .m-orderlist {
+    overflow-y: auto;
+    width: 100%;
+  }
+
   .e-cell {
     position: relative;
   }

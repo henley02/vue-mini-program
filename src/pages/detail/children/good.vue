@@ -38,22 +38,22 @@
       </navigator>
     </div>
     <div class="m-panel-ft">
-      <navigator class="m-cell m-cell-access m-cell-links" bindtap='coupon'>
+      <div class="m-cell m-cell-access m-cell-links" @tap='goCouponList'>
         <div class="m-cell-bd">
           <div class='p-cell-content'>优惠券</div>
           <text> {{textIndex}}张可领取</text>
         </div>
         <text class="m-cell-ft"></text>
-      </navigator>
+      </div>
     </div>
     <div class="m-panel-ft" style='margin-bottom:20rpx'>
-      <navigator url="/pages/user/address-list/main?type=2" class="m-cell m-cell-access m-cell-links">
+      <div class="m-cell m-cell-access m-cell-links" @tap="goAddressList">
         <div class="m-cell-bd">
           <div class='p-cell-content'>送至</div>
           <text class='m-cell-content' v-if="address!=null&& address != 'undefined'">{{address}}</text>
         </div>
         <text class="m-cell-ft"></text>
-      </navigator>
+      </div>
     </div>
     <div class="m-panel-ft">
       <div class="m-cell-access">
@@ -92,6 +92,12 @@
       };
     },
     methods: {
+      goCouponList() {
+        this.$emit('goCouponList');
+      },
+      goAddressList() {
+        this.$emit('goAddressList');
+      },
       /**
        * 滚动大图
        */

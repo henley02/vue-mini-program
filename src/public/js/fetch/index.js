@@ -30,7 +30,13 @@ function fetch(data, config) {
         if (res.statusCode < 200 || res.statusCode > 300) {
           return reject(res.data || {});
         }
-        return resolve(res.data || {});
+        if (res.data.code === '21') {
+          wx.redirectTo({
+            url: '/pages/user/login/main'
+          });
+        } else {
+          return resolve(res.data || {});
+        }
       },
       fail: error => {
         console.log(error);

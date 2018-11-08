@@ -10,7 +10,6 @@ export default {
       confirmText: options.confirmText || '确认',
       cancelText: options.cancelText || '取消',
       success: function (res) {
-        console.log(res);
         if (res.confirm) {
           if (options.confirmCallback) {
             options.confirmCallback();
