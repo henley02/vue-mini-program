@@ -304,6 +304,12 @@ export const fetchDefaultAddress = (params) => fetch({method: 'api.ebusiness.mem
 export const fetchCommoditySkuInfo = (params) => fetch({method: 'api.ebusiness.commoditySkuInfo.find', ...params}, {isLoading: true});
 
 /**
+ * 领取优惠券
+ * @param params
+ */
+export const receiveCoupon = (params) => fetch({method: 'api.ebusiness.coupon.receive', ...params}, {isLoading: true});
+
+/**
  * 获取商品评价总数和平均评分
  * @param params
  */

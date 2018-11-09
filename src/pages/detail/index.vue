@@ -7,11 +7,13 @@
     </div>
     <div class="container">
       <!-- 商品 -->
-      <good v-if="currentIndex==0" :pictureList="pictureList" :commodity="commodity" :textIndex="textIndex"
+      <good v-if="currentIndex==0" :pictureList="pictureList" :commodity="commodity"
+            :couponLength="couponDefinition.length"
             :address="address" :evaluate="evaluate"
             :spec1ValueName="spec1ValueName" :spec2ValueName="spec2ValueName" :spec3ValueName="spec3ValueName"
             :Salespromotion="Salespromotion" :showPriceone="showPriceone" :showPrice="showPrice"
-            @changeTab="changeTab" @goAddressList="goAddressList" @goCouponList="goCouponList"></good>
+            @changeTab="changeTab" @goAddressList="goAddressList" @showCouponList="showCouponList"
+            @showSpecification="showSpecification"></good>
       <!-- 详情 -->
       <detail v-if="currentIndex==1" :commonAttrLis="commonAttrLis" :Therichtext="Therichtext"
               :tabIndex.sync="detailTableIndex"></detail>
@@ -19,40 +21,11 @@
       <evaluate v-if="currentIndex==2" :evaluateTableIndex="evaluateTableIndex" :evaluate="evaluate"
                 :id="id"></evaluate>
     </div>
-    <!-- 优惠券 -->
-    <div class="m-panel-sp" v-if="isShowCouponList" style='z-index:999;'>
-      <div class="m-panel-sp-content">
-        <div class="m-panel-sp-listbox-item">
-          <div class="m-cells-title">领取优惠券</div>
-        </div>
-        <div v-if="textIndex<=0">
-          <image :src='noCouponImg' class='shoppingcart'/>
-          <div class='text'>无可用优惠券</div>
-        </div>
-        <scroll-div class="m-panel-sp-listbox" scroll-y="true">
-          <block v-for="(item,index) in couponDefinition" :key="index">
-            <block>
-              <div class='y-cell'>
-                <div class='y-img'>
-                  <image :src='couponBg'/>
-                  <div class='y-con' bindtap="onReceiveCouponTap">领取</div>
-                  <div class='y-juan'>
-                    <div>{{items.name}}</div>
-                    <div>有效期至：{{filter.formatDay(items.endGetTime)}}</div>
-                  </div>
-                </div>
-              </div>
-            </block>
-          </block>
-          <div style="height:96rpx;width:100%;"></div>
-        </scroll-div>
-        <div class="m-m-panel-sp-btn">
-          <div class="m-m-panel-sp-rbtn" @tap="closeCouponList()">关闭</div>
-        </div>
-      </div>
-    </div>
+    <!-- 优惠券 弹框-->
+    <coupon-list v-if="isShowCouponList" :couponDefinition="couponDefinition"
+                 @closeCouponList="closeCouponList" @onReceiveCouponTap="onReceiveCouponTap"></coupon-list>
 
-    <div class="m-footer-btn" v-if="!btnflag">
+    <div class="m-footer-btn">
       <div class="m-footer-btn-list">
       </div>
       <div class="m-footer-btn-mains" bindtap="ckselectsp">
@@ -62,41 +35,24 @@
         加入购物车
       </div>
     </div>
-    <div class="m-footer-btn" v-else>
-      <div class="m-m-panel-sp-btn">
-        <div class="m-m-panel-sp-rbtn" @tap="buynow" v-if="tab==0">确定</div>
-        <div class="m-m-panel-sp-rbtn" @tap="ckselectspbuynow" v-else>确定</div>
-      </div>
-    </div>
-
-    <!--以下为toast显示的内容-->
-    <div class="toast_content_box" v-if="isShowToast">
-      <div class="toast_content">
-        <image src='../../img/outofrange.png' class='toast_content_img'></image>
-        <div class="toast_content_text">
-          {{toastText}}
-        </div>
-      </div>
-    </div>
     <!-- 筛选规格 -->
-    <!--<div class="m-panel-sp" :class="{'hide':selectsp==0}" bindtap="closesp" v-if="!conponflag">
-      <div class="m-panel-sp-content"
-           :class="{'bounceOutDown animated':selectct==0,'bozunceInUp animated':selectct!=0}">
+    <div class="m-panel-sp" v-if="isShowSpecification">
+      <div style="height: 100%" @tap="closeSpecification"></div>
+      <div class="m-panel-sp-content">
         <div class="m-panel-sp-pinfo">
           <div class="m-panel-sp-pimg">
             <image :src="commodity.pictureUrl"/>
           </div>
           <div class="m-panel-sp-pname">
-            &lt;!&ndash; <div class='m-pprice'>¥{{showPrice}}</div> &ndash;&gt;
             <div class='m-pprice'>¥{{Salespromotion ? Salespromotion : showPrice}}</div>
             <div class="m-pstock" v-if="repertoryquantity>0">库存{{repertoryquantity}}件</div>
             <div class="m-pstock" v-else>库存0件</div>
             <div class="p-pstock">请选择</div>
           </div>
-          <icon type="cancel" class="m-panel-sp-icon" color="#888" @tap="closesp"/>
+          <icon type="cancel" class="m-panel-sp-icon" color="#888" @tap="closeSpecification"/>
         </div>
-        <scroll-div class="m-panel-sp-listbox" scroll-y="true">
-          <div class="m-panel-sp-listbox-item">
+        <scroll-view class="m-panel-sp-listbox" scroll-y="true">
+          <div class="m-panel-sp-listbox-item" v-if="spec1AttrList.length>0">
             <div class="m-cells-title">{{spec1AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in spec1AttrList" :key="index">
@@ -105,19 +61,19 @@
               </block>
             </div>
           </div>
-          <div class="m-panel-sp-listbox-item">
-            <div class="m-cells-title">{{ProductInfo.spec2AttrList[0].attributeName}} </div>
+          <div class="m-panel-sp-listbox-item" v-if="spec2AttrList.length>0">
+            <div class="m-cells-title">{{spec2AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
-              <block v-for="(item,index) in ProductInfo.spec2AttrList" :key="index">
+              <block v-for="(item,index) in spec2AttrList" :key="index">
                 <label :class="{'m-panel-sp-sellabel':spec2AttrList==i}"
                        @tap="spec2AttrList">{{item.valueName}}</label>
               </block>
             </div>
           </div>
-          <div class="m-panel-sp-listbox-item">
-            <div class="m-cells-title">{{ProductInfo.spec3AttrList[0].attributeName}} </div>
+          <div class="m-panel-sp-listbox-item" v-if="spec3AttrList.length>0">
+            <div class="m-cells-title">{{spec3AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
-              <block v-for="(item,index) in ProductInfo.spec3AttrList" :key="index">
+              <block v-for="(item,index) in spec3AttrList" :key="index">
                 <label :class="{'m-panel-sp-sellabel':spec3AttrList==i}"
                        @tap="spec3AttrList">{{item.valueName}}</label>
               </block>
@@ -129,15 +85,19 @@
             <div class="m-panel-sp-labellist">
               <div class="u-cart-num">
                 <div class="u-num-btn" @tap="sub" :class="minusStatus">-</div>
-                <input type="number" v-model="numval" bindblur="writenum"/>
+                <input type="number" v-model="quantity"/>
                 <div class="u-num-btn" @tap="add">+</div>
               </div>
             </div>
           </div>
-          <div style="height:163rpx;width:100%;"></div>
-        </scroll-div>
+        </scroll-view>
+        <div class="m-footer-btn">
+          <div class="m-m-panel-sp-btn">
+            <div class="m-m-panel-sp-rbtn" @tap="buynow">确定</div>
+          </div>
+        </div>
       </div>
-    </div>-->
+    </div>
     <btn-home></btn-home>
   </div>
 </template>
@@ -155,14 +115,14 @@
     setLocation,
     fetchDefaultAddress,
     fetchCommoditySkuInfo,
-    fetchCommodityEvaluationNumber
+    fetchCommodityEvaluationNumber,
+    receiveCoupon
   } from 'api/index.js';
+  import CouponList from './components/coupon-list/coupon-list.vue';
 
   export default {
     data() {
       return {
-        couponBg: require('public/images/user/coupon-bg.png'),
-        noCouponImg: require('public/images/user/nocoupon.png'),
         userInfo: {}, // 用户信息
         pictureList: [], // 轮播图
         tabList: ['商品', '详情', '评价'], // tab信息
@@ -175,24 +135,24 @@
           pictureEvaluationNumber: 0, // 有图评论的总和
           list: [] // 评论列表
         },
-        isShowCouponList: false,
+        isShowCouponList: false, // 是否展示优惠券列表弹框
+        isShowSpecification: false, // 是否展示规格列表弹框
         itemList: [],
         spec1AttrList: [],
         spec2AttrList: [],
         spec3AttrList: [],
         commonAttrLis: [],
-        isShowToast: false,
         pictureEvaluationNumber: 0,
         evaluationNumber: 0,
         comments: [],
-        numval: 1, // 购买数量
+        quantity: 1, // 购买数量
         minusStatus: 'disabled ', // 购买数量少于1时不能点击
         selectsp: 0,
         selectct: 0,
         flag: false,
         inventoryInfo: [],
         prduindex: 0,
-        quantity: 0, // 库存数量
+        inventoryCount: 0, // 库存数量
         attributeId: 0, //  类型id
         spec2AttrListId: 0, //  类型id
         spec3AttrListId: 0, // 类型id
@@ -219,7 +179,6 @@
         originalprice: '', // 原价
         Salespromotion: '', //  促销价
         couponDefinition: [],
-        textIndex: 0,
         allindex: 1,
         pagenumber: 1,
         pagesize: 10,
@@ -231,14 +190,51 @@
       };
     },
     components: {
-      detail, evaluate, good
+      CouponList, detail, evaluate, good
     },
     computed: {},
     methods: {
+      /**
+       * 关闭规格
+       */
+      closeSpecification() {
+        this.isShowSpecification = false;
+      },
+      /**
+       * 打开规格
+       */
+      showSpecification() {
+        this.isShowSpecification = true;
+      },
+      /**
+       * 领取优惠券
+       */
+      async onReceiveCouponTap(item) {
+        let params = {
+          couponDefinitionId: item.id,
+          deviceType: 'MOBILE',
+          mobileType: 'MOBILE',
+          systemType: 'B2C',
+          memberId: this.userInfo.memberId,
+          passportId: this.userInfo.id
+        };
+        let res = await receiveCoupon(params);
+        if (res.firstErrorMessage === '') {
+          this.$bridge.dialog.alert({content: '领取成功'});
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+      },
+      /**
+       * 关闭优惠券弹框
+       */
       closeCouponList() {
         this.isShowCouponList = false;
       },
-      goCouponList() {
+      /**
+       * 显示优惠券弹框
+       */
+      showCouponList() {
         if (this.userInfo) {
           this.isShowCouponList = true;
         } else {
@@ -280,7 +276,8 @@
             this.showPrice = item.unitPrice;
           }
         });
-
+        console.log('------');
+        console.log(itemId);
         if (itemId) {
           this.itemId = itemId;
         } else {
@@ -337,13 +334,11 @@
           this.originalprice = parseFloat(res.itemOuList[0].unitPrice);
           this.Salespromotion = parseFloat(res.itemOuList[0].currentPrice);
           res.itemOuList.forEach(item => {
-            if (item.itemId === this.id) {
+            if (item.itemId === this.itemId) {
+              item.couponDefinitionList.forEach(it => {
+                it.endGetTime = this._dateFormat(it.endGetTime, 'yyyy-MM-dd');
+              });
               this.couponDefinition = item.couponDefinitionList;
-              for (let j in item.couponDefinitionList) {
-                if (item.couponDefinitionList[j] !== '') {
-                  this.textIndex++;
-                }
-              }
             }
           });
         }
@@ -397,6 +392,7 @@
             this.spec3AttributeId = res.spec3AttrList[0].valueId;
           }
           this.Todealwith();
+          this.inventory();
         }
       },
       /**
@@ -443,7 +439,6 @@
       this.id = this.$root.$mp.query.id || '';
       this.getProductDetail();
       this.userInfo = this.$bridge.storage.get('userInfo');
-      this.inventory();
       this.fetchCommodityEvaluationNumber();
       if (!this.userInfo) {
         this.getLocation();
@@ -706,14 +701,13 @@
   }
 
   /*选择规格遮罩 start*/
-
   .m-panel-sp {
     position: fixed;
     width: 100%;
     height: 100%;
     top: 0;
     left: 0;
-    z-index: 12;
+    z-index: 14;
     background-color: rgba(0, 0, 0, 0.2);
   }
 

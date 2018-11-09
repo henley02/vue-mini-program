@@ -28,20 +28,20 @@
         </div>
       </div>
     </div>
-    <div class="m-panel-ft" bindtap='ckselectsp2'>
-      <navigator class="m-cell m-cell-access m-cell-links">
+    <div class="m-panel-ft" >
+      <div class="m-cell m-cell-access m-cell-links" @tap='showSpecification'>
         <div class="m-cell-bd">
           <div class='p-cell-content'>规格</div>
           <text class='m-cell-content'>{{spec1ValueName}} {{spec2ValueName}} {{spec3ValueName}}</text>
         </div>
         <text class="m-cell-ft"></text>
-      </navigator>
+      </div>
     </div>
     <div class="m-panel-ft">
-      <div class="m-cell m-cell-access m-cell-links" @tap='goCouponList'>
+      <div class="m-cell m-cell-access m-cell-links" @tap='showCouponList'>
         <div class="m-cell-bd">
           <div class='p-cell-content'>优惠券</div>
-          <text> {{textIndex}}张可领取</text>
+          <text> {{couponLength}}张可领取</text>
         </div>
         <text class="m-cell-ft"></text>
       </div>
@@ -76,7 +76,7 @@
     props: {
       pictureList: {type: Array},
       commodity: {type: Object},
-      textIndex: {},
+      couponLength: {},
       address: {},
       evaluate: {},
       spec1ValueName: {},
@@ -92,8 +92,8 @@
       };
     },
     methods: {
-      goCouponList() {
-        this.$emit('goCouponList');
+      showCouponList() {
+        this.$emit('showCouponList');
       },
       goAddressList() {
         this.$emit('goAddressList');
@@ -106,6 +106,9 @@
       },
       changeTab(index) {
         this.$emit('changeTab', index);
+      },
+      showSpecification() {
+        this.$emit('showSpecification');
       }
     }
   };
