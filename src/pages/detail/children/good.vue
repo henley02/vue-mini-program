@@ -28,7 +28,7 @@
         </div>
       </div>
     </div>
-    <div class="m-panel-ft" >
+    <div class="m-panel-ft">
       <div class="m-cell m-cell-access m-cell-links" @tap='showSpecification'>
         <div class="m-cell-bd">
           <div class='p-cell-content'>规格</div>
@@ -108,7 +108,7 @@
         this.$emit('changeTab', index);
       },
       showSpecification() {
-        this.$emit('showSpecification');
+        this.$emit('showSpecification', 1);
       }
     }
   };

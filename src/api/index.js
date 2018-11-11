@@ -327,3 +327,27 @@ export const fetchEvaluateList = (params, config) => fetch({method: 'api.ebusine
  * @param params
  */
 export const fetchSearchProductList = (params, config) => fetch({method: 'api.ebusiness.findCommodityExtend.advanced', ...params}, config);
+
+/**
+ * 加入购物车
+ * @param params
+ */
+export const addToCart = (params) => fetch({method: 'api.ebusiness.batchCart.add', ...params}, {isLoading: true});
+
+/**
+ * 获取购物车列表
+ * @param params
+ */
+export const fetchCartList = (params) => fetch({method: 'api.ebusiness.cardList.get', ...params}, {isLoading: true});
+
+/**
+ * 从购物车删除记录(单个)
+ * @param params
+ */
+export const cartDelete = (params) => fetch({method: 'api.ebusiness.cart.delete', ...params}, {isLoading: true});
+
+/**
+ * 从购物车删除记录(多个)
+ * @param params
+ */
+export const cartBatchDelete = (params) => fetch({method: 'api.ebusiness.batchCart.delete', ...params}, {isLoading: true});

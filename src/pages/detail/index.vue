@@ -28,10 +28,10 @@
     <div class="m-footer-btn">
       <div class="m-footer-btn-list">
       </div>
-      <div class="m-footer-btn-mains" bindtap="ckselectsp">
+      <div class="m-footer-btn-mains" @tap="showSpecification(2)">
         立即购买
       </div>
-      <div class="m-footer-btn-main m-now" bindtap="ckselectsp1">
+      <div class="m-footer-btn-main m-now" @tap="showSpecification(3)">
         加入购物车
       </div>
     </div>
@@ -51,13 +51,14 @@
           </div>
           <icon type="cancel" class="m-panel-sp-icon" color="#888" @tap="closeSpecification"/>
         </div>
-        <scroll-view class="m-panel-sp-listbox" scroll-y="true">
+        <scroll-view class="m-panel-sp-listbox" scroll-y="true" style="height:450rpx;overflow-y:true">
           <div class="m-panel-sp-listbox-item" v-if="spec1AttrList.length>0">
             <div class="m-cells-title">{{spec1AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in spec1AttrList" :key="index">
-                <label :class="{'m-panel-sp-sellabel':prduindex==i,'p-panel-sp':prduindex!=i}"
-                       @tap="selectsp">{{item.valueName}}</label>
+                <label
+                  :class="{'m-panel-sp-sellabel':spec1ValueName==item.valueName,'p-panel-sp':spec1ValueName!==item.valueName}"
+                  @tap="changeSpecification(item,1)">{{item.valueName}}</label>
               </block>
             </div>
           </div>
@@ -65,8 +66,8 @@
             <div class="m-cells-title">{{spec2AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in spec2AttrList" :key="index">
-                <label :class="{'m-panel-sp-sellabel':spec2AttrList==i}"
-                       @tap="spec2AttrList">{{item.valueName}}</label>
+                <label :class="{'m-panel-sp-sellabel':spec2ValueName==item.valueName}"
+                       @tap="changeSpecification(item,2)">{{item.valueName}}</label>
               </block>
             </div>
           </div>
@@ -74,8 +75,8 @@
             <div class="m-cells-title">{{spec3AttrList[0].attributeName}} </div>
             <div class="m-panel-sp-labellist">
               <block v-for="(item,index) in spec3AttrList" :key="index">
-                <label :class="{'m-panel-sp-sellabel':spec3AttrList==i}"
-                       @tap="spec3AttrList">{{item.valueName}}</label>
+                <label :class="{'m-panel-sp-sellabel':spec3ValueName==item.valueName}"
+                       @tap="changeSpecification(item,3)">{{item.valueName}}</label>
               </block>
             </div>
           </div>
@@ -85,7 +86,7 @@
             <div class="m-panel-sp-labellist">
               <div class="u-cart-num">
                 <div class="u-num-btn" @tap="sub" :class="minusStatus">-</div>
-                <input type="number" v-model="quantity"/>
+                <input type="number" v-model="quantity" @blur="onBlur()"/>
                 <div class="u-num-btn" @tap="add">+</div>
               </div>
             </div>
@@ -93,7 +94,7 @@
         </scroll-view>
         <div class="m-footer-btn">
           <div class="m-m-panel-sp-btn">
-            <div class="m-m-panel-sp-rbtn" @tap="buynow">确定</div>
+            <div class="m-m-panel-sp-rbtn" @tap="confirm">确定</div>
           </div>
         </div>
       </div>
@@ -116,13 +117,15 @@
     fetchDefaultAddress,
     fetchCommoditySkuInfo,
     fetchCommodityEvaluationNumber,
-    receiveCoupon
+    receiveCoupon,
+    addToCart
   } from 'api/index.js';
   import CouponList from './components/coupon-list/coupon-list.vue';
 
   export default {
     data() {
       return {
+        clickType: 1, // 1选择规格、2立即购买、3加入购物车
         userInfo: {}, // 用户信息
         pictureList: [], // 轮播图
         tabList: ['商品', '详情', '评价'], // tab信息
@@ -146,54 +149,117 @@
         evaluationNumber: 0,
         comments: [],
         quantity: 1, // 购买数量
-        minusStatus: 'disabled ', // 购买数量少于1时不能点击
-        selectsp: 0,
-        selectct: 0,
-        flag: false,
-        inventoryInfo: [],
-        prduindex: 0,
         inventoryCount: 0, // 库存数量
-        attributeId: 0, //  类型id
-        spec2AttrListId: 0, //  类型id
-        spec3AttrListId: 0, // 类型id
-        conponflag: false,
+        spec1ValueId: 0, //  类型id
+        spec2ValueId: 0, //  类型id
+        spec3ValueId: 0, // 类型id
         spec1ValueName: '',
         spec2ValueName: '',
         spec3ValueName: '',
         list: [],
-        btn: 0, // 区别立即购买和加入购物车
         spec3AttributeId: '',
         itemId: '',
-        btnflag: false,
-        materialId: [],
-        randId: '',
-        selected: false,
         address: '', // 地址
         repertory: [], // 库存
         repertoryquantity: 0, // 库存数量
-        isCollected: false,
-        couponCount: 0,
-        showpice: '',
-        tapindex: 1,
-        topNum: 0,
         originalprice: '', // 原价
         Salespromotion: '', //  促销价
         couponDefinition: [],
-        allindex: 1,
-        pagenumber: 1,
-        pagesize: 10,
-        flags: false,
-        inputval: 0,
         showPriceone: 0,
-        Therichtext: '',
-        tab: 0
+        Therichtext: ''
       };
     },
     components: {
       CouponList, detail, evaluate, good
     },
-    computed: {},
+    watch: {
+      quantity(newVal, oldVal) {
+        if (!/^([1-9][0-9]*){1,9}$/.test(newVal) && newVal !== '') {
+          this.quantity = oldVal;
+        } else if (newVal > this.repertoryquantity) {
+          this.$bridge.dialog.alert({content: '库存不足!'});
+          this.quantity = this.repertoryquantity;
+        }
+      }
+    },
     methods: {
+      /**
+       * 立即购买
+       */
+      buyNow() {
+        if (this.repertoryquantity <= 0) {
+          this.$bridge.dialog.alert({content: '库存不足!'});
+        } else {
+          wx.navigateTo({
+            url: `/pages/pay/main?quantity=${this.quantity}&productId=${this.id}`
+          });
+        }
+      },
+      /**
+       * 添加到购物车
+       */
+      async addToCart() {
+        if (this.repertoryquantity <= 0) {
+          this.$bridge.dialog.alert({content: '库存不足!'});
+        } else {
+          let params = {
+            passportId: this.userInfo.id,
+            list: [
+              {
+                systemType: 'B2C',
+                deviceType: 'MOBILE',
+                operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
+                storeId: '986901391685849088',
+                memberId: this.userInfo.memberId,
+                itemId: this.itemId,
+                quantity: this.quantity,
+                itemManufacturingType: 'STANDARD',
+                isSuite: false
+              }
+            ]
+          };
+          let res = await addToCart(params);
+          if (res.firstErrorMessage === '' && res.result) {
+            wx.showToast({
+              title: '添加成功'
+            });
+          } else {
+            this.$bridge.dialog.alert({content: '库存不足!'});
+          }
+        }
+      },
+      confirm() {
+        this.closeSpecification();
+        if (this.clickType === 2) {
+          this.buyNow();
+        } else if (this.clickType === 3) {
+          this.addToCart();
+        }
+      },
+      onBlur() {
+        if (this.quantity === '') {
+          this.quantity = 1;
+        }
+      },
+      sub() {
+        this.quantity--;
+      },
+      add() {
+        this.quantity++;
+      },
+      changeSpecification(item, index) {
+        if (index === 1) {
+          this.spec1ValueName = item.valueName;
+          this.spec1ValueId = item.valueId;
+        } else if (index === 2) {
+          this.spec2ValueName = item.valueName;
+          this.spec2ValueId = item.valueId;
+        } else if (index === 3) {
+          this.spec3ValueName = item.valueName;
+          this.spec3ValueId = item.valueId;
+        }
+        this.Todealwith();
+      },
       /**
        * 关闭规格
        */
@@ -203,8 +269,13 @@
       /**
        * 打开规格
        */
-      showSpecification() {
-        this.isShowSpecification = true;
+      showSpecification(type) {
+        if (this.userInfo) {
+          this.clickType = type;
+          this.isShowSpecification = true;
+        } else {
+          this.$bridge.link.goLogin();
+        }
       },
       /**
        * 领取优惠券
@@ -251,37 +322,33 @@
       Todealwith() {
         let itemId;
         this.itemList.forEach((item) => {
-          if (this.attributeId === item.spec1ValueId) {
+          if (this.spec1ValueId === item.spec1ValueId) {
             itemId = item.itemEbusiness.detailList[0].itemId;
             this.showPrice = item.unitPrice;
-          }
-          if (item.spec2AttributeId && item.spec2AttributeId !== '') {
-            itemId = item.itemEbusiness.detailList[0].itemId;
-            this.showPrice = item.unitPrice;
-            if (this.spec2AttrListId === item.spec2ValueId) {
+            if (item.spec2AttributeId && item.spec2AttributeId !== '') {
               itemId = item.itemEbusiness.detailList[0].itemId;
               this.showPrice = item.unitPrice;
-              if (item.spec3AttributeId && item.spec3AttributeId !== '') {
-                if (this.spec3AttrListId === item.spec3ValueId) {
-                  itemId = item.itemEbusiness.detailList[0].itemId;
-                  this.showPrice = item.unitPrice;
+              if (this.spec2ValueId === item.spec2ValueId) {
+                itemId = item.itemEbusiness.detailList[0].itemId;
+                this.showPrice = item.unitPrice;
+                if (item.spec3AttributeId && item.spec3AttributeId !== '') {
+                  if (this.spec3ValueId === item.spec3ValueId) {
+                    itemId = item.itemEbusiness.detailList[0].itemId;
+                    this.showPrice = item.unitPrice;
+                  }
                 }
+              } else {
+                itemId = item.itemEbusiness.detailList[0].itemId;
+                this.showPrice = item.unitPrice;
               }
             } else {
               itemId = item.itemEbusiness.detailList[0].itemId;
               this.showPrice = item.unitPrice;
             }
-          } else {
-            itemId = item.itemEbusiness.detailList[0].itemId;
-            this.showPrice = item.unitPrice;
           }
         });
-        console.log('------');
-        console.log(itemId);
         if (itemId) {
           this.itemId = itemId;
-        } else {
-
         }
         for (let o in this.repertory) {
           if (this.repertory[o].itemId === this.itemId) {
@@ -378,17 +445,17 @@
           this.Therichtext = res.commodityText.replace(/\\<img/gi, '<img class="rich-img" '); // 防止富文本图片过大
           if (this.spec1AttrList && this.spec1AttrList.length > 0) {
             this.spec1ValueName = res.spec1AttrList[0].valueName || '';
-            this.attributeId = res.spec1AttrList[0].valueId || 0;
+            this.spec1ValueId = res.spec1AttrList[0].valueId || 0;
           } else {
             this.itemId = res.itemList[0].itemEbusiness.detailList[0].itemId;
           }
           if (res.spec2AttrList && res.spec2AttrList.length > 0) {
             this.spec2ValueName = res.spec2AttrList[0].valueName || '';
-            this.spec2AttrListId = res.spec2AttrList[0].valueId || 0;
+            this.spec2ValueId = res.spec2AttrList[0].valueId || 0;
           }
           if (res.spec3AttrList && res.spec3AttrList.length > 0) {
             this.spec3ValueName = res.spec3AttrList[0].valueName;
-            this.spec3AttrListId = res.spec3AttrList[0].valueId;
+            this.spec3ValueId = res.spec3AttrList[0].valueId;
             this.spec3AttributeId = res.spec3AttrList[0].valueId;
           }
           this.Todealwith();
@@ -437,6 +504,43 @@
       this.detailTableIndex = 0;
       this.evaluateTableIndex = 0;
       this.id = this.$root.$mp.query.id || '';
+      this.pictureList = [];
+      this.commodity = {};
+      this.evaluate = {
+        evaluationNumber: 0,
+        pictureEvaluationNumber: 0,
+        list: [] // 评论列表
+      };
+      this.isShowCouponList = false;
+      this.isShowSpecification = false;
+      this.itemList = [];
+      this.spec1AttrList = [];
+      this.spec2AttrList = [];
+      this.spec3AttrList = [];
+      this.commonAttrLis = [];
+      this.pictureEvaluationNumber = 0;
+      this.evaluationNumber = 0;
+      this.comments = [];
+      this.quantity = 1; // 购买数量
+      this.inventoryCount = 0; // 库存数量
+      this.spec1ValueId = 0; //  类型id
+      this.spec2ValueId = 0; //  类型id
+      this.spec3ValueId = 0; // 类型id
+      this.spec1ValueName = '';
+      this.spec2ValueName = '';
+      this.spec3ValueName = '';
+      this.list = [];
+      this.spec3AttributeId = '';
+      this.itemId = '';
+      this.address = ''; // 地址
+      this.repertory = []; // 库存
+      this.repertoryquantity = 0; // 库存数量
+      this.originalprice = ''; // 原价
+      this.Salespromotion = ''; //  促销价
+      this.couponDefinition = [];
+      this.showPriceone = 0;
+      this.Therichtext = '';
+
       this.getProductDetail();
       this.userInfo = this.$bridge.storage.get('userInfo');
       this.fetchCommodityEvaluationNumber();
