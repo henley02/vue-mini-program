@@ -1,9 +1,9 @@
 <template>
   <div>
-    <div v-if="cartList.length>0 && cartList[0].cartList.length != 0">
+    <div v-if="cal.totalCount!=0">
       <div class='m-product-con' @tap='toggleEdit()'>{{!isEdit ? '编辑' : '完成'}}</div>
       <div class="c-cart">
-        <div class="m-product-list" v-for="(item,index) in cartList" :key="index">
+        <div class="m-product-list" v-for="(item,index) in cartList" :key="index" v-if="item.cartList.length>0">
           <div class="m-shop-item">
             <div class="quan">
               <icon :type="item.IsCheck?'success':'circle'" :color="item.IsCheck?'#ea281a':'#d5d5d5'"
@@ -33,9 +33,9 @@
                     <text>{{items.unitPrice}}</text>
                   </div>
                   <div class="u-cart-num">
-                    <div class="u-num-btn" catchtap="sub">-</div>
-                    <input type="number" v-model="items.quantity" bindblur="writenum"/>
-                    <div class="u-num-btn" catchtap="add">+</div>
+                    <div class="u-num-btn" @tap="sub(items)">-</div>
+                    <input type="number" v-model="items.quantity" @blur="onBlur(items)"/>
+                    <div class="u-num-btn" @tap="add(items)">+</div>
                   </div>
                 </div>
               </div>
@@ -60,7 +60,7 @@
             </div>
           </div>
         </div>
-        <div class="m-footer-btn-main" bindtap="submitorder" v-if="!isEdit">
+        <div class="m-footer-btn-main" @tap="balance" v-if="!isEdit">
           结算
         </div>
         <div class="m-footer-btn-main" @tap="del" v-else>
@@ -76,7 +76,7 @@
 </template>
 
 <script>
-  import {fetchCartList, cartBatchDelete} from 'api/index';
+  import {fetchCartList, cartBatchDelete, updateCart} from 'api/index';
 
   export default {
     data() {
@@ -85,21 +85,7 @@
         isEdit: false, // 是否是编辑
         isLoading: false,
         userInfo: {},
-        id: 0, // 商品id
-        price: 0, // 商品价钱
-        quantity: 0, // 商品数量
-        cartList: [], // 商品信息列表
-        selectcardListgetInfo: [], // 选中的商品信息
-        IsCheck: false,
-        itemid: '', // 选中的商品id
-        shopItem: [], // 选中的商品id集合
-        totalpice: 0, // 总价
-        totalnum: 0, // 选中的数量
-        balance: '', // 库存
-        linshi: [],
-        IsShow: false,
-        pid: 0,
-        arr: []
+        cartList: [] // 商品信息列表
       };
     },
     components: {},
@@ -112,21 +98,77 @@
           item.cartList.forEach(it => {
             if (it.IsCheck) {
               selectedCount++;
-              totalPrice = this.add(totalPrice, this.mul(it.unitPrice, it.quantity));
+              totalPrice += this.mul(it.unitPrice, parseInt(it.quantity));
             }
             totalCount++;
           });
         });
+        console.log(totalCount);
         return {
-          selectedCount,
-          totalPrice: totalPrice.toFixed(2),
-          totalCount: totalCount,
-          isAllSelected: totalCount === selectedCount
+          selectedCount, // 选中的数量
+          totalPrice: totalPrice.toFixed(2), // 总价
+          totalCount: totalCount, // 总数量
+          isAllSelected: totalCount === selectedCount // 是否全部选中
         };
       }
     },
     watch: {},
     methods: {
+      balance() { // 结算
+        if (this.cal.selectedCount === 0) {
+          this.$bridge.dialog.alert({title: '提示', content: '请选择商品进行结算'});
+          return false;
+        }
+        let data = [];
+        this.cartList.forEach(item => {
+          item.cartList.forEach(it => {
+            if (it.IsCheck) {
+              data.push({
+                itemId: it.itemId,
+                quantity: it.quantity,
+                id: it.id
+              });
+            }
+          });
+        });
+        wx.navigateTo({
+          url: `/pages/pay/index/main?data=${JSON.stringify(data)}`
+        });
+      },
+      onBlur(item) {
+        if (item.quantity === '') {
+          item.quantity = 1;
+        }
+        this.updateCart(item);
+      },
+      async updateCart(item) {
+        let params = {
+          id: item.id,
+          systemType: 'B2C',
+          deviceType: 'MOBILE',
+          unitPrice: item.price,
+          quantity: item.quantity,
+          passportId: this.userInfo.id
+        };
+        let res = await updateCart(params, {isLoading: false});
+        if (res.firstErrorMessage === '') {
+        }
+      },
+      sub(item) {
+        if (item.quantity <= 1) {
+          return;
+        }
+        item.quantity--;
+        this.updateCart(item);
+      },
+      add(item) {
+        if (item.quantity > item.balance) {
+          this.$bridge.dialog.alert({content: '数量超出范围'});
+          return;
+        }
+        item.quantity++;
+        this.updateCart(item);
+      },
       del() { // 删除购物车
         if (this.cal.selectedCount === 0) {
           this.$bridge.dialog.alert({content: '请选择删除项'});
@@ -218,6 +260,7 @@
     onShow() {
       this.cartList = [];
       this.isLoading = true;
+      this.isEdit = false;
       this.userInfo = this.$bridge.storage.get('userInfo');
       this.init();
     },

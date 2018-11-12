@@ -353,6 +353,13 @@ export const cartDelete = (params) => fetch({method: 'api.ebusiness.cart.delete'
 export const cartBatchDelete = (params) => fetch({method: 'api.ebusiness.batchCart.delete', ...params}, {isLoading: true});
 
 /**
+ * 更新购物车数据
+ * @param params
+ * @param config
+ */
+export const updateCart = (params, config) => fetch({method: 'api.ebusiness.cartNew.update', ...params}, config);
+
+/**
  * 根据Id获取微分销会员信息
  * @param params
  */

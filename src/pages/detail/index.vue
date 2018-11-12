@@ -190,8 +190,13 @@
         if (this.repertoryquantity <= 0) {
           this.$bridge.dialog.alert({content: '库存不足!'});
         } else {
+          let data = [];
+          data.push({
+            itemId: this.itemId,
+            quantity: this.quantity
+          });
           wx.navigateTo({
-            url: `/pages/pay/main?quantity=${this.quantity}&productId=${this.id}`
+            url: `/pages/pay/index/main?data=${JSON.parse(data)}`
           });
         }
       },

@@ -61,7 +61,7 @@ export default {
      * @returns {number}
      */
     add(a, b) {
-      var c, d, e;
+      let c, d, e;
       try {
         c = a.toString().split('.')[1].length;
       } catch (f) {
