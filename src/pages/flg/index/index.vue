@@ -1,39 +1,129 @@
 <template>
   <div class="container">
+    <div class="notification-wrapper">
+      <img :src="notification"/>
+      <text>您的入馆申请正在审核中, 请耐心等待!</text>
+    </div>
     <div class="banner">
-      <div class="banner-wrapper">
-        <button open-type="getUserInfo" lang="zh_CN" @getuserinfo="onGotUserInfo">获取用户信息</button>
-        <div style="border-radius: 50%;height: 60px;width:60px; ">
-          <img :src="wxInfo.avatarUrl"/>
+      <img :src="bgIndex" class="bg-index"/>
+      <div class="content-wrapper">
+        <img :src="data.avatarUrl" class="head-img"/>
+        <div v-if="data.storeId && data.storeId!==''">
+          <div class="name">{{data.storeName}}</div>
+          <div style="display:flex;flex-direction: row">
+            <div class="desc opened" @tap="goShopDecoration()">进入我的馆</div>
+            <img class="share" :src="shareImg"/>
+          </div>
+        </div>
+        <div v-else="">
+          <div class="name">等待馆主开馆</div>
+          <div class="desc">点我开馆</div>
         </div>
       </div>
+    </div>
+    <div class="activity">
+      <div class="name">活动</div>
+      <div class="content">芳疗馆可以添加照片啦！</div>
+    </div>
+    <div class="list">
+      <div class="title">
+        <div class="icon"></div>
+        <div class="name">好馆推荐</div>
+      </div>
+      <ul v-if="list.length>0">
+        <li v-for="(item,index) in list" :key="index" class="item">
+          <img class="img" :src="item.img"/>
+          <div class="name">{{item.name}}</div>
+          <div class="zhishu">网红指数  {{item.zhishu}}</div>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
 
 <script>
+  import {fetchWFXMember} from 'api/index';
+
   /**
    * 芳聊馆首页
    */
   export default {
     data() {
       return {
+        notification: require('public/images/flg/index/notification.png'),
+        bgIndex: require('public/images/flg/index/bg-index.png'),
+        shareImg: require('public/images/flg/index/share.png'),
         userInfo: {},
-        wxInfo: {}
+        list: [
+          {
+            name: '哈哈哈哈哈哈哈哈哈哈',
+            zhishu: 123123,
+            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
+          },
+          {
+            name: '哈哈哈哈哈哈哈哈哈哈',
+            zhishu: 123123,
+            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
+          },
+          {
+            name: '哈哈哈哈哈哈哈哈哈哈',
+            zhishu: 123123,
+            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
+          },
+          {
+            name: '哈哈哈哈哈哈哈哈哈哈',
+            zhishu: 123123,
+            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
+          },
+          {
+            name: '哈哈哈哈哈哈哈哈哈哈',
+            zhishu: 123123,
+            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
+          }
+        ],
+        isOpen: true,
+        data: {
+          memberName: '', // 会员名称
+          avatarUrl: '', // 头像路径
+          distributorStatus: '', // 微分销状态,
+          storeId: '', // 微分销店铺Id
+          storeName: '', // 微分销店铺名称
+          storeBackgroundPictureId: '', // 店铺背景图片Id
+          storeBackgroundPictureUrl: '', // 店铺背景图片Url
+          storeIntroduction: '', // 店铺简介
+          popularityIndex: '', // 人气指数
+          salesQuantityCount: '' // 商品销量
+        }
       };
     },
     components: {},
     computed: {},
     methods: {
+      /**
+       * 跳转到店铺装修
+       */
+      goShopDecoration() {
+        this.$bridge.link.navigateTo('/pages/flg/shop-decoration/main');
+      },
+      async fetchWFXMember() {
+        let res = await fetchWFXMember({id: this.userInfo.memberId, passportId: this.userInfo.id});
+        if (res.firstErrorMessage === '') {
+          this.data = res.wfxMember;
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+      },
       onGotUserInfo(e) {
         console.log(e.detail.userInfo);
         console.log(e.detail.rawData);
       }
     },
     async onLoad() {
-      let userInfo = this.$bridge.storage.get('userInfo');
-      if (!userInfo) {
+      this.userInfo = this.$bridge.storage.get('userInfo');
+      if (!this.userInfo) {
         this.$bridge.link.goLogin();
+      } else {
+        this.fetchWFXMember();
       }
       this.wxInfo = this.$bridge.storage.get('wxInfo');
       console.log(this.wxInfo);
@@ -42,28 +132,125 @@
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
-  @import "~public/stylus/variable";
   @import "~public/stylus/mixin";
-  .container {
+  .container
     padding-top: rpx(30);
-  }
-
-  .banner {
+    width: 345px;
     margin: 0 auto;
-    width: 92%;
-    height: rpx(297)
-    border: 1px solid red;
-    border-radius: rpx(10)
-  }
+    .notification-wrapper
+      width: 100%
+      height: 36px
+      background: #FDFCEC;
+      display: flex;
+      align-items: center
+      img
+        margin-left: 15px
+        width: 15px
+        height: 16px
+      text
+        margin-left: 10px
+        font-size: 14px;
+        color: #F86E21;
 
-  .banner-wrapper {
-    padding-top: rpx(90);
-  }
+  .banner
+    position: relative
+    height: rpx(297);
+    border-radius: rpx(10);
+    .bg-index
+      width: 100%;
+      height: 100%;
+      border-radius: rpx(10);
+    .content-wrapper
+      position: absolute
+      width: 100%;
+      height: 100%;
+      top: 0
+      left: 45px
+      display: flex;
+      align-items: center;
+      .head-img
+        display: inline-block;
+        width: rpx(120);
+        height: rpx(120);
+        border-radius: 50%;
+      .name
+        margin-left: 15px
+        font-size: 18px
+        color: #333
+      .desc
+        margin-left: 15px
+        margin-top: 5px
+        width: 82px
+        height: 30px
+        line-height: 30px
+        border-radius: 50px;
+        background: #F8ABAE;
+        box-shadow: 0 rpx(1) rpx(4) 0 rgba(0, 0, 0, 0.16);
+        font-size: 13px;
+        color: #FFFFFF;
+        text-align: center
+        &.opened
+          width: 95px
+      .share
+        margin-top: 5px
+        margin-left: 10px
+        width: 30px
+        height: 30px
+        background: #F8ABAE;
+        box-shadow: 0 rpx(1) rpx(4) 0 rgba(0, 0, 0, 0.16);
+        border-radius: 50%;
 
-  .head-img {
-    display: inline-block;
-    width: rpx(120);
-    height: rpx(120);
-    border-radius: 50%;
-  }
+  .activity
+    margin-top: 13px;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    font-size: 14px;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAroAAABYCAMAAAAtMKSLAAABCFBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAwMAAAAAAAD5tLf//f35sbT3wsTswcOrmJiMgYFjXV3zxMbburv6uLv5vL750tP7+vp9bW1NR0fy8vLnwcHTsbTqwsO6oaH9/f3yxMbvycro6Ojb29vV1dX6uLr+/v76vsD3wMP40ND2ztD4+PjGpKf+/v7709T9/f3z8/P81tf95uf84+X12dno0dL39/f////4q67819j95uf92tv81tf+6en92dr929z+5+j829z93d7+6+z+6On+6uv+6+v95+j70NH7zs/+5eb70tP7zc7/9/f93t/+4OH/8/P+7+//+/v/8fH+7e3+4uP+5OWcb0BSAAAAOHRSTlMDAAkRAQYMCg8NDvv+/tONLSEZtFr38OPXHhWadkp/NOKrmndbUPjy6NzXyMND7ezlpfDs3bd3t3GR+5IAAAcsSURBVHja7N1pU9pAHMfxNJbNUYqAWO+jtvbw6H1QwcgtiCK37/+ddNkk/hsSYjXUJNPft5kmhBkffWZnySk9ubOndhJC/7hbbHe7vIMuyKJQIr4PomuzTfBkhB6pBM/m+yC6ptuJWoUxXVcXEHqEVF1nTJFNvn54JT+4gq2m7mwvpV4sP3v+ax7l0X9UveDV6ew+rhwc7m1uZVRN8PXDK/nCZfraYmrZVge66J6VPemenN7VycFeLqszX7zSbLiKpm6+nwy1oIseWMGzs9O/6cvLLVVTXHj96Npw114+49RAFz28etlRwRyFK3xYPT3hi7dZ+m5lc93GewddGnJlllkScEEXBahR4FqJrbV9bfLk8RVte33+uJ1lMg28fnQtuOqiBRd0UYD65XKz3OSLIGtvj0/u0UpOtfDOpktyta13tjTQRQEaOsjednKvvqc1L7uSW66iL9KPM9BFAep40y3ez+6XnK647UouuSyb+kWBLgpQsn5buU6Euyf3bG+duexKLrnpF39KA10UpJogy+MrIly4NXl2cibiG87oe/HdYcZlV3LKldnxG4c00EVB6hl1o+7uWngVZImv7/a3NJOddqUpubmpIwugi4KU5HINwddei9oOntRswp1PO1N2Jeds4XhaLuiiQPUNz6oW0+JZkS+0PqP9PPruJp//lKY5g5OumOe6ZgugiwI1MDwrF4kmRWR5RJr/G/A/tSrmu0SXBt2EknX/QgNdFKyh4Vm3eJ9q4k8drSsJGnYlkiurKbc00EXBSjYMr+pVYbJULPGlSLn38c1x3mxDlW27RFeSZG3RQxroooB1yGvDaPDFXJdtomJtVylV+OLcX6wO8lavNVmSiK416LItr3NooIuC1muYCbZEuF2qENdihUZb/oHvEvtFpU7e7m2aiWGX6Irpgud1C6CLAte32AqyVFvAJKZE2bFd6uWpn2LKQHTFoOs9XQBdFLz+ecOrNlGdJkz7qhO51Gsx7BJdKaFkvI/ogi6ai93zBufL/3NUtqi65rrUdSfvaDerWMOuZA262pK3NNBF86h37pnRLVWrlWqFL7QuVWnUHQ/yU73SrGFXsgbdtRmDLuiiudSpcam18xpfaM0bl7hUk2uVGIv4x1He1ad1a9iVrEH35QxpoIvmU3JY88zoVmdVHuRd0bArWYcXZg26oIvm1cAT73DQqV8LqdfVa75Ure2u0cl7tisOMth02eYsaaCL5ley03e67XeSYv/wpmvTFevuzVB84dk+s+jy+YKsv58lDXTRnPX2hv1RrTbqD3vcLe3v9Y2bcbfbHd8Y/Z6HW+qzLk9mDJL5I23miTTQRVHrrTg+xun6n44AXRS5XrNbulpqpjTQRZFrQxN0J9eMqcszpYEuilyrqixxuJOp7s5saaCLoldGSZh02fZsaaCLotc+s+n6XL8Auih6vbLp6j6/0kAXRa8N3aQr6z53U4Iuil5Huizo+h5gAF0UvVZVi+6Cz7U3oIui1+6CTdfnNDDoouj1QdCVOF0faaCLoleS05VAF8UvQRcTBhS/PizgZxqKZbsLODiGYtmqKuOUBIpjR7qME8Eojm3ouPwGxbJXDBc9oli2zxK41BzFMXGpOW7wQbHLvMEHt1Wi2LWh4WZ2FMsmN7PjESIofpmPEMGDm1DsMh/chMfloTg06I3q7XbbGPUG5qExPKQUxaFOrW13026sioeU4tHQKPINbLiFdoEv7R/i0dB4ID+Kep2Cs6/igfx4DQqKer3CVOagi5dPoYjXaRacfRNHxvDKPxTxBpZcKide+YcXraKIN/pTbbPQbH4XhxfwemsU8TrNqb66Xm/Nh11J1rymDKCLwmtkkx1XTltXV1etnCZL5qBLdMWUIeWWBrootJL1erPO4XYvr8z2xHThli7ZVbIvXNJAF4VWr9nkdm9suBeH64qQS3TtKUOCpd9MSwNdFFr9Oq97YXeQYQkxXZimK+weTx/dBV0UWiPDMKq3clfSQq6DLtmVWW7KLuii0GoYRrdlum1drOwwmeQSXbJ77JwzgC4KLcMoXLZarYsWp3uQJrlE1zlnSDt+q4EuCq3zxmnL6jBDswWiO203m/pFgS4KrdHYlru3TnKJrsuuoi/SeTXQRaHVP7lsTWYMH3O6QnKJrtuurG29s6WBLgqt4aVoKa3JJNeTLtll6qJ1pAF0UWgZl7yVnMpIrgddsmvhzSwJvKCLQqvL4W5nTbgk15suDbwJRVt7yfGCLgqt4srmuqYkaMidRZfs2njVzffPQReF09vPW6oFl+T60yW8MtPXFlPLoIseu9WN11mdyQTXk64vXoVp6s72UurF8rPnoIv+cckPu6tHG6/2M6rGFILrT9cbr5QQfJmuqwsIPUKqrjPBNiERXB+63nh5Ei/BkxF6pBI8SbgluPegS3o5X4Qeuafk9kF0iS8I/94ooAuAJzbC6RIAiyqK9Tu3lu0AAAAASUVORK5CYII=');
+    background-size: 100% 100%;
+    .name
+      width: 56px
+      text-align: center
+      color: #FFF;
+    .content
+      margin-left: 10px;
+      color: #000;
+
+  .list
+    width: 100%;
+    margin-top: 6px
+    height: 25px;
+    line-height: 25px
+    .title
+      display: flex
+      align-items: center
+      .icon
+        display: inline-block
+        height: 20px;
+        line-height: 25px
+        border-left: 3px solid #333;
+        width: 5px;
+      .name
+        display: inline-block
+        font-size: 18px;
+        color: #333;
+    ul
+      width: 100%
+      .item
+        position: relative;
+        width: 50%
+        float: left;
+        display: inline-block
+        margin-top: 15px;
+        overflow: hidden;
+        .img
+          width: 165px;
+          height: 165px;
+        .name
+          margin-top: 5px;
+          font-size: 14px;
+          color: #333;
+        .zhishu
+          font-size: 12px;
+          color: #EA281A;
 </style>

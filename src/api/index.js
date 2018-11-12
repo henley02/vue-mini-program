@@ -351,3 +351,9 @@ export const cartDelete = (params) => fetch({method: 'api.ebusiness.cart.delete'
  * @param params
  */
 export const cartBatchDelete = (params) => fetch({method: 'api.ebusiness.batchCart.delete', ...params}, {isLoading: true});
+
+/**
+ * 根据Id获取微分销会员信息
+ * @param params
+ */
+export const fetchWFXMember = (params) => fetch({method: 'api.wfx.wfxMember.get', ...params}, {isLoading: true});

@@ -31,7 +31,7 @@ function fetch(data, config) {
           return reject(res.data || {});
         }
         if (res.data.code === '21') {
-          this.$bridge.storage.remove('userInfo');
+          wx.removeStorageSync('userInfo');
           wx.redirectTo({
             url: '/pages/user/login/main'
           });
