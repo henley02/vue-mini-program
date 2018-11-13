@@ -246,7 +246,7 @@
         }
       }
     },
-    async onShow() {
+    onShow() {
       this.userInfo = this.$bridge.storage.get('userInfo');
       if (!this.userInfo) {
         this.$bridge.link.goLogin();

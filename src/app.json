@@ -3,6 +3,7 @@
     "pages/index/main",
     "pages/detail/main",
     "pages/search/main",
+    "pages/pay/index/main",
     "pages/flg/index/main",
     "pages/flg/product-list/main",
     "pages/flg/shop-decoration/main",

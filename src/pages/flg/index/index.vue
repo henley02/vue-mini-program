@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <scroll-view scroll-y="true" @scrolltolower="dropDown" class="container">
     <div class="notification-wrapper">
       <img :src="notification"/>
       <text>您的入馆申请正在审核中, 请耐心等待!</text>
@@ -30,19 +30,21 @@
         <div class="icon"></div>
         <div class="name">好馆推荐</div>
       </div>
-      <ul v-if="list.length>0">
-        <li v-for="(item,index) in list" :key="index" class="item">
+      <ul v-if="topList.length>0">
+        <li v-for="(item,index) in topList" :key="index" class="item">
           <img class="img" :src="item.img"/>
           <div class="name">{{item.name}}</div>
           <div class="zhishu">网红指数  {{item.zhishu}}</div>
         </li>
+        <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
+        <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
       </ul>
     </div>
-  </div>
+  </scroll-view>
 </template>
 
 <script>
-  import {fetchWFXMember} from 'api/index';
+  import {fetchWFXMember, fetchTopStore, fetchWFXOperationSetting} from 'api/index';
 
   /**
    * 芳聊馆首页
@@ -54,7 +56,12 @@
         bgIndex: require('public/images/flg/index/bg-index.png'),
         shareImg: require('public/images/flg/index/share.png'),
         userInfo: {},
-        list: [
+        isLoading: false,
+        pageSize: 10, // 页数
+        pageNumber: 1, // 页码
+        isEnd: false,
+        canDropDown: true, // 是否可以下拉加载
+        topList: [
           {
             name: '哈哈哈哈哈哈哈哈哈哈',
             zhishu: 123123,
@@ -105,8 +112,53 @@
       goShopDecoration() {
         this.$bridge.link.navigateTo('/pages/flg/shop-decoration/main');
       },
+      /**
+       * 下拉加载
+       */
+      dropDown() {
+        if (this.isEnd || !this.canDropDown) {
+          return false;
+        }
+        this.canDropDown = false;
+        this.fetchTopStore();
+      },
+      async fetchWFXOperationSetting() {
+        let res = await fetchWFXOperationSetting({});
+        console.log(res);
+      },
+      /**
+       * 获取商铺推荐
+       * @returns {Promise.<void>}
+       */
+      async fetchTopStore() {
+        this.isLoading = true;
+        if (this.pageNumber === 1) {
+          this.topList = [];
+        }
+        let params = {
+          pageNumber: this.pageNumber,
+          pageSize: this.pageSize,
+          passportId: this.userInfo.id
+        };
+        let res = await fetchTopStore(params, {isLoading: this.pageNumber === 1});
+        if (res.firstErrorMessage === '') {
+          this.topList = this.topList.concat(res.data.result);
+          // 判断数据是否全部加载完
+          if (this.topList.length >= res.totalCount || res.data.result.length < this.pageSize) {
+            this.isEnd = true;
+            this.canDropDown = false;
+          } else {
+            this.canDropDown = true;
+            this.pageNumber++;
+          }
+          this.isLoading = false;
+        }
+      },
       async fetchWFXMember() {
-        let res = await fetchWFXMember({id: this.userInfo.memberId, passportId: this.userInfo.id});
+        let res = await fetchWFXMember({
+          id: this.userInfo.memberId,
+          passportId: this.userInfo.id
+        }, {isLoading: this.pageNumber === 1});
         if (res.firstErrorMessage === '') {
           this.data = res.wfxMember;
         } else {
@@ -124,6 +176,8 @@
         this.$bridge.link.goLogin();
       } else {
         this.fetchWFXMember();
+        this.fetchTopStore();
+        this.fetchWFXOperationSetting();
       }
       this.wxInfo = this.$bridge.storage.get('wxInfo');
       console.log(this.wxInfo);

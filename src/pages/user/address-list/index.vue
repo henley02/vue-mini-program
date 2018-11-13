@@ -57,7 +57,12 @@
     components: {},
     methods: {
       selectAddress(item) {
-        if (this.type === '2') {
+        if (this.type === '1') {
+          wx.navigateBack({
+            delta: 1
+          });
+          this.$bridge.storage.save('locationId', item.id);
+        } else if (this.type === '2') {
           wx.navigateBack({
             delta: -1
           });

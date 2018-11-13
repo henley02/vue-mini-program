@@ -364,3 +364,21 @@ export const updateCart = (params, config) => fetch({method: 'api.ebusiness.cart
  * @param params
  */
 export const fetchWFXMember = (params) => fetch({method: 'api.wfx.wfxMember.get', ...params}, {isLoading: true});
+
+/**
+ * 查询top人气店铺
+ * @param params
+ */
+export const fetchTopStore = (params, config) => fetch({method: 'api.wfx.topStore.find', ...params}, config);
+
+/**
+ * 确认订单信息
+ * @param params
+ */
+export const fetchOrderInfo = (params) => fetch({method: 'api.ebusiness.orderNew.confirm', ...params}, {isLoading: true});
+
+/**
+ * 获取微分销运营设置
+ * @param params
+ */
+export const fetchWFXOperationSetting = (params) => fetch({method: 'api.wfx.wFXOperationSetting.get', ...params}, {isLoading: true});

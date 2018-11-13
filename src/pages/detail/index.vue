@@ -505,47 +505,8 @@
       }
     },
     onLoad() {
-      this.currentIndex = 0;
-      this.detailTableIndex = 0;
-      this.evaluateTableIndex = 0;
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.id = this.$root.$mp.query.id || '';
-      this.pictureList = [];
-      this.commodity = {};
-      this.evaluate = {
-        evaluationNumber: 0,
-        pictureEvaluationNumber: 0,
-        list: [] // 评论列表
-      };
-      this.isShowCouponList = false;
-      this.isShowSpecification = false;
-      this.itemList = [];
-      this.spec1AttrList = [];
-      this.spec2AttrList = [];
-      this.spec3AttrList = [];
-      this.commonAttrLis = [];
-      this.pictureEvaluationNumber = 0;
-      this.evaluationNumber = 0;
-      this.comments = [];
-      this.quantity = 1; // 购买数量
-      this.inventoryCount = 0; // 库存数量
-      this.spec1ValueId = 0; //  类型id
-      this.spec2ValueId = 0; //  类型id
-      this.spec3ValueId = 0; // 类型id
-      this.spec1ValueName = '';
-      this.spec2ValueName = '';
-      this.spec3ValueName = '';
-      this.list = [];
-      this.spec3AttributeId = '';
-      this.itemId = '';
-      this.address = ''; // 地址
-      this.repertory = []; // 库存
-      this.repertoryquantity = 0; // 库存数量
-      this.originalprice = ''; // 原价
-      this.Salespromotion = ''; //  促销价
-      this.couponDefinition = [];
-      this.showPriceone = 0;
-      this.Therichtext = '';
-
       this.getProductDetail();
       this.userInfo = this.$bridge.storage.get('userInfo');
       this.fetchCommodityEvaluationNumber();
