@@ -125,7 +125,6 @@
             val.hasAttachment = true;
           }
           values.push(val);
-          console.log(values);
           let res = await createComment({commodityEvaluationCreates: values, passportId: this.userInfo.id});
           if (res.firstErrorMessage === '') {
             if (res.resultCount > 0) {
@@ -241,7 +240,6 @@
             item.stars = [0, 1, 2, 3, 4];
           });
           this.goods = res.order.orderLineList;
-          console.log(this.goods);
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }

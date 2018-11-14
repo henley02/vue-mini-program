@@ -28,7 +28,7 @@
         </div>
       </div>
     </div>
-    <div class="m-panel-ft">
+    <div class="m-panel-ft" v-if="spec1ValueName!=='' || spec2ValueName!=='' || spec3ValueName!==''">
       <div class="m-cell m-cell-access m-cell-links" @tap='showSpecification'>
         <div class="m-cell-bd">
           <div class='p-cell-content'>规格</div>

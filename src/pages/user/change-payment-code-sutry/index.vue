@@ -33,8 +33,7 @@
         temporary: '', // 临时值
         isFocus: true,
         paymentCode: '',
-        confirmPaymentCode: '',
-        sutry: ''
+        confirmPaymentCode: ''
       };
     },
     computed: {
@@ -86,17 +85,9 @@
           };
           let res = await changePaymentCode(params);
           if (res.firstErrorMessage === '') {
-            if (this.sutry === 1) {
+            if (this.$root.$mp.query.backStepNumber) {
               wx.navigateBack({
-                delta: -6
-              });
-            } else if (this.sutry === 2) {
-              wx.navigateBack({
-                delta: -6
-              });
-            } else if (this.sutry === 3) {
-              wx.navigateBack({
-                delta: -6
+                delta: parseInt(this.$root.$mp.query.backStepNumber)
               });
             } else {
               wx.showToast({
@@ -114,9 +105,6 @@
           }
         }
       }
-    },
-    onLoad(options) {
-      this.sutry = options.sutry;
     },
     onShow() {
       this.isNext = false;

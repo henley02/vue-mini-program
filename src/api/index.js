@@ -338,7 +338,10 @@ export const addToCart = (params) => fetch({method: 'api.ebusiness.batchCart.add
  * 获取购物车列表
  * @param params
  */
-export const fetchCartList = (params) => fetch({method: 'api.ebusiness.cardList.get', ...params}, {isLoading: true});
+export const fetchCartList = (params) => fetch({method: 'api.ebusiness.cardList.get', ...params}, {
+  isLoading: true,
+  isNeedLogin: true
+});
 
 /**
  * 从购物车删除记录(单个)
@@ -378,7 +381,34 @@ export const fetchTopStore = (params, config) => fetch({method: 'api.wfx.topStor
 export const fetchOrderInfo = (params) => fetch({method: 'api.ebusiness.orderNew.confirm', ...params}, {isLoading: true});
 
 /**
+ * 计算运费(结算页面)
+ * @param params
+ */
+export const fetchFreight = (params) => fetch({method: 'api.ebusiness.freightNewPay.count', ...params}, {isLoading: true});
+
+/**
+ * 校验是否设置支付密码
+ * @param params
+ */
+export const checkIsSettingPayPassword = (params) => fetch({method: 'api.security.transaction_password.has_set', ...params}, {isLoading: true});
+
+/**
  * 获取微分销运营设置
  * @param params
  */
 export const fetchWFXOperationSetting = (params) => fetch({method: 'api.wfx.wFXOperationSetting.get', ...params}, {isLoading: true});
+
+/**
+ * 申请成为微分销
+ * @param params
+ */
+export const applyWFXDistributor = (params) => fetch({method: 'api.wfx.distributor.apply', ...params}, {isLoading: true});
+
+/**
+ * 提交订单
+ * @param params
+ */
+export const commitOrder = (params) => fetch({method: 'api.ebusiness.orderNew.commit', ...params}, {
+  isLoading: true,
+  isNeedLogin: true
+});

@@ -9,6 +9,12 @@ import getPostParameter from './postparameter.js';
  * @returns {Promise}
  */
 function fetch(data, config) {
+  if (config.isNeedLogin && !wx.getStorageSync('userInfo')) {
+    wx.redirectTo({
+      url: '/pages/user/login/main'
+    });
+    return false;
+  }
   if (config.isLoading) {
     wx.showLoading({title: '加载中...'});
   }

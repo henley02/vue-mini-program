@@ -27,6 +27,9 @@
     },
     methods: {
       jump(url) {
+        if (this.$root.$mp.query.backStepNumber && url.indexOf('change-payment-code') > -1) {
+          url += `?backStepNumber=${this.$root.$mp.query.backStepNumber}`;
+        }
         this.$bridge.link.navigateTo(url);
       }
     }

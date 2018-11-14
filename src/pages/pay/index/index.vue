@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="!isLoading">
     <div>
       <div class='userContainer' @tap='selectAddress' v-if="address.id">
         <image :src='stripedImg' class='v-cell'/>
@@ -18,13 +18,13 @@
       <div class='userContainer user-addre' @tap='selectAddress' v-else>
         <image :src='stripedImg' mode="aspectFill" class='v-cell'/>
         <div class="m-cell-address">
-          <image class='addressSty' src="../../../../public/images/location.png" style='padding-right:20rpx;'/>
+          <image class='addressSty' :src="positionImg" style='padding-right:20rpx;'/>
           <text>您还没有添加地址，点击添加地址吧</text>
         </div>
       </div>
       <div class="m-product-all">
         <div class="m-product-list" v-for="(item,index) in cartDetailList" :key="index">
-          <navigator class="m-product-item">
+          <div class="m-product-item">
             <div class="m-product-img" style='width:178rpx;height:178rpx'>
               <image :src="item.pictureUrl"/>
             </div>
@@ -42,18 +42,17 @@
                 <div class='m-te'>x{{item.quantity}}</div>
               </div>
             </div>
-          </navigator>
+          </div>
         </div>
       </div>
       <!-- 备注 -->
       <div class="m-cell p-cell" style='font-size:28rpx;margin-top:20rpx;'>
         <div class="m-cell-bd">
-          <input class="u-textarea" maxlength="45" v-model="memberMessage" bindinput="inputRemark"
-                 placeholder='选填：给商家留言(45字以内)'/>
+          <input class="u-textarea" maxlength="45" v-model="memberMessage" placeholder='选填：给商家留言(45字以内)'/>
         </div>
       </div>
-      <div class="total-info" @tap="showPayList">
-        <div class="m-cell" style='margin-bottom:20rpx'>
+      <div class="total-info">
+        <div class="m-cell" style='margin-bottom:20rpx' @tap="toggleShowPayList">
           <div class="m-cell-bd">
             <text>支付方式</text>
           </div>
@@ -65,7 +64,7 @@
           </div>
         </div>
 
-        <div class="m-cell" catchtap="suitcouponlist" style='border-bottom:1rpx solid #EEEEEE;'>
+        <div class="m-cell" style='border-bottom:1rpx solid #EEEEEE;' @tap="showCouponList">
           <div class="m-cell-bd">
             <text>优惠券</text>
           </div>
@@ -82,11 +81,11 @@
             </div>
           </block>
         </div>
-        <div class="m-cell" catchtap="interesting" style='border-bottom:1rpx solid #EEEEEE;'>
+        <div class="m-cell" @tap="showPointPop" style='border-bottom:1rpx solid #EEEEEE;'>
           <div class="m-cell-bd">
             <text>积分</text>
           </div>
-          <div class="m-cell-ft m-order-typetxt" v-if="!pointflag">
+          <div class="m-cell-ft m-order-typetxt" v-if="numval===0">
             可用{{maxPoint}}积分抵扣,共{{myPoint}} 分
           </div>
           <div class="m-cell-ft m-order-typetxt" v-else>已使用{{numval}}积分,抵扣￥{{pointRulepick}}</div>
@@ -94,18 +93,6 @@
             <div class="m-cell-ft "></div>
           </div>
         </div>
-        <navigator catchtap='sergiftcard'>
-          <div class="m-cell" style='margin-bottom:20rpx'>
-            <div class="m-cell-bd">
-              <text>礼品卡</text>
-            </div>
-            <div class="m-cell-ft m-order-typetxt" style='color:#EA281A' v-if="Giftcardamount>0">-{{Giftcardamount}}
-            </div>
-            <div class="arrow m-cell-access">
-              <div class="m-cell-ft "></div>
-            </div>
-          </div>
-        </navigator>
 
         <div class="m-cell" style='margin-bottom:20rpx' catchtap='HuoDong'>
           <div class="m-cell-bd">
@@ -124,7 +111,7 @@
           <div class="m-cell-bd">
             <text>商品金额</text>
           </div>
-          <div class="m-cell-ft m-order-typetxt">￥{{goods_amount}}</div>
+          <div class="m-cell-ft m-order-typetxt">￥{{totalAmount}}</div>
         </div>
 
         <div class="m-cell" style='margin-bottom:100rpx;' catchtap='toaoMEN'>
@@ -137,77 +124,69 @@
 
       <div class="m-footer-btn">
         <div class="m-footer-btn-listS">实付款：￥{{amount}}</div>
-        <div class="m-footer-btn-main m-now" bindtap="orderNewcommit" v-if="!btnflag">
-          提交订单
-        </div>
-        <div class="m-footer-btn-main m-now" v-else>
+        <div class="m-footer-btn-main m-now" @tap="pay()">
           提交订单
         </div>
       </div>
     </div>
     <!-- 优惠券模板 -->
-    <div class="m-panel-sp " v-if="conponflag">
-      <div class="m-panel-sp-content"
-           :class="{'bounceOutDown animated':selectct==0,'bozunceInUp animated':selectct!=0}">
-        <icon type="cancel" class="m-panel-sp-icon" color="#888" catchtap="closesps"/>
+    <div class="m-panel-sp " v-if="isShowCouponList">
+      <div class="m-panel-sp-content">
+        <icon type="cancel" class="m-panel-sp-icon" color="#888" @tap="closeCouponList"/>
         <div class="m-panel-sp-listbox-item">
           <div class="m-cells-title">选择优惠券</div>
         </div>
-        <div v-if="couponDetailList.length<=0">
-          <image src='../../img/nocoupon.png' class='shoppingcart'></image>
+        <div v-if="couponDetailList.length === 0">
+          <image :src='noCouponImg' class='shoppingcart'/>
           <div class='text'>无可用优惠券</div>
         </div>
         <scroll-view class="m-panel-sp-listbox" scroll-y="true" v-if="couponDetailList.length>0">
-          <div class='y-cell' v-for="(item,index) in couponDetailList" :key="index">
-            <div class="quan" catchtap="ckitvendor" style="float: left;margin-top:58rpx;padding:0 16rpx;">
-              <icon :type="item.IsCheck && fid==index?'success':'circle'"
-                    :color="item.IsCheck && fid==index?'#EA281A':'#d5d5d5'"
-                    catchtap='change'/>
+          <div class='y-cell' v-for="(item,index) in couponDetailList" :key="index"
+               @tap="toggleSelectedCoupon(index)">
+            <div class="quan" style="float: left;margin-top:58rpx;padding:0 16rpx;">
+              <icon :type="item.IsCheck?'success':'circle'" :color="item.IsCheck?'#EA281A':'#d5d5d5'"/>
             </div>
-            <div class='y-img' catchtap='ShiYong'>
+            <div class='y-img'>
               <div class='y-cells-bach'>
-                <image src='../../img/copyxs.png' style='width:100%;height:100%'/>
+                <image :src='copyxsImg' style='width:100%;height:100%'/>
                 <div class='y-juan'>
                   <div>{{item.couponEntity.couponName}}</div>
                   <div>
-                    有效期{{filter.formatDay(item.couponEntity.usefulStart)}}至{{filter.formatDay(item.couponEntity.usefulEnd)}}
+                    有效期{{item.couponEntity.usefulStart}}至{{item.couponEntity.usefulEnd}}
                   </div>
                 </div>
                 <div class='y-con'>￥{{item.benefitAmount}}</div>
               </div>
             </div>
           </div>
-          <div style="height:96rpx;width:100%;"></div>
         </scroll-view>
         <div class="m-m-panel-sp-btn">
-          <div class="m-m-panel-sp-rbtn" catchtap="Shutdown">确定</div>
+          <div class="m-m-panel-sp-rbtn" @tap="confirmSelectedCoupon()">确定</div>
         </div>
       </div>
     </div>
     <!--积分模板-->
-    <div class="m-panel-sp " v-if="inteflag">
-      <div class="m-panel-sp-content"
-           :class="{'bounceOutDown animated':selectct==0,'bozunceInUp animated':selectct!=0}">
-        <icon type="cancel" class="m-panel-sp-icon" color="#888" catchtap="closespinter"/>
+    <div class="m-panel-sp " v-if="isShowPointPop">
+      <div class="m-panel-sp-content">
+        <icon type="cancel" class="m-panel-sp-icon" color="#888" @tap="closePointPop()"/>
         <scroll-view class="m-panel-sp-listbox" scroll-y="true">
           <div class="m-panel-sp-listbox-item">
-
             <div class="m-cells-title">使用积分</div>
             <div class='m-inter'>
-              <div>总积分:\t{{PointsInfo}}</div>
+              <div>总积分:\t{{myPoint}}</div>
               <div>本次最多可使用积分:\t{{maxPoint}}</div>
             </div>
           </div>
           <!--加减-->
           <div class="u-cart-num">
-            <div class="u-num-btn" catchtap="sub">-</div>
-            <input type="number" value="numval" bindblur="writenum" disabled='disabled'/>
-            <div class="u-num-btn" catchtap="add">+</div>
+            <div class="u-num-btn" @tap="pointSub">-</div>
+            <input type="number" v-model="temporaryPoint" disabled='disabled'/>
+            <div class="u-num-btn" @tap="pointAdd">+</div>
           </div>
-          <div class='m-inter-cell' catchtap='largestuse'>最大使用</div>
+          <div class='m-inter-cell' @tap='pointMax'>最大使用</div>
         </scroll-view>
         <div class="m-m-panel-sp-btn">
-          <div class="m-m-panel-sp-rbtn" catchtap="buynow">确定</div>
+          <div class="m-m-panel-sp-rbtn" @tap="pointPopConfirm()">确定</div>
         </div>
       </div>
     </div>
@@ -244,20 +223,20 @@
     <div class="auth-pop" v-if="isShowPayList">
       <div class="auth-box" style='background:#FFFFFF;position:relative;top:-40rpx'>
         <div class='auth-box-zhi'>选择支付方式</div>
-        <div class='a-cell-content' bindtap='balancepaid'>
-          <image src='../../img/yue.png' class='a-cell-con-img'></image>
+        <div class='a-cell-content' @tap='changePayType(1)'>
+          <image :src='yueImg' class='a-cell-con-img'/>
           <div class='a-cell-tetx'>
             <div class='a-cell-title'>余额支付</div>
             <div class='a-cells-te'>使用你的账号余额支付</div>
           </div>
         </div>
-        <div class='a-cell-content' bindtap='WeChatPay'>
-          <image src='../../img/weixin.png' class='a-cell-con-img'></image>
+        <div class='a-cell-content' @tap='changePayType(2)'>
+          <image :src='weiXinImg' class='a-cell-con-img'/>
           <div class='a-cell-tetx' style='margin-top:23rpx;'>
             <div class='a-cell-title'>微信支付</div>
           </div>
         </div>
-        <image src="../../img/close.png" class='auth-box-imgs' catchtap='bindimgs'></image>
+        <image :src="closeImg" class='auth-box-imgs' @tap='toggleShowPayList'/>
       </div>
     </div>
   </div>
@@ -267,46 +246,308 @@
   /**
    * 确认订单
    */
-  import {fetchOrderInfo, fetchDefaultAddress, fetchAddressById} from 'api/index';
+  import {
+    fetchOrderInfo,
+    fetchDefaultAddress,
+    fetchAddressById,
+    fetchFreight,
+    checkIsSettingPayPassword,
+    commitOrder
+  } from 'api/index';
 
   export default {
     data() {
       return {
+        isLoading: true,
+        yueImg: require('public/images/pay/yue.png'),
+        weiXinImg: require('public/images/pay/weixin.png'),
+        closeImg: require('public/images/close.png'),
         positionImg: require('public/images/location.png'),
         stripedImg: require('public/images/user/striped.png'),
         arrowsRightImg: require('public/images/right.png'),
+        noCouponImg: require('public/images/user/nocoupon.png'),
+        copyxsImg: require('public/images/copyxs.png'),
         memberMessage: '', // 买家留言
         userInfo: {},
         myPoint: '', // 当前可用积分
         maxPoint: [], // 本次最多使用积分
         pointRule: [], // 积分使用规则
         cartDetailList: [], // 购物清单列表
-        totalAmount: [], // 商品总额
+        totalAmount: 0, // 实付款的商品总额
         selectBenefitList: [], // 可选优惠活动列表
         couponDetailList: [], // 不参加优惠活动的时候可以使用的优惠券
         supplierAndAmountList: [], // 供应商对应优惠金额
-        enableElectronicInvoice: [], // 是否启用电子发票
+        enableElectronicInvoice: false, // 是否启用电子发票
         argumentsStr: '', // 请求数据
         payType: 0, // 支付类型
         locationId: '',
         address: {}, // 收货地址
-        isShowPayList: false // 是否展示支付列表
+        isShowPayList: false, // 是否展示支付列表
+        benefitAmount: 0, // 使用优惠券减的金额
+        isShowCouponList: false, // 是否展示优惠券列表
+        selectedCouponId: '', // 选中的优惠券id
+        pointRulepick: 0, // 积分抵扣的金额
+        numval: 0, // 使用的积分
+        temporaryPoint: 0, // 积分弹框展示的临时积分
+        isShowPointPop: false, // 是否展示积分弹框
+        benefitAmounts: 0, // 参与活动的金额
+        totalFeightFee: 0, // 运费
+        idList: []
       };
     },
     components: {},
-    computed: {},
+    computed: {
+      /**
+       * 计算实际付款的金额
+       * 商品的总金额-优惠券的金额 - 活动优惠的金额 - 积分的金额 （如果减下来是小于0 就是0） 再 + 运费的金额
+       */
+      amount() {
+        let s = this.totalAmount - this.benefitAmount - this.benefitAmounts - this.pointRulepick;
+        if (s <= 0) {
+          s = 0;
+        }
+        return s + parseFloat(this.totalFeightFee);
+      }
+    },
     methods: {
-      showPayList() {
-        this.isShowPayList = true;
+      /**
+       * 提交订单
+       */
+      async pay() {
+        if (!this.address.id) {
+          this.$bridge.dialog.alert({title: '提示', content: '请选择收货地址'});
+          return false;
+        }
+        if (this.payType === 0) {
+          this.$bridge.dialog.alert({title: '提示', content: '请支付方式'});
+          return false;
+        }
+        if (this.payType === 1) {
+          wx.navigateTo({
+            url: '/pages/user/account-safety/main?backStepNumber=3'
+          });
+          let res = await checkIsSettingPayPassword({passportId: this.userInfo.id});
+          if (res.firstErrorMessage === '' && res.verifyResult) {
+            this.acknowledgement();
+          } else {
+            wx.navigateTo({
+              url: '/pages/user/account-safety/main?backStepNumber=-6'
+            });
+          }
+        } else {
+          this.acknowledgement();
+        }
+      },
+      /**
+       * 余额支付
+       */
+      orderMergePayNews: function () {
+        let val = {
+          orderIdList: this.idList,
+          payType: 'ACCOUNT',
+          storeId: '986901391685849088'
+        };
+        var that = this;
+        xnServiceapi.orderMergePayNews(val, function (data) {
+          console.log(data)
+          if (data.id !== '') {
+            that.setData({
+              flagm: true,
+              mergePayId: data.id
+            });
+          }
+        });
+      },
+      async acknowledgement() {
+        let params = {
+          operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
+          systemType: 'B2C',
+          deviceType: 'MOBILE',
+          storeId: '986901391685849088',
+          locationId: this.address.id, // 收货地址id
+          goodsAmount: this.totalAmount, // 商品总额
+          freightFee: this.data.totalFeightFee, // 运费
+          memberMessage: this.memberMessage, // 买家留言
+          isNeedInvoice: false, // 是否需要开发票
+          orderConfirmItemList: this.argumentsStr, // 商品清单
+          usedPoint: this.numval, // 使用的积分
+          pointAmount: this.pointRulepick, // 积分抵扣金额
+          ticketAmount: this.benefitAmount, // 优惠券抵扣金额
+          couponEntityIdList: JSON.stringify(this.selectedCouponId.split(',')), // 优惠券id
+          promotionAmount: 0, // 促销抵扣金额
+          promotionSourceIdList: [], // 促销ID集合
+          giftCardAmount: 0, // 礼品卡抵扣总金额
+          prePaidCardUseList: '', // 礼品卡实用信息集合
+          locationRowVersion: this.address.rowVersion // 地址的RowVersion
+        };
+        let res = await commitOrder(params);
+        if (res.firstErrorMessage === '') {
+          this.idList = res.idList;
+          if (res.isZeroOrderPaid) {
+            wx.redirectTo({
+              url: '../paymentsuccess/paymentsuccess?tab=' + 1 + '&goodsAmount=' + this.amount
+            });
+          } else {
+            if (this.payType === 1) {
+              this.orderMergePayNews();
+            }
+            if (this.payType === 2) {
+              this.gotopay();
+            }
+          }
+        } else {
+          this.$bridge.dialog.alert({title: '提示', content: res.firstErrorMessage});
+        }
+      },
+      /**
+       * 积分弹框 -- 减1
+       */
+      pointSub() {
+        if (this.temporaryPoint <= 0) {
+          return;
+        }
+        this.temporaryPoint--;
+      },
+      /**
+       * 积分弹框 -- 加1
+       */
+      pointAdd() {
+        if (this.temporaryPoint === this.maxPoint) {
+          return;
+        }
+        this.temporaryPoint++;
+      },
+      /**
+       * 积分弹框 -- 最大使用
+       */
+      pointMax() {
+        this.temporaryPoint = this.maxPoint;
+      },
+      /**
+       * 积分弹框 -- 确认
+       */
+      pointPopConfirm() {
+        // 积分抵扣的金额
+        let pointRulepick = (this.mul(this.division(this.temporaryPoint, this.pointRule.point), this.pointRule.amount)).toFixed(2);
+        let s = this.totalAmount - this.benefitAmount - this.benefitAmounts;
+        if (s < 0) {
+          s = 0;
+        }
+        if (s < pointRulepick) {
+          this.$bridge.dialog.alert({title: '提示', content: '不能抵扣这么多'});
+          return false;
+        }
+        // 计算每单最大使用的金额
+        let maxPrice = parseFloat(this.mul(this.totalAmount, this.division(this.pointRule.maxPercent, 100)));
+        if (pointRulepick > maxPrice) {
+          this.$bridge.dialog.alert({title: '提示', content: '不能抵扣这么多'});
+        } else {
+          this.pointRulepick = pointRulepick;
+          this.numval = this.temporaryPoint;
+          this.isShowPointPop = false;
+        }
+      },
+      /**
+       * 打开积分弹框
+       */
+      showPointPop() {
+        this.temporaryPoint = this.numval;
+        this.isShowPointPop = true;
+      },
+      /**
+       * 关闭积分弹框
+       */
+      closePointPop() {
+        this.isShowPointPop = false;
+      },
+      /**
+       * 优惠券弹框--确认
+       */
+      confirmSelectedCoupon() {
+        let arr = this.couponDetailList.filter(item => item.IsCheck);
+        if (arr.length === 0) {
+          this.selectedCouponId = '';
+          this.benefitAmount = 0;
+        } else {
+          this.benefitAmount = arr[0].benefitAmount;
+          this.selectedCouponId = arr[0].couponEntity.id;
+        }
+        this.isShowCouponList = false;
+      },
+      /**
+       * 优惠券弹框--选中、取消选中
+       * @param index
+       */
+      toggleSelectedCoupon(index) {
+        this.couponDetailList.forEach((item, i) => {
+          if (index === i) {
+            item.IsCheck = !item.IsCheck;
+          } else {
+            item.IsCheck = false;
+          }
+        });
+      },
+      /**
+       * 关闭优惠券弹框
+       */
+      closeCouponList() {
+        this.isShowCouponList = false;
+      },
+      /**
+       * 打开优惠券弹框
+       */
+      showCouponList() {
+        if (this.couponDetailList.length === 0) {
+          return;
+        }
+        this.couponDetailList.forEach(item => {
+          if (item.couponEntity.id === this.selectedCouponId) {
+            item.IsCheck = true;
+          } else {
+            item.IsCheck = false;
+          }
+        });
+        this.isShowCouponList = true;
+      },
+      /**
+       * 更改支付方式
+       * @param type
+       */
+      changePayType(type) {
+        this.payType = type;
+        this.isShowPayList = false;
+      },
+      toggleShowPayList() {
+        this.isShowPayList = !this.isShowPayList;
       },
       selectAddress() {
         this.$bridge.link.navigateTo(`/pages/user/address-list/main?type=1`);
+      },
+      /**
+       * 计算运费
+       * @returns {Promise.<void>}
+       */
+      async getFreight() {
+        let params = {
+          operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
+          systemType: 'B2C',
+          deviceType: 'MOBILE',
+          cityId: this.address.cityId,
+          districtId: this.address.districtId,
+          list: this.argumentsStr,
+          passportId: this.userInfo.id
+        };
+        let res = await fetchFreight(params);
+        if (res.firstErrorMessage === '') {
+          this.totalFeightFee = res.totalFeightFee.toFixed(2); // 运费金额
+        }
       },
       async fetchAddressById() {
         let res = await fetchAddressById({ids: this.locationId.split(','), passportId: this.userInfo.id});
         if (res.firstErrorMessage === '') {
           console.log(res.result[0]);
           this.address = res.result[0];
+          this.getFreight();
         }
       },
       async getDefaultAddress() {
@@ -317,9 +558,11 @@
         });
         if (res.firstErrorMessage === '' && res.location.provinceName) {
           this.address = res.location;
+          this.getFreight();
         }
       },
       async getOrderInfo() {
+        this.isLoading = true;
         let params = {
           passportId: this.userInfo.id,
           operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
@@ -332,7 +575,15 @@
           res.cartDetailList.forEach((item) => {
             item.unitPrice = item.unitPrice.toFixed(2);
           });
+          res.couponDetailList.forEach(item => {
+            item.IsCheck = false;
+            item.couponEntity.usefulStart = this._dateFormat(item.couponEntity.usefulStart, 'yyyy-MM-dd');
+            item.couponEntity.usefulEnd = this._dateFormat(item.couponEntity.usefulEnd, 'yyyy-MM-dd');
+          });
           res.totalAmount = res.totalAmount.toFixed(2);
+          if (res.selectBenefitList && res.selectBenefitList.length > 0) {
+            this.benefitAmounts = res.selectBenefitList[0].benefitAmount;
+          }
           let {myPoint, maxPoint, pointRule, cartDetailList, totalAmount, selectBenefitList, couponDetailList, supplierAndAmountList, enableElectronicInvoice} = res;
           this.myPoint = myPoint;
           this.maxPoint = maxPoint;
@@ -346,15 +597,16 @@
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
+        this.isLoading = false;
       }
     },
     onUnload() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
     },
     onLoad() {
       this.$bridge.storage.remove('locationId');
     },
     onShow() {
-      Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.userInfo = this.$bridge.storage.get('userInfo');
       this.argumentsStr = this.$root.$mp.query.data;
       this.locationId = this.$bridge.storage.get('locationId');

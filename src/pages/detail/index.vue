@@ -196,7 +196,7 @@
             quantity: this.quantity
           });
           wx.navigateTo({
-            url: `/pages/pay/index/main?data=${JSON.parse(data)}`
+            url: `/pages/pay/index/main?data=${JSON.stringify(data)}`
           });
         }
       },
@@ -499,7 +499,12 @@
               if (res.firstErrorMessage === '') {
                 this.address = res.address;
               }
+            } else {
+              this.address = '北京-朝阳区';
             }
+          },
+          fail: () => {
+            this.address = '北京-朝阳区';
           }
         });
       }
@@ -509,6 +514,7 @@
       this.id = this.$root.$mp.query.id || '';
       this.getProductDetail();
       this.userInfo = this.$bridge.storage.get('userInfo');
+      console.log(this.userInfo);
       this.fetchCommodityEvaluationNumber();
       if (!this.userInfo) {
         this.getLocation();

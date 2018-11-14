@@ -64,7 +64,11 @@
               icon: 'success'
             });
             setTimeout(() => {
-              this.$bridge.link.navigateTo(`/pages/user/change-payment-code-sutry/main`);
+              let url = `/pages/user/change-payment-code-sutry/main`;
+              if (this.$root.$mp.query.backStepNumber) {
+                url += `?backStepNumber=${this.$root.$mp.query.backStepNumber}`;
+              }
+              this.$bridge.link.navigateTo(url);
             }, 1500);
           } else {
             this.$bridge.dialog.alert({content: '验证码错误'});

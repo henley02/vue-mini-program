@@ -143,7 +143,6 @@
       this.getData();
     },
     onLoad(options) {
-      console.log(options);
       wx.getSystemInfo({
         success: (res) => {
           this.scrollHeight = res.windowHeight - 50 + 'px';

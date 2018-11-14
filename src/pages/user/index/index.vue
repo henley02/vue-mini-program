@@ -89,7 +89,7 @@
           {name: '优惠券', imageUrl: require('public/images/user/coupon.png'), value: 0, url: '/pages/user/coupon/main'}
         ],
         list: [
-          {name: '积分兑换记录', url: '/pages/user/points-record/main'},
+          // {name: '积分兑换记录', url: '/pages/user/points-record/main'},
           {name: '我的账户', url: '/pages/user/user-account/main'},
           {name: '资料.地址管理', url: '/pages/user/user-manage/main'},
           {name: '账户安全', url: '/pages/user/account-safety/main'}

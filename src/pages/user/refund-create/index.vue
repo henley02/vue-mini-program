@@ -255,7 +255,6 @@
       }
     },
     onLoad(options) {
-      console.log(options);
       this.selectedServiceTypeIndex = -1;
       this.selectedRefundReasonIndex = -1;
       this.requestedAmount = '';
