@@ -4,6 +4,7 @@
     "pages/detail/main",
     "pages/search/main",
     "pages/pay/index/main",
+    "pages/pay/result/main",
     "pages/flg/index/main",
     "pages/flg/product-list/main",
     "pages/flg/shop-decoration/main",
@@ -78,5 +79,8 @@
     "navigationBarBackgroundColor": "#fff",
     "navigationBarTitleText": "WeChat",
     "navigationBarTextStyle": "black"
+  },
+  "networkTimeout": {
+    "request": 10000
   }
 }

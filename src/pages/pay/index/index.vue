@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!isLoading">
+  <div>
     <div>
       <div class='userContainer' @tap='selectAddress' v-if="address.id">
         <image :src='stripedImg' class='v-cell'/>
@@ -191,32 +191,33 @@
       </div>
     </div>
     <!-- 支付模态框 -->
-    <div class="auth-pop" v-if="flagm">
+    <div class="auth-pop" v-if="isShowBalancePayPop">
       <div class="auth-box">
         <div class='auth-box-title'>输入支付密码</div>
 
         <div class='auth-box-meny'>￥{{amount}}</div>
         <div class="m-panel-bd" style='border-bottom:1rpx solid #DDDDDD;'>
           <div class="m-media-box m-media-box-small-appmsg">
-            <navigator class="m-cell m-cell-access" style='font-size:28rpx;background:#F4F4FB;'>
+            <div class="m-cell m-cell-access" style='font-size:28rpx;background:#F4F4FB;'>
               <div class="m-cell-bd m-cell-primary" style='position:relative;right:154rpx;'>
                 <p>支付方式</p>
               </div>
               <div>余额支付</div>
               <text class="m-cell-ft"></text>
-            </navigator>
+            </div>
           </div>
         </div>
-        <form bindsubmit="formSubmit">
+        <form>
           <div class='content'>
             <block v-for="(item,index) in 6" :key="index">
-              <input class='iptbox' :value="Value.length>=index+1?Value[index]:''" disabled catchtap='Tap'/>
+              <input class='iptbox' type="password" :value="paymentCode.length>=index+1?paymentCode[index]:''" disabled
+                     @tap='getFocus()'/>
             </block>
           </div>
-          <input name="password" type="password" class='ipt' maxlength="6" :focus="isFocus" bindinput="Focus"/>
-
+          <input name="password" type="password" class='ipt' maxlength="6" :focus="isFocus" v-model="paymentCode"
+                 @blur="lossFocus"/>
         </form>
-        <image src="../../img/close.png" class='auth-box-img' catchtap='bindimg'/>
+        <image :src="closeImg" class='auth-box-img' @tap='closeBalancePayPop()'/>
       </div>
     </div>
     <!-- 选择支付方式 -->
@@ -252,8 +253,13 @@
     fetchAddressById,
     fetchFreight,
     checkIsSettingPayPassword,
-    commitOrder
+    commitOrder,
+    createdOrderAndMergePayInfo,
+    payForBalance,
+    fetchOpenid
   } from 'api/index';
+  import MD5 from 'public/js/util/md5';
+  import config from 'public/config/index.js';
 
   export default {
     data() {
@@ -292,8 +298,20 @@
         isShowPointPop: false, // 是否展示积分弹框
         benefitAmounts: 0, // 参与活动的金额
         totalFeightFee: 0, // 运费
-        idList: []
+        idList: [],
+        isShowBalancePayPop: false, // 是否展示余额支付的弹框
+        mergePayId: '',
+        isFocus: false, // 支付密码输入框获取焦点
+        paymentCode: '', // 支付密码
+        pms: []
       };
+    },
+    watch: {
+      paymentCode(newVal, oldVal) {
+        if (newVal.length >= 6) {
+          this.mergeAccountPaid();
+        }
+      }
     },
     components: {},
     computed: {
@@ -306,10 +324,27 @@
         if (s <= 0) {
           s = 0;
         }
-        return s + parseFloat(this.totalFeightFee);
+        return (s + parseFloat(this.totalFeightFee)).toFixed(2);
       }
     },
     methods: {
+      /**
+       * 失去焦点
+       */
+      lossFocus() {
+        this.isFocus = false;
+      },
+      /**
+       * 获取焦点
+       */
+      getFocus() {
+        this.isFocus = true;
+      },
+      closeBalancePayPop() {
+        this.paymentCode = '';
+        this.lossFocus();
+        this.isShowBalancePayPop = false;
+      },
       /**
        * 提交订单
        */
@@ -323,16 +358,11 @@
           return false;
         }
         if (this.payType === 1) {
-          wx.navigateTo({
-            url: '/pages/user/account-safety/main?backStepNumber=3'
-          });
-          let res = await checkIsSettingPayPassword({passportId: this.userInfo.id});
+          let res = await checkIsSettingPayPassword({passportId: this.userInfo.id, userId: this.userInfo.userId});
           if (res.firstErrorMessage === '' && res.verifyResult) {
             this.acknowledgement();
           } else {
-            wx.navigateTo({
-              url: '/pages/user/account-safety/main?backStepNumber=-6'
-            });
+            this.$bridge.link.navigateTo('/pages/user/account-safety/main?backStepNumber=3');
           }
         } else {
           this.acknowledgement();
@@ -341,35 +371,100 @@
       /**
        * 余额支付
        */
-      orderMergePayNews: function () {
-        let val = {
+      async mergeAccountPaid() {
+        let params = {
+          mergePayId: this.mergePayId,
+          transactionPassword: MD5.hexMD5(this.paymentCode),
+          passportId: this.userInfo.id
+        };
+        let res = await payForBalance(params);
+        this.closeBalancePayPop();
+        if (res.firstErrorMessage === '' && res.result) {
+          this.$bridge.link.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
+        } else {
+          this.$bridge.dialog.alert({title: '提示', content: res.firstErrorMessag});
+        }
+      },
+      /**
+       * 订单合并
+       */
+      async orderMergePayNews() {
+        let params = {
+          passportId: this.userInfo.id,
           orderIdList: this.idList,
           payType: 'ACCOUNT',
           storeId: '986901391685849088'
         };
-        var that = this;
-        xnServiceapi.orderMergePayNews(val, function (data) {
-          console.log(data)
-          if (data.id !== '') {
-            that.setData({
-              flagm: true,
-              mergePayId: data.id
+        let res = await createdOrderAndMergePayInfo(params);
+        if (res.id !== '') {
+          this.isShowBalancePayPop = true;
+          this.paymentCode = '';
+          this.isFocus = true;
+          this.mergePayId = res.id;
+        }
+      },
+      /**
+       * 小程序支付
+       */
+      gotopay() {
+        wx.login({
+          success: (datainfo) => {
+            wx.getUserInfo({
+              success: async (data) => {
+                let params = {
+                  appId: config.appId,
+                  jsCode: encodeURIComponent(datainfo.code),
+                  encryptData: encodeURIComponent(data.encryptedData),
+                  iv: encodeURIComponent(data.iv)
+                };
+                let res = await fetchOpenid(params);
+                if (res.firstErrorMessag === '' && res.result) {
+                  let val = {
+                    orderIdList: this.idList, // 单ID集合----------------------- 必填
+                    payType: 'MINIAPP', // 支付方式------传"MINIAPP"--------必填
+                    storeId: '986901391685849088', // 店铺ID--------------------------- 必填
+                    appId: config.appId, // 小程序AppId----------------------必填
+                    openId: res.openId // 会员的openId--------------------- 必填
+                  };
+                  let result = await createdOrderAndMergePayInfo(val);
+                  if (result.firstErrorMessage === '') {
+                    wx.requestPayment({
+                      'timeStamp': result.miniAppPrePayParams.timeStamp,
+                      'nonceStr': result.miniAppPrePayParams.nonceStr,
+                      'package': result.miniAppPrePayParams.packageStr,
+                      'signType': 'MD5',
+                      'paySign': result.miniAppPrePayParams.paySign,
+                      'success': (res) => {
+                        this.$bridge.linl.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
+                      },
+                      'fail': (res) => {
+                        this.$bridge.linl.redirectTo(`/pages/pay/result/main?result=fail&amount=${this.amount}`);
+                      }
+                    });
+                  }
+                } else {
+                  wx.showToast({
+                    title: '支付失败'
+                  });
+                }
+              }
             });
           }
         });
       },
       async acknowledgement() {
         let params = {
+          passportId: this.userInfo.id,
           operatingUnitId: this.$bridge.storage.get('operatingUnitId'),
           systemType: 'B2C',
           deviceType: 'MOBILE',
           storeId: '986901391685849088',
           locationId: this.address.id, // 收货地址id
           goodsAmount: this.totalAmount, // 商品总额
-          freightFee: this.data.totalFeightFee, // 运费
+          freightFee: this.totalFeightFee, // 运费
           memberMessage: this.memberMessage, // 买家留言
           isNeedInvoice: false, // 是否需要开发票
-          orderConfirmItemList: this.argumentsStr, // 商品清单
+          orderConfirmItemList: this.pms, // 商品清单
           usedPoint: this.numval, // 使用的积分
           pointAmount: this.pointRulepick, // 积分抵扣金额
           ticketAmount: this.benefitAmount, // 优惠券抵扣金额
@@ -377,16 +472,14 @@
           promotionAmount: 0, // 促销抵扣金额
           promotionSourceIdList: [], // 促销ID集合
           giftCardAmount: 0, // 礼品卡抵扣总金额
-          prePaidCardUseList: '', // 礼品卡实用信息集合
-          locationRowVersion: this.address.rowVersion // 地址的RowVersion
+          prePaidCardUseList: [], // 礼品卡实用信息集合
+          locationRowVersion: this.address.rowVersion // 地址的RowVersion,
         };
         let res = await commitOrder(params);
         if (res.firstErrorMessage === '') {
           this.idList = res.idList;
           if (res.isZeroOrderPaid) {
-            wx.redirectTo({
-              url: '../paymentsuccess/paymentsuccess?tab=' + 1 + '&goodsAmount=' + this.amount
-            });
+            this.$bridge.linl.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
           } else {
             if (this.payType === 1) {
               this.orderMergePayNews();
@@ -572,9 +665,21 @@
         };
         let res = await fetchOrderInfo(params);
         if (res.firstErrorMessage === '') {
+          let arr = [];
           res.cartDetailList.forEach((item) => {
             item.unitPrice = item.unitPrice.toFixed(2);
+            let obj = {
+              itemId: item.itemId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              isGift: false
+            };
+            if (item.id) {
+              obj.cartid = item.id;
+            }
+            arr.push(obj);
           });
+          this.pms = arr;
           res.couponDetailList.forEach(item => {
             item.IsCheck = false;
             item.couponEntity.usefulStart = this._dateFormat(item.couponEntity.usefulStart, 'yyyy-MM-dd');
@@ -608,6 +713,7 @@
     },
     onShow() {
       this.userInfo = this.$bridge.storage.get('userInfo');
+      console.log(this.userInfo);
       this.argumentsStr = this.$root.$mp.query.data;
       this.locationId = this.$bridge.storage.get('locationId');
       if (this.locationId === '') {

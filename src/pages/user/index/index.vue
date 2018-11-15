@@ -85,7 +85,12 @@
         point: 0, // 我的积分
         userInfo: {},
         extendList: [
-          {name: '积分', imageUrl: require('public/images/user/integrals.png'), value: 0, url: '/pages/user/integral/main'},
+          {
+            name: '积分',
+            imageUrl: require('public/images/user/integrals.png'),
+            value: 0,
+            url: '/pages/user/integral/main'
+          },
           {name: '优惠券', imageUrl: require('public/images/user/coupon.png'), value: 0, url: '/pages/user/coupon/main'}
         ],
         list: [
@@ -171,9 +176,7 @@
         let res = await deleteUserOauth(params);
         if (res.firstErrorMessage === '') {
           this.$bridge.storage.remove('userInfo');
-          wx.redirectTo({
-            url: '/pages/user/login/main'
-          });
+          this.$bridge.link.goLogin();
         } else {
           this.$bridge.dialog.alert(res.firstErrorMessage);
         }

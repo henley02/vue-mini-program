@@ -3,6 +3,9 @@ function jump(url) {
 }
 
 export default {
+  redirectTo(url) {
+    wx.redirectTo({url});
+  },
   navigateTo(url) {
     jump(url);
   },

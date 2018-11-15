@@ -16,7 +16,7 @@ function fetch(data, config) {
     return false;
   }
   if (config.isLoading) {
-    wx.showLoading({title: '加载中...'});
+    wx.showToast({icon: 'loading', title: '加载中...', duration: 10 * 1000});
   }
   if (data.method === 'api.system.member.login') {
     data.tenantid = tenantId;
@@ -47,13 +47,16 @@ function fetch(data, config) {
       },
       fail: error => {
         console.log(error);
-        if (error.errMsg.indexOf('timeout') > -1) {
-          this.$bridge.dialog.alert({content: '请求超时,稍后再试'});
+        if (error.errMsg === 'request:fail timeout') {
+          wx.showModal({
+            content: '请求超时,稍后再试',
+            showCancel: false
+          });
         }
       },
       complete: res => {
         if (config.isLoading) {
-          wx.hideLoading();
+          wx.hideToast();
         }
       }
     });

@@ -1,5 +1,5 @@
 <template>
-  <scroll-view scroll-y="true" @scrolltolower="dropDown" class="container">
+  <scroll-view scroll-y="true" @scrolltolower="dropDown" class="container" style='height:100%;'>
     <div class="notification-wrapper">
       <img :src="notification"/>
       <text>您的入馆申请正在审核中, 请耐心等待!</text>
@@ -17,13 +17,13 @@
         </div>
         <div v-else="">
           <div class="name">等待馆主开馆</div>
-          <div class="desc">点我开馆</div>
+          <div class="desc" @tap="toggleRightsPop">点我开馆</div>
         </div>
       </div>
     </div>
-    <div class="activity">
+    <div class="activity" v-if="wfxSetting.notice">
       <div class="name">活动</div>
-      <div class="content">芳疗馆可以添加照片啦！</div>
+      <div class="content">{{wfxSetting.notice}}</div>
     </div>
     <div class="list">
       <div class="title">
@@ -32,19 +32,58 @@
       </div>
       <ul v-if="topList.length>0">
         <li v-for="(item,index) in topList" :key="index" class="item">
-          <img class="img" :src="item.img"/>
+          <img class="img" :src="item.storeBackgroundPictureUrl"/>
           <div class="name">{{item.name}}</div>
-          <div class="zhishu">网红指数  {{item.zhishu}}</div>
+          <div class="zhishu">网红指数  {{item.popularityIndex}}</div>
         </li>
         <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
         <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
       </ul>
     </div>
+    <div v-if="isShowRights" class="right-pop">
+      <div class="modal-mask" @tap="toggleRightsPop" @touchmove="preventTouchMove"></div>
+      <div class="modal-dialog">
+        <div class="image-wrapper">
+          <image :src="rightsImg"/>
+        </div>
+        <div class="modal-title">开店权益</div>
+        <scroll-view class="modal-content" scroll-y="true" style='height:70px;'>
+          <rich-text :nodes="wfxSetting.right"></rich-text>
+        </scroll-view>
+        <div class="modal-footer">
+          <div class="btn-cancel" @tap="toggleRightsPop" data-status="cancel">取消</div>
+          <div class="btn-confirm" @tap="confirmRightsPop" data-status="confirm">确定</div>
+        </div>
+      </div>
+    </div>
+    <div v-if="showModal" class="entry-distributor-name">
+      <div class="modal-mask" @tap="hideModal" @touchmove="preventTouchMove"></div>
+      <div class="modal-dialog">
+        <div class="modal-title">输入店铺名称</div>
+        <div class="modal-content">
+          <div class="modal-input">
+            <input placeholder-class="input-holder" type="text" maxlength="10" v-model="distributorName" class="input"
+                   placeholder="不超过10个字"/>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="btn-cancel" @tap="onCancel" data-status="cancel">取消</div>
+          <div class="btn-confirm" @tap="onConfirm" data-status="confirm">确定</div>
+        </div>
+      </div>
+    </div>
   </scroll-view>
 </template>
 
 <script>
-  import {fetchWFXMember, fetchTopStore, fetchWFXOperationSetting} from 'api/index';
+  import {
+    fetchWFXMember,
+    fetchTopStore,
+    fetchWFXOperationSetting,
+    applyWFXDistributor,
+    loginnewId,
+    fetchUserInfo
+  } from 'api/index';
 
   /**
    * 芳聊馆首页
@@ -52,6 +91,15 @@
   export default {
     data() {
       return {
+        memberUserInfo: {},
+        wfxSetting: {
+          notice: '', // 活动
+          right: '', // 权益
+          popularityByLike: 0, // 点赞增加人气数量
+          popularityByOrder: 0 // 订单增加人气数量
+        },
+        distributorName: '',
+        rightsImg: require('public/images/flg/index/rights.png'),
         notification: require('public/images/flg/index/notification.png'),
         bgIndex: require('public/images/flg/index/bg-index.png'),
         shareImg: require('public/images/flg/index/share.png'),
@@ -61,34 +109,10 @@
         pageNumber: 1, // 页码
         isEnd: false,
         canDropDown: true, // 是否可以下拉加载
-        topList: [
-          {
-            name: '哈哈哈哈哈哈哈哈哈哈',
-            zhishu: 123123,
-            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
-          },
-          {
-            name: '哈哈哈哈哈哈哈哈哈哈',
-            zhishu: 123123,
-            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
-          },
-          {
-            name: '哈哈哈哈哈哈哈哈哈哈',
-            zhishu: 123123,
-            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
-          },
-          {
-            name: '哈哈哈哈哈哈哈哈哈哈',
-            zhishu: 123123,
-            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
-          },
-          {
-            name: '哈哈哈哈哈哈哈哈哈哈',
-            zhishu: 123123,
-            img: 'https://img-dev.xiniunet.com/852769418315444224/avatar/1056913233363210240.jpg'
-          }
-        ],
+        topList: [],
         isOpen: true,
+        showModal: false, // 是否展示开店输入店名的弹框
+        isShowRights: false, // 是否显示权益的弹框
         data: {
           memberName: '', // 会员名称
           avatarUrl: '', // 头像路径
@@ -106,6 +130,76 @@
     components: {},
     computed: {},
     methods: {
+      confirmRightsPop() {
+        this.isShowRights = false;
+        this.showDialogBtn();
+      },
+      toggleRightsPop() {
+        this.isShowRights = !this.isShowRights;
+      },
+      /**
+       * 输入店名的弹窗
+       */
+      showDialogBtn: function () {
+        this.showModal = true;
+      },
+      /**
+       * 弹出框蒙层截断touchmove事件
+       */
+      preventTouchMove: function () {
+      },
+      /**
+       * 隐藏模态对话框
+       */
+      hideModal: function () {
+        this.showModal = false;
+      },
+      /**
+       * 对话框取消按钮点击事件
+       */
+      onCancel: function () {
+        this.hideModal();
+      },
+      /**
+       * 对话框确认按钮点击事件
+       */
+      onConfirm: function () {
+        this.apply();
+        this.hideModal();
+      },
+      /**
+       * 申请成为微分销
+       */
+      async apply() {
+        let operatingUnitId = this.$bridge.storage.get('operatingUnitId');
+        let params = {
+          passportId: this.userInfo.id,
+          operatingUnitId: operatingUnitId,
+          systemType: 'B2C',
+          deviceType: 'MOBILE',
+          storeId: '986901391685849088'
+        };
+        let data = await fetchUserInfo(params, {isLoading: true});
+        if (data.firstErrorMessage === '') {
+          this.memberUserInfo = data;
+          let id = await loginnewId({});
+          let params = {
+            passportId: this.userInfo.id,
+            id: id,
+            distributorName: this.distributorName,
+            memberRowVersion: data.member.rowVersion,
+            rowVersion: ''
+          };
+          let res = await applyWFXDistributor(params);
+          if (res.firstErrorMessage === '' && res.result) {
+            console.log(res);
+          } else {
+            this.$bridge.dialog.alert({content: res.firstErrorMessage});
+          }
+        } else {
+          this.$bridge.dialog.alert({content: data.firstErrorMessage});
+        }
+      },
       /**
        * 跳转到店铺装修
        */
@@ -124,7 +218,11 @@
       },
       async fetchWFXOperationSetting() {
         let res = await fetchWFXOperationSetting({});
-        console.log(res);
+        if (res.firstErrorMessage === '') {
+          res.right = '<div style="text-align: center">· 轻松赚收益<br/>· 进货打白条<br/>·一对一教你开店<br>· 轻松赚收益<br/>· 进货打白条<br/>·一对一教你开店<br/>· 进货打白条<br/>·一对一教你开店<br>· 轻松赚收益<br/>· 进货打白条<br/>·一对一教你开店</div>';
+          this.wfxSetting = res;
+          console.log(this.wfxSetting);
+        }
       },
       /**
        * 获取商铺推荐
@@ -164,14 +262,12 @@
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
-      },
-      onGotUserInfo(e) {
-        console.log(e.detail.userInfo);
-        console.log(e.detail.rawData);
       }
     },
-    async onLoad() {
+    onShow() {
       this.userInfo = this.$bridge.storage.get('userInfo');
+      console.log('---------');
+      console.log(this.userInfo);
       if (!this.userInfo) {
         this.$bridge.link.goLogin();
       } else {
@@ -188,11 +284,9 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/mixin";
   .container
-    padding-top: rpx(30);
-    width: 345px;
-    margin: 0 auto;
     .notification-wrapper
-      width: 100%
+      width: 345px;
+      margin: 0 auto;
       height: 36px
       background: #FDFCEC;
       display: flex;
@@ -208,6 +302,9 @@
 
   .banner
     position: relative
+    width: 345px;
+    margin: 0 auto;
+    margin-top: 15px;
     height: rpx(297);
     border-radius: rpx(10);
     .bg-index
@@ -255,6 +352,8 @@
         border-radius: 50%;
 
   .activity
+    width: 345px;
+    margin: 0 auto;
     margin-top: 13px;
     display: flex;
     align-items: center;
@@ -271,7 +370,8 @@
       color: #000;
 
   .list
-    width: 100%;
+    width: 345px;
+    margin: 0 auto;
     margin-top: 6px
     height: 25px;
     line-height: 25px
@@ -307,4 +407,89 @@
         .zhishu
           font-size: 12px;
           color: #EA281A;
+
+  /**
+    弹框开始
+   */
+  .entry-distributor-name, .right-pop
+    .modal-mask
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #000;
+      opacity: 0.5;
+      overflow: hidden;
+      z-index: 9000;
+      color: #fff;
+    .modal-dialog
+      width: 270px;
+      overflow: hidden;
+      position: fixed;
+      top: 50%;
+      left: 0;
+      z-index: 9999;
+      background: #fff;
+      margin: rpx(-180) rpx(105);
+      border-radius: 7px;
+    .show-btn
+      margin-top: 50px;
+      color: #22cc22;
+    .modal-title
+      font-family: PingFangSC-Regular;
+      font-size: 18px;
+      color: #000;
+      letter-spacing: 0;
+      line-height: 18px;
+      text-align: center;
+      margin-top: 20px;
+    .modal-footer
+      display: flex;
+      flex-direction: row;
+      height: 50px;
+      border-top: 1px solid #dedede;
+      font-size: 18px;
+      line-height: 50px;
+    .btn-cancel
+      width: 50%;
+      color: #000;
+      text-align: center;
+      border-right: 1px solid #dedede;
+    .btn-confirm
+      width: 50%;
+      color: #108EE9;
+      text-align: center;
+
+  .entry-distributor-name
+    .modal-content
+      padding: 25px 16px;
+    .modal-input
+      display: flex;
+      background: #fff;
+      font-size: 14px;
+    .input
+      width: 100%;
+      height: 36px;
+      font-size: 14px;
+      line-height: 36px;
+      padding: 0 10px;
+      box-sizing: border-box;
+      border-radius: 4px;
+      border: 1px solid #dedede;
+      color: #333;
+    input-holder
+      color: #666;
+      font-size: 14px;
+
+  .right-pop
+    .modal-dialog
+      top: 20%
+    .image-wrapper
+      text-align: center
+      image
+        margin: 0 auto
+        margin-top: 10px
+        width: 86px;
+        height: 79px;
 </style>

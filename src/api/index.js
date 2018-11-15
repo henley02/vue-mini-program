@@ -378,7 +378,10 @@ export const fetchTopStore = (params, config) => fetch({method: 'api.wfx.topStor
  * 确认订单信息
  * @param params
  */
-export const fetchOrderInfo = (params) => fetch({method: 'api.ebusiness.orderNew.confirm', ...params}, {isLoading: true});
+export const fetchOrderInfo = (params) => fetch({method: 'api.ebusiness.orderNew.confirm', ...params}, {
+  isLoading: true,
+  isNeedLogin: true
+});
 
 /**
  * 计算运费(结算页面)
@@ -411,4 +414,39 @@ export const applyWFXDistributor = (params) => fetch({method: 'api.wfx.distribut
 export const commitOrder = (params) => fetch({method: 'api.ebusiness.orderNew.commit', ...params}, {
   isLoading: true,
   isNeedLogin: true
+});
+
+/**
+ * APP创建订单合并付款信息
+ * @param params
+ */
+export const createdOrderAndMergePayInfo = (params) => fetch({method: 'api.ebusiness.orderMergePayNew.create', ...params}, {
+  isLoading: true,
+  isNeedLogin: true
+});
+
+/**
+ *订单合并付款储值卡支付（余额支付）
+ * @param params
+ */
+export const payForBalance = (params) => fetch({method: 'api.ebusiness.mergeAccountPaid.order', ...params}, {
+  isLoading: true,
+  isNeedLogin: true
+});
+
+/**
+ * 获取openid
+ * @param params
+ */
+export const fetchOpenid = (params) => fetch({method: 'api.wechat.session.key.save', ...params}, {
+  isLoading: true,
+  isNeedLogin: true
+});
+
+/**
+ * 微分销店铺点赞
+ * @param params
+ */
+export const like = (params) => fetch({method: 'api.wfx.store.like', ...params}, {
+  isLoading: true
 });
