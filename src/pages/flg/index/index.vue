@@ -483,8 +483,11 @@
       font-size: 14px;
 
   .right-pop
-    .modal-dialog
-      top: 20%
+    .modal-title
+      margin: 10px 0;
+    .modal-content
+      font-size: 15px;
+      color: #888888;
     .image-wrapper
       text-align: center
       image
