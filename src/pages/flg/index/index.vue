@@ -1,6 +1,6 @@
 <template>
   <scroll-view scroll-y="true" @scrolltolower="dropDown" class="container" style='height:100%;'>
-    <div class="notification-wrapper">
+    <div class="notification-wrapper" v-if="data.distributorStatus==='PENDING_APPROVAL'">
       <img :src="notification"/>
       <text>您的入馆申请正在审核中, 请耐心等待!</text>
     </div>
@@ -17,13 +17,13 @@
         </div>
         <div v-else="">
           <div class="name">等待馆主开馆</div>
-          <div class="desc" @tap="toggleRightsPop">点我开馆</div>
+          <div class="desc" @tap="open()">点我开馆</div>
         </div>
       </div>
     </div>
     <div class="activity" v-if="wfxSetting.notice">
       <div class="name">活动</div>
-      <div class="content">{{wfxSetting.notice}}</div>
+      <div class="content" @tap="showNotice(wfxSetting.notice)">{{wfxSetting.notice}}</div>
     </div>
     <div class="list">
       <div class="title">
@@ -81,7 +81,6 @@
     fetchTopStore,
     fetchWFXOperationSetting,
     applyWFXDistributor,
-    loginnewId,
     fetchUserInfo
   } from 'api/index';
 
@@ -130,10 +129,31 @@
     components: {},
     computed: {},
     methods: {
+      showNotice(content) {
+        this.$bridge.dialog.alert({content: content});
+      },
+      /**
+       * 点我开馆
+       * 如果有店铺权益就弹出店铺权益框
+       * 如果没有，就弹出输入店名的框
+       */
+      open() {
+        if (this.wfxSetting.right) {
+          this.toggleRightsPop();
+        } else {
+          this.showDialogBtn();
+        }
+      },
+      /**
+       * 权益弹框 -- 确认
+       */
       confirmRightsPop() {
         this.isShowRights = false;
         this.showDialogBtn();
       },
+      /**
+       * 显示、隐藏权益弹框
+       */
       toggleRightsPop() {
         this.isShowRights = !this.isShowRights;
       },
@@ -182,17 +202,17 @@
         let data = await fetchUserInfo(params, {isLoading: true});
         if (data.firstErrorMessage === '') {
           this.memberUserInfo = data;
-          let id = await loginnewId({});
           let params = {
             passportId: this.userInfo.id,
-            id: id,
+            id: data.member.id,
             distributorName: this.distributorName,
             memberRowVersion: data.member.rowVersion,
-            rowVersion: ''
+            rowVersion: data.member.rowVersion
           };
           let res = await applyWFXDistributor(params);
           if (res.firstErrorMessage === '' && res.result) {
-            console.log(res);
+            this.$bridge.dialog.alert({content: '恭喜您，申请成功，等待后台审核'});
+            this.data.distributorStatus = 'PENDING_APPROVAL';
           } else {
             this.$bridge.dialog.alert({content: res.firstErrorMessage});
           }
@@ -216,12 +236,13 @@
         this.canDropDown = false;
         this.fetchTopStore();
       },
+      /**
+       * 获取微分销设置信息
+       */
       async fetchWFXOperationSetting() {
         let res = await fetchWFXOperationSetting({});
         if (res.firstErrorMessage === '') {
-          res.right = '<div style="text-align: center">· 轻松赚收益<br/>· 进货打白条<br/>·一对一教你开店<br>· 轻松赚收益<br/>· 进货打白条<br/>·一对一教你开店<br/>· 进货打白条<br/>·一对一教你开店<br>· 轻松赚收益<br/>· 进货打白条<br/>·一对一教你开店</div>';
           this.wfxSetting = res;
-          console.log(this.wfxSetting);
         }
       },
       /**
@@ -252,6 +273,10 @@
           this.isLoading = false;
         }
       },
+      /**
+       * 获取微分销会员信息
+       * @returns {Promise.<void>}
+       */
       async fetchWFXMember() {
         let res = await fetchWFXMember({
           id: this.userInfo.memberId,
@@ -265,9 +290,8 @@
       }
     },
     onShow() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.userInfo = this.$bridge.storage.get('userInfo');
-      console.log('---------');
-      console.log(this.userInfo);
       if (!this.userInfo) {
         this.$bridge.link.goLogin();
       } else {
@@ -276,7 +300,6 @@
         this.fetchWFXOperationSetting();
       }
       this.wxInfo = this.$bridge.storage.get('wxInfo');
-      console.log(this.wxInfo);
     }
   };
 </script>
@@ -366,8 +389,14 @@
       text-align: center
       color: #FFF;
     .content
+      width: 275px;
       margin-left: 10px;
       color: #000;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
 
   .list
     width: 345px;
@@ -421,7 +450,7 @@
       background: #000;
       opacity: 0.5;
       overflow: hidden;
-      z-index: 9000;
+      z-index: 100;
       color: #fff;
     .modal-dialog
       width: 270px;
@@ -429,7 +458,7 @@
       position: fixed;
       top: 50%;
       left: 0;
-      z-index: 9999;
+      z-index: 101;
       background: #fff;
       margin: rpx(-180) rpx(105);
       border-radius: 7px;

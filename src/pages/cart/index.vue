@@ -258,13 +258,16 @@
       }
     },
     onShow() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.cartList = [];
       this.isLoading = true;
       this.isEdit = false;
       this.userInfo = this.$bridge.storage.get('userInfo');
-      this.init();
-    },
-    onLoad() {
+      if (!this.userInfo) {
+        this.$bridge.link.goLogin();
+      } else {
+        this.init();
+      }
     }
   };
 </script>

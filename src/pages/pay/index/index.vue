@@ -289,7 +289,8 @@
         locationId: '',
         address: {}, // 收货地址
         isShowPayList: false, // 是否展示支付列表
-        benefitAmount: 0, // 使用优惠券减的金额
+        benefitAmount: 0, // 使用优惠券减的金额（用于页面展示）
+        realBenefitAmount: 0, // 使用优惠券实际减的金额（用于页面展示）
         isShowCouponList: false, // 是否展示优惠券列表
         selectedCouponId: '', // 选中的优惠券id
         pointRulepick: 0, // 积分抵扣的金额
@@ -320,7 +321,7 @@
        * 商品的总金额-优惠券的金额 - 活动优惠的金额 - 积分的金额 （如果减下来是小于0 就是0） 再 + 运费的金额
        */
       amount() {
-        let s = this.totalAmount - this.benefitAmount - this.benefitAmounts - this.pointRulepick;
+        let s = this.totalAmount - this.realBenefitAmount - this.benefitAmounts - this.pointRulepick;
         if (s <= 0) {
           s = 0;
         }
@@ -382,7 +383,7 @@
         if (res.firstErrorMessage === '' && res.result) {
           this.$bridge.link.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
         } else {
-          this.$bridge.dialog.alert({title: '提示', content: res.firstErrorMessag});
+          this.$bridge.dialog.alert({title: '提示', content: res.firstErrorMessage});
         }
       },
       /**
@@ -418,7 +419,7 @@
                   iv: encodeURIComponent(data.iv)
                 };
                 let res = await fetchOpenid(params);
-                if (res.firstErrorMessag === '' && res.result) {
+                if (res.firstErrorMessage === '' && res.result) {
                   let val = {
                     orderIdList: this.idList, // 单ID集合----------------------- 必填
                     payType: 'MINIAPP', // 支付方式------传"MINIAPP"--------必填
@@ -435,10 +436,10 @@
                       'signType': 'MD5',
                       'paySign': result.miniAppPrePayParams.paySign,
                       'success': (res) => {
-                        this.$bridge.linl.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
+                        this.$bridge.link.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
                       },
                       'fail': (res) => {
-                        this.$bridge.linl.redirectTo(`/pages/pay/result/main?result=fail&amount=${this.amount}`);
+                        this.$bridge.link.redirectTo(`/pages/pay/result/main?result=fail&amount=${this.amount}`);
                       }
                     });
                   }
@@ -467,7 +468,7 @@
           orderConfirmItemList: this.pms, // 商品清单
           usedPoint: this.numval, // 使用的积分
           pointAmount: this.pointRulepick, // 积分抵扣金额
-          ticketAmount: this.benefitAmount, // 优惠券抵扣金额
+          ticketAmount: this.realBenefitAmount, // 优惠券实际抵扣金额
           couponEntityIdList: JSON.stringify(this.selectedCouponId.split(',')), // 优惠券id
           promotionAmount: 0, // 促销抵扣金额
           promotionSourceIdList: [], // 促销ID集合
@@ -479,7 +480,7 @@
         if (res.firstErrorMessage === '') {
           this.idList = res.idList;
           if (res.isZeroOrderPaid) {
-            this.$bridge.linl.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
+            this.$bridge.link.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
           } else {
             if (this.payType === 1) {
               this.orderMergePayNews();
@@ -522,7 +523,7 @@
       pointPopConfirm() {
         // 积分抵扣的金额
         let pointRulepick = (this.mul(this.division(this.temporaryPoint, this.pointRule.point), this.pointRule.amount)).toFixed(2);
-        let s = this.totalAmount - this.benefitAmount - this.benefitAmounts;
+        let s = this.totalAmount - this.realBenefitAmount - this.benefitAmounts;
         if (s < 0) {
           s = 0;
         }
@@ -561,9 +562,22 @@
         if (arr.length === 0) {
           this.selectedCouponId = '';
           this.benefitAmount = 0;
+          this.realBenefitAmount = 0;
         } else {
           this.benefitAmount = arr[0].benefitAmount;
           this.selectedCouponId = arr[0].couponEntity.id;
+        }
+        let needPay = this.totalAmount - this.benefitAmounts; // 支付金额减去 活动优惠金额
+        if (this.benefitAmount >= needPay) { // 如果使用的优惠券的金额 大于 (支付金额减去 活动优惠金额) | 直接使用优惠券就够了
+          this.realBenefitAmount = this.benefitAmount - needPay;
+          this.pointRulepick = 0;
+          this.numval = 0;
+        } else if (needPay - this.benefitAmount - this.pointRulepick < 0) { // 使用优惠券、积分支付 （积分超标的）
+          this.realBenefitAmount = this.benefitAmount;
+          this.pointRulepick = this.totalAmount - this.benefitAmount - this.benefitAmounts;
+          this.numval = this.mul(this.division(this.pointRulepick, this.pointRule.amount), this.pointRule.point);
+        } else { // 使用优惠券、积分支付
+          this.realBenefitAmount = this.benefitAmount;
         }
         this.isShowCouponList = false;
       },

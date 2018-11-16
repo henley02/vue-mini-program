@@ -9,7 +9,7 @@
 	},
 	"miniprogramRoot": "dist/",
 	"compileType": "miniprogram",
-	"appid": "wx2c35ca54d4b807ff",
+	"appid": "wx878f29f4478f429d",
 	"projectname": "vue-mini-program",
 	"condition": {
 		"search": {

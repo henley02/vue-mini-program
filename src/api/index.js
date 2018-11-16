@@ -447,6 +447,10 @@ export const fetchOpenid = (params) => fetch({method: 'api.wechat.session.key.sa
  * 微分销店铺点赞
  * @param params
  */
-export const like = (params) => fetch({method: 'api.wfx.store.like', ...params}, {
-  isLoading: true
-});
+export const like = (params) => fetch({method: 'api.wfx.store.like', ...params}, {isLoading: true});
+
+/**
+ * 人气榜单查询
+ * @param params
+ */
+export const fetchPopularityList = (params) => fetch({method: 'api.wfx.popularityList.find', ...params}, {isLoading: true});
