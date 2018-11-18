@@ -49,7 +49,7 @@
         "selectedIconPath": "/static/images/home-selected.png"
       },
       {
-        "pagePath": "pages/flg/index/main",
+        "pagePath": "pages/flg/shop-decoration/main",
         "text": "芳聊馆",
         "iconPath": "/static/images/flg.png",
         "selectedIconPath": "/static/images/flg-selected.png"

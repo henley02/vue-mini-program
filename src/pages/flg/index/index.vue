@@ -138,6 +138,10 @@
        * 如果没有，就弹出输入店名的框
        */
       open() {
+        if (this.data.distributorStatus === 'PENDING_APPROVAL') {
+          this.$bridge.dialog.alert({content: '您的入馆申请正在审核中，请耐心等待！'});
+          return;
+        }
         if (this.wfxSetting.right) {
           this.toggleRightsPop();
         } else {

@@ -15,7 +15,7 @@
           <img :src="like"/>
           <div class="text">点赞</div>
         </div>
-        <div class="share">
+        <div class="share" @tap="shareBtn()">
           <img :src="share"/>
           <div class="text">分享</div>
         </div>
@@ -42,27 +42,47 @@
     <div class="popularity-list-pop" v-if="isShowPopularityListPop">
       <div class="modal-mask" @tap="hideModal" @touchmove="preventTouchMove"></div>
       <div v-if="popularityList.length>0" class="modal-dialog">
+        <image :src="closeImg" class="close" @tap="hideModal"/>
         <div class="top">
-          <image :src="popularityList[0].sourceMemberAvatarUrl" calss="top-image"/>
+          <image :src="popularityList[0].sourceMemberAvatarUrl" class="top-image"/>
           <div class="content">{{popularityList[0].sourceMemberName}}占领了网红指数贡献榜</div>
-          <div class="tops">TIPS: 下单+20网红指数  点赞+1网红指数</div>
+          <div class="tips">TIPS: 下单+20网红指数  点赞+1网红指数</div>
+        </div>
+        <div class="nav">
+          <div class="left" :class="{'active':navType=='week'}" @tap="changePopularityTab('week')">周贡献榜</div>
+          <div class="right" :class="{'active':navType=='total'}" @tap="changePopularityTab('total')">总贡献榜</div>
         </div>
         <scroll-view scroll-y="true" @scrolltolower="dropDown" class="list">
           <ul v-for="(item,index) in popularityList" :key="index">
             <li class="item">
-              <div class="ranking">
-                <image v-if="index===0" :src="goldImg"/>
-                <image v-else-if="index===1" :src="silverImg"/>
-                <image v-else-if="index===2" :src="copperImg"/>
-                <div v-else="">{{index + 1}}</div>
+              <div class="left">
+                <div class="ranking">
+                  <image v-if="index===0" :src="goldImg"/>
+                  <image v-else-if="index===1" :src="silverImg"/>
+                  <image v-else-if="index===2" :src="copperImg"/>
+                  <div v-else="">{{index + 1}}</div>
+                </div>
+                <div class="head-img">
+                  <image :src="item.sourceMemberAvatarUrl"/>
+                </div>
+                <div class="name">{{item.sourceMemberName}}</div>
               </div>
-              <div class="name">{{item.sourceMemberName}}</div>
-              <div class="exponent">{{item.popularityBalance}}</div>
+              <div class="exponent" :class="{'gold':index===0,'silver':index===1,'copper':index==2}">
+                {{item.popularityBalance}}
+              </div>
             </li>
           </ul>
+          <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
+          <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
+          <div v-if="popularityList.length===0 && isEnd">
+            <image :src='noDataImg'/>
+            <div class='no-order-text'>暂无数据</div>
+          </div>
         </scroll-view>
       </div>
     </div>
+    <canvas canvas-id="shareCanvas" style="display: block;background: #fff"
+            v-if="isShowCanvas"></canvas>
   </div>
 </template>
 
@@ -75,11 +95,15 @@
   export default {
     data() {
       return {
+        shareImg: '',
+        isShowCanvas: false,
+        closeImg: require('public/images/close.png'),
         like: require('public/images/flg/shop-decoration/like.png'),
         share: require('public/images/flg/shop-decoration/share.png'),
         goldImg: require('public/images/flg/shop-decoration/gold.png'),
         silverImg: require('public/images/flg/shop-decoration/silver.png'),
         copperImg: require('public/images/flg/shop-decoration/copper.png'),
+        noDataImg: require('public/images/user/nocoupon.png'),
         bg: '',
         temporaryBg: '',
         index: -1,
@@ -90,50 +114,51 @@
         popularityList: [
           {
             sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/like.png'),
+            sourceMemberAvatarUrl: require('public/images/flg/1.png'),
             popularityBalance: 500000
           },
           {
             sourceMemberName: '哈哈哈哈哈哈哈哈哈哈',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/like.png'),
+            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
             popularityBalance: 500
           },
           {
             sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/like.png'),
+            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
             popularityBalance: 500
           },
           {
             sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/like.png'),
+            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
             popularityBalance: 500
           },
           {
             sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/like.png'),
+            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
             popularityBalance: 500
           },
           {
             sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/like.png'),
+            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
             popularityBalance: 500
           },
           {
             sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/like.png'),
+            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
             popularityBalance: 500
           },
           {
             sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/like.png'),
+            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
             popularityBalance: 500
           },
           {
             sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/like.png'),
+            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
             popularityBalance: 500
           }
         ], // 排行榜
+        navType: 'week',
         isShowPopularityListPop: false, // 是否展示排行榜的弹框
         imgList: [
           {image: require('public/images/flg/1.png'), index: 0},
@@ -148,8 +173,16 @@
     components: {},
     computed: {},
     methods: {
+      save() {
+        console.log('on save click');
+      },
+      onImgOk(e) {
+        this.shareImg = e.mp.detail.path;
+        // 两种路径是一样的
+        console.log(e.mp.detail.path);
+        console.log(e.target.path);
+      },
       preventTouchMove() {
-
       },
       /**
        * 下拉加载
@@ -161,34 +194,50 @@
         this.canDropDown = false;
         this.getList();
       },
-      changePopularityTab(item) {
-        this.type = item.status;
+      /**
+       * 切换周、总榜
+       */
+      changePopularityTab(type) {
+        this.navType = type;
         this.pageNumber = 1;
         this.isEnd = false;
         this.canDropDown = true;
-        this.list = [];
-        if (this.type === 'EVALUATION') {
-          this.getReFundList();
-        } else {
-          this.getOrderList();
-        }
+        this.popularityList = [];
+        this.getList();
       },
+      /**
+       * 隐藏榜单
+       */
+      hideModal() {
+        this.isShowPopularityListPop = false;
+      },
+      /**
+       * 展示榜单
+       */
       showPopularityListPop() {
         this.isShowPopularityListPop = true;
       },
+      /**
+       * 获取榜单的数据
+       * @returns {Promise.<void>}
+       */
       async getList() {
         let params = {
-          systemType: 'B2C',
+          storeId: this.data.storeId,
           passportId: this.userInfo.id,
           memberId: this.userInfo.memberId,
           pageSize: this.pageSize,
-          pageNumber: this.pageNumber,
-          storeId: '986901391685849088'
+          pageNumber: this.pageNumber
         };
+        if (this.navType === 'week') {
+          params.isWeek = true;
+        } else {
+          params.isWeek = false;
+        }
         let res = await fetchPopularityList(params);
-        this.list = this.list.concat(res.result);
+        this.popularityList = this.popularityList.concat(res.result);
         // 判断数据是否全部加载完
-        if (res.result.length < this.pageSize) {
+        if (this.popularityList.length >= res.totalAmount || res.result.length < this.pageSize) {
           this.isEnd = true;
           this.canDropDown = false;
         } else {
@@ -196,7 +245,6 @@
           this.pageNumber++;
         }
         this.isLoading = false;
-        console.log(res);
       },
       async likeBtn() {
         let params = {
@@ -220,14 +268,23 @@
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
       },
+      /**
+       * 背景列表选择框 -确定
+       */
       confirm() {
         this.$bridge.storage.save('shopDecoration' + this.userInfo.id, this.index);
         this.isShowImgList = false;
       },
+      /**
+       * 背景列表选择框 - 选择某个背景图片
+       */
       onChange(item, index) {
         this.bg = item.image;
         this.index = index;
       },
+      /**
+       * 获取微分销的信息
+       */
       async fetchWFXMember() {
         let res = await fetchWFXMember({id: this.userInfo.memberId, passportId: this.userInfo.id});
         if (res.firstErrorMessage === '') {
@@ -249,6 +306,172 @@
       },
       goProductList() {
         this.$bridge.link.navigateTo('/pages/flg/product-list/main');
+      },
+      shareBtn() {
+        this.bb();
+      },
+      bb() {
+        wx.canvasToTempFilePath({
+          x: 100,
+          y: 200,
+          width: 50,
+          height: 50,
+          destWidth: 100,
+          destHeight: 100,
+          canvasId: 'shareCanvas',
+          success(res) {
+            console.log(res.tempFilePath);
+            this.isShowCanvas = true;
+          },
+          fail: (res) => {
+            console.log(res);
+          }
+        });
+      },
+      aa() {
+        var context = wx.createCanvasContext('shareCanvas');
+        var path = 'https://xcx.upload.utan.com/article/coverimage/2018/01/25/eyJwaWMiOiIxNTE2ODU0MTg2OTY1NSIsImRvbWFpbiI6InV0YW50b3V0aWFvIn0=';
+        // 将模板图片绘制到canvas,在开发工具中drawImage()函数有问题，不显示图片
+        // 不知道是什么原因，手机环境能正常显示
+        context.drawImage(path, 0, 0, 262, 467);
+
+        // context.drawImage(QD, 10, 390, 65, 65);
+        context.setFillStyle('#832d3b');
+        context.setFontSize(10);
+        context.fillText(this.data.remainTxt1, 60, 130, 100);
+        context.fillText(this.data.remainTxt3, 80, 155, 100);
+        context.fillText(this.data.remainTxt5, 160, 155, 100);
+        context.fillText(this.data.remainTxt6, 75, 180, 100);
+        context.fillText(this.data.remainTxt8, 140, 180, 100);
+
+        context.setFillStyle('#e24342');
+        context.setFontSize(10);
+        context.fillText(this.data.remainTxt2, 65, 155, 100);
+        context.fillText(this.data.remainTxt4, 150, 155, 100);
+        context.fillText(this.data.remainTxt7, 115, 180, 100);
+
+        // 将生成好的图片保存到本地，需要延迟一会，绘制期间耗时
+        wx.showToast({
+          title: '分享图片生成中...',
+          icon: 'loading',
+          duration: 1000
+        });
+
+        // 绘制图片
+        context.draw(false, wx.canvasToTempFilePath({
+          canvasId: 'shareCanvas',
+          success: (res) => {
+            var tempFilePath = res.tempFilePath;
+            console.log(tempFilePath);
+            this.isShowCanvas = true;
+            wx.hideToast();
+          },
+          fail: function (res) {
+            console.log(res);
+          }
+        }, this));
+      },
+
+      /**
+       * 绘制分享的图片
+       * @param goodsPicPath 商品图片的本地链接
+       * @param qrCodePath 二维码的本地链接
+       */
+      drawSharePic(goodsPicPath, qrCodePath) {
+        wx.showLoading({
+          title: '正在生成图片...',
+          mask: true
+        });
+        // y方向的偏移量，因为是从上往下绘制的，所以y一直向下偏移，不断增大。
+        let yOffset = 20;
+        const goodsTitle = '因为是从上往下绘制的，所以y一直向下偏移，不断增大';
+        let goodsTitleArray = [];
+        // 为了防止标题过长，分割字符串,每行18个
+        for (let i = 0; i < goodsTitle.length / 18; i++) {
+          if (i > 2) {
+            break;
+          }
+          goodsTitleArray.push(goodsTitle.substr(i * 18, 18));
+        }
+        const price = '500';
+        const marketPrice = '100';
+        const title1 = '您的好友邀请您一起分享精品好货';
+        const title2 = '立即打开看看吧';
+        const codeText = '长按识别小程序码查看详情';
+
+        const canvasCtx = wx.createCanvasContext('shareCanvas');
+        // 绘制背景
+        canvasCtx.setFillStyle('white');
+        canvasCtx.fillRect(0, 0, 390, 800);
+        // 绘制分享的标题文字
+        canvasCtx.setFontSize(24);
+        canvasCtx.setFillStyle('#333333');
+        canvasCtx.setTextAlign('center');
+        canvasCtx.fillText(title1, 195, 40);
+        // 绘制分享的第二行标题文字
+        canvasCtx.fillText(title2, 195, 70);
+        // 绘制商品图片
+        canvasCtx.drawImage(goodsPicPath, 0, 90, 390, 390);
+        // 绘制商品标题
+        yOffset = 490;
+        goodsTitleArray.forEach(function (value) {
+          canvasCtx.setFontSize(20);
+          canvasCtx.setFillStyle('#333333');
+          canvasCtx.setTextAlign('left');
+          canvasCtx.fillText(value, 20, yOffset);
+          yOffset += 25;
+        });
+        // 绘制价格
+        yOffset += 8;
+        canvasCtx.setFontSize(20);
+        canvasCtx.setFillStyle('#f9555c');
+        canvasCtx.setTextAlign('left');
+        canvasCtx.fillText('￥', 20, yOffset);
+        canvasCtx.setFontSize(30);
+        canvasCtx.setFillStyle('#f9555c');
+        canvasCtx.setTextAlign('left');
+        canvasCtx.fillText(price, 40, yOffset);
+        // 绘制原价
+        const xOffset = (price.length / 2 + 1) * 24 + 50;
+        canvasCtx.setFontSize(20);
+        canvasCtx.setFillStyle('#999999');
+        canvasCtx.setTextAlign('left');
+        canvasCtx.fillText('原价:¥' + marketPrice, xOffset, yOffset);
+        // 绘制原价的删除线
+        canvasCtx.setLineWidth(1);
+        canvasCtx.moveTo(xOffset, yOffset - 6);
+        canvasCtx.lineTo(xOffset + (3 + marketPrice.toString().length / 2) * 20, yOffset - 6);
+        canvasCtx.setStrokeStyle('#999999');
+        canvasCtx.stroke();
+        // 绘制最底部文字
+        canvasCtx.setFontSize(18);
+        canvasCtx.setFillStyle('#333333');
+        canvasCtx.setTextAlign('center');
+        canvasCtx.fillText(codeText, 195, 780);
+        // 绘制二维码
+        canvasCtx.drawImage(qrCodePath, 95, 550, 200, 200);
+        canvasCtx.draw();
+        // 绘制之后加一个延时去生成图片，如果直接生成可能没有绘制完成，导出图片会有问题。
+        setTimeout(() => {
+          wx.canvasToTempFilePath({
+            x: 0,
+            y: 0,
+            width: 390,
+            height: 800,
+            destWidth: 390,
+            destHeight: 800,
+            canvasId: 'shareCanvas',
+            success: (res) => {
+              this.shareImage = res.tempFilePath;
+              this.showSharePic = true;
+              wx.hideLoading();
+            },
+            fail: (res) => {
+              console.log(res);
+              wx.hideLoading();
+            }
+          });
+        }, 2000);
       }
     },
     onShow() {
@@ -392,9 +615,113 @@
       bottom: 0
       left 0
       width: 100%
-      height: 498px
+      height: 385px
       background: #fff
       border-radius: 8px 8px 0 0;
+      .close
+        position: absolute
+        width: 16px;
+        height: 16px;
+        top: 15px;
+        right: 15px;
+      .top
+        position: relative
+        text-align: center;
+        border-bottom: 1px solid #DDDDDD
+        .top-image
+          position: absolute
+          top: -79px;
+          margin-left: -40px;
+          width: 79px;
+          height: 79px
+          border-radius: 50%
+        .content
+          margin-top: 52px
+          font-size: 17px;
+          color: #000;
+        .tips
+          margin-top: 5px;
+          font-size: 12px;
+          color: #888;
+          margin-bottom: 15px
+      .nav
+        margin: 0 auto
+        margin-top: 15px
+        margin-bottom: 15px
+        display: flex;
+        flex-direction: row
+        width: 164px
+        height: 30px
+        line-height: 30px
+        .left
+          border-radius: 10px 0 0 10px;
+          border: 1px solid #FC9776;
+          border-right: none
+        .right
+          border-radius: 0 10px 10px 0;
+          border: 1px solid #FC9776;
+          border-left: none
+        .left, .right
+          width: 50%
+          text-align: center
+          font-family: PingFangSC-Regular;
+          font-size: 13px;
+          color: #EA281A;
+          &.active
+            color: #FFFFFF;
+            background-image: linear-gradient(-90deg, #FC9978 0%, #EE3320 100%);
+      .list
+        height: 218px
+        .item
+          width: 100%
+          height: 63px
+          line-height: 63px
+          display: flex
+          justify-content: space-between
+          align-items: center
+          .left
+            display: flex
+            flex-direction: row
+            align-items: center
+            justify-content: center
+            .ranking
+              width: 40px;
+              height: 40px;
+              line-height: 40px
+              margin: 0 15px;
+              text-align: center
+              image
+                width: 100%
+                height: 100%
+            .head-img
+              width: 43px
+              height: 43px
+              image
+                width: 100%
+                height: 100%
+                border-radius: 50%
+            .name
+              margin: 0 15px;
+              font-family: PingFangSC-Regular;
+              font-size: 14px;
+              color: #6C553D;
+          .exponent
+            font-family: PingFangSC-Regular;
+            font-size: 18px;
+            color: #8B8B8D;
+            margin-right: 15px
+          .gold
+            font-family: AxureHandwriting;
+            font-size: 21px;
+            color: #FFD31A;
+          .silver
+            font-family: AxureHandwriting;
+            font-size: 21px;
+            color: #A4B8C4;
+          .copper
+            font-family: AxureHandwriting;
+            font-size: 21px;
+            color: #DF9548;
 
   /*背景列表的选择弹框*/
   .img-list
