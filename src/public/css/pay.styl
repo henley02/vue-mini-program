@@ -1,0 +1,126 @@
+@import "~public/stylus/mixin";
+.auth-pop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-wrap: wrap;
+  z-index: 999;
+}
+
+.auth-box {
+  width: rpx(640);
+  background-color: #f4f4fb;
+  box-shadow: 0 rpx(10) rpx(30) rgba(0, 0, 0, 0.5);
+  height: rpx(515);
+  border-radius: rpx(4);
+  position: relative;
+  top: rpx(-222);
+}
+
+.auth-box-title {
+  margin-top: rpx(40);
+  font-size: rpx(32);
+  font-family: PingFangSC-Semibold;
+}
+
+.auth-box-meny {
+  margin-top: rpx(40);
+  font-size: rpx(72);
+}
+
+.content {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  float: left;
+  position: relative;
+  top: rpx(51);
+  left: rpx(26);
+  background: #fff;
+  border-radius: rpx(4);
+}
+
+.iptbox {
+  width: rpx(94.5);
+  height: rpx(94);
+  border: rpx(1) solid #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.ipt {
+  width: 0;
+  height: 0;
+}
+
+.btn-area {
+  width: 80%;
+  background-color: orange;
+  color: white;
+}
+
+.auth-box-img {
+  width: rpx(20);
+  height: rpx(20);
+  position: relative;
+  top: rpx(-355);
+  right: rpx(16);
+  z-index: 2;
+}
+
+.auth-box-imgs {
+  width: rpx(20);
+  height: rpx(20);
+  position: absolute;
+  top: rpx(38);
+  right: rpx(40);
+  z-index: 2;
+}
+
+.a-cell-tetx {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: rpx(54);
+  margin-left: rpx(26);
+  width: 72%;
+}
+
+.a-cells-te {
+  font-size: rpx(28);
+  color: #666;
+  width: 92%;
+}
+
+.auth-box-zhi {
+  margin-top: rpx(27);
+  font-size: rpx(32);
+  color: #999;
+}
+
+.a-cell-con-img {
+  width: rpx(100);
+  height: rpx(100);
+}
+
+.a-cell-content {
+  display: flex;
+  flex-direction: row;
+  margin-left: rpx(47);
+  margin-top: rpx(28);
+}
+
+.a-cell-title {
+  font-size: rpx(35);
+  color: black;
+}
+

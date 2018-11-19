@@ -82,9 +82,9 @@
             </div>
 
             <div class="m-total-btn">
-              <navigator v-if="order.status == 'UN_PAID'" class="u-link-btn" @tap="cancelOrder(order)">取消订单</navigator>
-              <navigator v-if="order.status == 'UN_PAID'" class="u-link-btn i-link-btn" catchtap='suitZhifu'>去付款
-              </navigator>
+              <div v-if="order.status == 'UN_PAID'" class="u-link-btn" @tap="cancelOrder(order)">取消订单</div>
+              <div v-if="order.status == 'UN_PAID'" class="u-link-btn i-link-btn" @tap='pay(order)'>去付款
+              </div>
               <navigator v-if="order.status == 'SIGNED'" class="u-link-btn"
                          :url="'/pages/user/order-comment/main?orderId='+order.id">评价
               </navigator>
@@ -117,69 +117,43 @@
         </div>
       </scroll-view>
     </div>
-
     <!-- 支付模态框 -->
-    <div class="auth-pop" v-if="flagm">
-      <div class="auth-box">
-        <div class='auth-box-title'>输入支付密码</div>
-
-        <div class='auth-box-meny'>￥{{Price}}</div>
-        <div class="m-panel-bd" style='border-bottom:1rpx solid #DDDDDD;'>
-          <div class="m-media-box m-media-box-small-appmsg">
-            <navigator class="m-cell m-cell-access" style='font-size:28rpx;background:#F4F4FB;'>
-              <div class="m-cell-bd m-cell-primary" style='position:relative;right:154);'>
-                <p>支付方式</p>
-              </div>
-              <div>余额支付</div>
-              <text class="m-cell-ft"></text>
-            </navigator>
-          </div>
-        </div>
-        <form bindsubmit="formSubmit">
-          <div class='content'>
-            <block v-for="(item,index) in Length" :key="index">
-              <input class='iptbox' :value="Value.length>=index+1?Value[index]:''" disabled type="password"
-                     catchtap='Tap'/>
-            </block>
-          </div>
-          <input name="password" type="password" class='ipt' :maxlength="Length" :focus="isFocus" bindinput="Focus"/>
-        </form>
-        <image src="../../img/close.png" class='auth-box-img' catchtap='bindimg'></image>
-      </div>
-    </div>
+    <balance-pay-pop v-if="isShowBalancePayPop" @closeBalancePayPop="closeBalancePayPop"
+                     :amount="payData.paidAmount" @inputFinished="mergeAccountPaid"></balance-pay-pop>
     <!-- 选择支付方式 -->
-    <div class="auth-pop" v-if="payment">
-      <div class="auth-box" style='background:#FFFFFF;position:relative;top:-40rpx'>
-        <div class='auth-box-zhi'>选择支付方式</div>
-        <div class='a-cell-content' bindtap='balancepaid'>
-          <image src='../../img/yue.png' class='a-cell-con-img'/>
-          <div class='a-cell-tetx'>
-            <div class='a-cell-title'>余额支付</div>
-            <div class='a-cells-te'>使用你的账号余额支付</div>
-          </div>
-        </div>
-        <div class='a-cell-content' bindtap='WeChatPay'>
-          <image src='../../img/weixin.png' class='a-cell-con-img'/>
-          <div class='a-cell-tetx' style='margin-top:23);'>
-            <div class='a-cell-title'>微信支付</div>
-            <!-- <div class='a-cells-te'>支持支付余额,快捷支付等多种支付方式</div> -->
-          </div>
-        </div>
-        <image src="../../img/close.png" class='auth-box-imgs' catchtap='bindimgs'/>
-      </div>
-    </div>
+    <pay-list v-if="isShowPayList" @changePayType="changePayType" @toggleShowPayList="toggleShowPayList"></pay-list>
   </div>
 </template>
 <script type="text/ecmascript-6">
   /*
   * 全部订单
   * */
-  import {fetchRecordList, fetchRefundList, cancelRefund, cancelOrder, orderSign} from 'api/index';
+  import {
+    fetchRecordList,
+    fetchRefundList,
+    cancelRefund,
+    cancelOrder,
+    orderSign,
+    checkIsSettingPayPassword,
+    createdOrderAndMergePayInfo,
+    payForBalance,
+    fetchOpenid
+  } from 'api/index';
+  import payList from 'components/pay-list/pay-list.vue';
+  import balancePayPop from 'components/balance-pay-pop/balance-pay-pop.vue';
+  import MD5 from 'public/js/util/md5';
+  import config from 'public/config/index.js';
 
   export default {
     name: 'consumption-records',
+    components: {
+      payList, balancePayPop
+    },
     data() {
       return {
+        isShowBalancePayPop: false,
+        isShowPayList: false,
+        payType: 0, // 支付类型
         noDataImg: require('public/images/user/noorder.png'),
         tabList: [
           {
@@ -210,10 +184,131 @@
         pageSize: 10, // 页数
         pageNumber: 1, // 页码
         isEnd: false,
-        canDropDown: true // 是否可以下拉加载
+        canDropDown: true, // 是否可以下拉加载
+        payData: {}, // 去支付的数据
+        mergePayId: ''
       };
     },
     methods: {
+      /**
+       * 小程序支付
+       */
+      gotopay() {
+        wx.login({
+          success: (datainfo) => {
+            wx.getUserInfo({
+              success: async (data) => {
+                let params = {
+                  appId: config.appId,
+                  jsCode: encodeURIComponent(datainfo.code),
+                  encryptData: encodeURIComponent(data.encryptedData),
+                  iv: encodeURIComponent(data.iv)
+                };
+                let res = await fetchOpenid(params);
+                if (res.firstErrorMessage === '' && res.result) {
+                  let val = {
+                    orderIdList: this.payData.idList, // 单ID集合----------------------- 必填
+                    payType: 'MINIAPP', // 支付方式------传"MINIAPP"--------必填
+                    storeId: '986901391685849088', // 店铺ID--------------------------- 必填
+                    appId: config.appId, // 小程序AppId----------------------必填
+                    openId: res.openId // 会员的openId--------------------- 必填
+                  };
+                  let result = await createdOrderAndMergePayInfo(val);
+                  if (result.firstErrorMessage === '') {
+                    wx.requestPayment({
+                      'timeStamp': result.miniAppPrePayParams.timeStamp,
+                      'nonceStr': result.miniAppPrePayParams.nonceStr,
+                      'package': result.miniAppPrePayParams.packageStr,
+                      'signType': 'MD5',
+                      'paySign': result.miniAppPrePayParams.paySign,
+                      'success': (res) => {
+                        this.$bridge.link.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
+                      },
+                      'fail': (res) => {
+                        this.$bridge.link.redirectTo(`/pages/pay/result/main?result=fail&amount=${this.amount}`);
+                      }
+                    });
+                  }
+                } else {
+                  wx.showToast({
+                    title: '支付失败'
+                  });
+                }
+              }
+            });
+          }
+        });
+      },
+      /**
+       * 余额支付
+       */
+      async mergeAccountPaid(paymentCode) {
+        let params = {
+          mergePayId: this.mergePayId,
+          transactionPassword: MD5.hexMD5(paymentCode),
+          passportId: this.userInfo.id
+        };
+        let res = await payForBalance(params);
+        this.closeBalancePayPop();
+        if (res.firstErrorMessage === '' && res.result) {
+          this.$bridge.link.redirectTo(`/pages/pay/result/main?result=success&amount=${this.payData.paidAmount}`);
+        } else {
+          this.$bridge.dialog.alert({title: '提示', content: res.firstErrorMessage});
+        }
+      },
+      /**
+       * 订单合并
+       */
+      async orderMergePayNews() {
+        let params = {
+          passportId: this.userInfo.id,
+          orderIdList: this.payData.id.split(','),
+          payType: 'ACCOUNT',
+          storeId: '986901391685849088'
+        };
+        let res = await createdOrderAndMergePayInfo(params);
+        if (res.id !== '') {
+          this.isShowBalancePayPop = true;
+          this.mergePayId = res.id;
+        }
+      },
+      /**
+       * 更改支付方式
+       * @param type
+       */
+      async changePayType(type) {
+        this.payType = type;
+        if (type === 1) {
+          let res = await checkIsSettingPayPassword({passportId: this.userInfo.id, userId: this.userInfo.userId});
+          if (res.firstErrorMessage === '' && res.verifyResult) {
+            this.isShowPayList = false;
+            this.isShowBalancePayPop = true;
+          } else {
+            this.$bridge.dialog.confirm({
+              title: '温馨提示',
+              confirmText: '去设置',
+              content: '为了您的账户安全，请设置支付密码？',
+              confirmCallback: async () => {
+                this.$bridge.link.navigateTo('/pages/user/account-safety/main?backStepNumber=3');
+              },
+              cancelCallback: () => {
+              }
+            });
+          }
+          this.orderMergePayNews();
+        } else if (type === 2) {
+          this.isShowPayList = false;
+          this.gotopay();
+        }
+      },
+      pay(order) {
+        this.payData = order;
+        this.isShowPayList = true;
+        console.log(order);
+      },
+      toggleShowPayList() {
+        this.isShowPayList = !this.isShowPayList;
+      },
       /**
        * 确认收货
        */

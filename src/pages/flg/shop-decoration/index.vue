@@ -31,10 +31,10 @@
         <div class="cancel" @tap="cancel()">取消</div>
         <div class="confirm" @tap="confirm()">完成</div>
       </div>
-      <scroll-view scroll-x="true" width="100%">
+      <scroll-view scroll-x="true" style="width: 100%; overflow-x: auto;">
         <ul>
-          <li v-for="(item,index) in imgList" :key="index" class="item" @tap="onChange(item,index)">
-            <img :src="item.image"/>
+          <li v-for="(item,index) in imgList" :key="index" class="item" @tap="onChange(item)">
+            <div :style="{backgroundImage:'url('+item.imageUrl+')'}" class="img"></div>
           </li>
         </ul>
       </scroll-view>
@@ -72,22 +72,31 @@
               </div>
             </li>
           </ul>
-          <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
-          <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
-          <div v-if="popularityList.length===0 && isEnd">
-            <image :src='noDataImg'/>
-            <div class='no-order-text'>暂无数据</div>
-          </div>
         </scroll-view>
       </div>
+      <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
+      <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
+      <div v-if="popularityList.length===0 && isEnd">
+        <image :src='noDataImg'/>
+        <div class='no-order-text'>暂无数据</div>
+      </div>
     </div>
-    <canvas canvas-id="shareCanvas" style="display: block;background: #fff"
-            v-if="isShowCanvas"></canvas>
+    <div v-if="isShowCanvas">
+      <div class="share-mask"></div>
+      <view class='canvas-box'>
+        <canvas style="width:750rpx; height:940rpx;" canvas-id="shareCanvas"/>
+        <div :src='imagePath'></div>
+        <div class="btn-list">
+          <div class="wx-friend">微信好友</div>
+          <div class="save-img">保存图片</div>
+        </div>
+      </view>
+    </div>
   </div>
 </template>
 
 <script>
-  import {fetchWFXMember, like, fetchPopularityList} from 'api/index';
+  import {fetchWFXMember, like, fetchPopularityList, updateWFXStorePictureUrl} from 'api/index';
 
   /**
    * 芳聊馆--店铺装修
@@ -95,7 +104,7 @@
   export default {
     data() {
       return {
-        shareImg: '',
+        imagePath: '',
         isShowCanvas: false,
         closeImg: require('public/images/close.png'),
         like: require('public/images/flg/shop-decoration/like.png'),
@@ -111,58 +120,14 @@
         data: {},
         isShowImgList: false,
         isLiked: false,
-        popularityList: [
-          {
-            sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/1.png'),
-            popularityBalance: 500000
-          },
-          {
-            sourceMemberName: '哈哈哈哈哈哈哈哈哈哈',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
-            popularityBalance: 500
-          },
-          {
-            sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
-            popularityBalance: 500
-          },
-          {
-            sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
-            popularityBalance: 500
-          },
-          {
-            sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
-            popularityBalance: 500
-          },
-          {
-            sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
-            popularityBalance: 500
-          },
-          {
-            sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
-            popularityBalance: 500
-          },
-          {
-            sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
-            popularityBalance: 500
-          },
-          {
-            sourceMemberName: 'apple',
-            sourceMemberAvatarUrl: require('public/images/flg/shop-decoration/menu.png'),
-            popularityBalance: 500
-          }
-        ], // 排行榜
+        popularityList: [], // 排行榜
         navType: 'week',
         isShowPopularityListPop: false, // 是否展示排行榜的弹框
         imgList: [
-          {image: require('public/images/flg/1.png'), index: 0},
-          {image: require('public/images/flg/2.jpg'), index: 1}
+          {imageUrl: 'https://cdn.xiniunet.com/img/store/bg1.png'},
+          {imageUrl: 'https://cdn.xiniunet.com/img/store/bg2.png'},
+          {imageUrl: 'https://cdn.xiniunet.com/img/store/bg3.png'},
+          {imageUrl: 'https://cdn.xiniunet.com/img/store/bg4.png'}
         ],
         pageSize: 10, // 页数
         pageNumber: 1, // 页码
@@ -173,15 +138,6 @@
     components: {},
     computed: {},
     methods: {
-      save() {
-        console.log('on save click');
-      },
-      onImgOk(e) {
-        this.shareImg = e.mp.detail.path;
-        // 两种路径是一样的
-        console.log(e.mp.detail.path);
-        console.log(e.target.path);
-      },
       preventTouchMove() {
       },
       /**
@@ -271,16 +227,25 @@
       /**
        * 背景列表选择框 -确定
        */
-      confirm() {
+      async confirm() {
         this.$bridge.storage.save('shopDecoration' + this.userInfo.id, this.index);
-        this.isShowImgList = false;
+        let res = await updateWFXStorePictureUrl({
+          id: this.data.storeId,
+          passportId: this.userInfo.id,
+          storeBackgroundPictureUrl: this.bg,
+          rowVersion: this.data.rowVersion
+        });
+        if (res.firstErrorMessage === '') {
+          this.isShowImgList = false;
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
       },
       /**
        * 背景列表选择框 - 选择某个背景图片
        */
-      onChange(item, index) {
-        this.bg = item.image;
-        this.index = index;
+      onChange(item) {
+        this.bg = item.imageUrl;
       },
       /**
        * 获取微分销的信息
@@ -288,7 +253,11 @@
       async fetchWFXMember() {
         let res = await fetchWFXMember({id: this.userInfo.memberId, passportId: this.userInfo.id});
         if (res.firstErrorMessage === '') {
+          if (!res.wfxMember.storeBackgroundPictureUrl) {
+            res.wfxMember.storeBackgroundPictureUrl = this.imgList[0].imageUrl;
+          }
           this.data = res.wfxMember;
+          this.bg = res.wfxMember.storeBackgroundPictureUrl;
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
@@ -308,70 +277,8 @@
         this.$bridge.link.navigateTo('/pages/flg/product-list/main');
       },
       shareBtn() {
-        this.bb();
+        this.drawSharePic(this.bg, this.goldImg);
       },
-      bb() {
-        wx.canvasToTempFilePath({
-          x: 100,
-          y: 200,
-          width: 50,
-          height: 50,
-          destWidth: 100,
-          destHeight: 100,
-          canvasId: 'shareCanvas',
-          success(res) {
-            console.log(res.tempFilePath);
-            this.isShowCanvas = true;
-          },
-          fail: (res) => {
-            console.log(res);
-          }
-        });
-      },
-      aa() {
-        var context = wx.createCanvasContext('shareCanvas');
-        var path = 'https://xcx.upload.utan.com/article/coverimage/2018/01/25/eyJwaWMiOiIxNTE2ODU0MTg2OTY1NSIsImRvbWFpbiI6InV0YW50b3V0aWFvIn0=';
-        // 将模板图片绘制到canvas,在开发工具中drawImage()函数有问题，不显示图片
-        // 不知道是什么原因，手机环境能正常显示
-        context.drawImage(path, 0, 0, 262, 467);
-
-        // context.drawImage(QD, 10, 390, 65, 65);
-        context.setFillStyle('#832d3b');
-        context.setFontSize(10);
-        context.fillText(this.data.remainTxt1, 60, 130, 100);
-        context.fillText(this.data.remainTxt3, 80, 155, 100);
-        context.fillText(this.data.remainTxt5, 160, 155, 100);
-        context.fillText(this.data.remainTxt6, 75, 180, 100);
-        context.fillText(this.data.remainTxt8, 140, 180, 100);
-
-        context.setFillStyle('#e24342');
-        context.setFontSize(10);
-        context.fillText(this.data.remainTxt2, 65, 155, 100);
-        context.fillText(this.data.remainTxt4, 150, 155, 100);
-        context.fillText(this.data.remainTxt7, 115, 180, 100);
-
-        // 将生成好的图片保存到本地，需要延迟一会，绘制期间耗时
-        wx.showToast({
-          title: '分享图片生成中...',
-          icon: 'loading',
-          duration: 1000
-        });
-
-        // 绘制图片
-        context.draw(false, wx.canvasToTempFilePath({
-          canvasId: 'shareCanvas',
-          success: (res) => {
-            var tempFilePath = res.tempFilePath;
-            console.log(tempFilePath);
-            this.isShowCanvas = true;
-            wx.hideToast();
-          },
-          fail: function (res) {
-            console.log(res);
-          }
-        }, this));
-      },
-
       /**
        * 绘制分享的图片
        * @param goodsPicPath 商品图片的本地链接
@@ -477,9 +384,6 @@
     onShow() {
       Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.userInfo = this.$bridge.storage.get('userInfo');
-      console.log(this.userInfo);
-      this.index = this.$bridge.storage.get('shopDecoration' + this.userInfo.id) || 0;
-      this.bg = this.imgList[this.index].image;
       this.fetchWFXMember();
     }
   };
@@ -750,17 +654,40 @@
         margin-right: 20px
         color: #108EE9;
     ul
-      margin: 0 auto
-      display: flex
-      flex-direction: row
+      width: 100%;
+      font-size: 0;
+      word-break: keep-all;
+      white-space: nowrap;
+      overflow-x: auto;
       .item
-        flex-shrink: 0
         width: 75px
         height: 80px
         margin: 15px
-        img
+        display: inline-block;
+        .img
           width: 100%
           height: 100%
+          overflow: hidden;
+          background-repeat: no-repeat;
+          background-position: top;
+          background-size: cover;
+          vertical-align: top;
 
+  .share-mask
+    position: fixed;
+    top: 0;
+    left: 0
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.40);
+    .canvas-box
+      position: fixed;
+      top: 999999 rpx;
+      left: 0
+    .btn-list
+      width: 100%;
+      height: 130px
+      background: #FFFFFF;
 
 </style>

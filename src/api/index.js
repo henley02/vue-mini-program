@@ -369,6 +369,12 @@ export const updateCart = (params, config) => fetch({method: 'api.ebusiness.cart
 export const fetchWFXMember = (params) => fetch({method: 'api.wfx.wfxMember.get', ...params}, {isLoading: true});
 
 /**
+ *更新店铺背景图
+ * @param params
+ */
+export const updateWFXStorePictureUrl = (params) => fetch({method: 'api.wfx.storePictureUrl.update', ...params}, {isLoading: true});
+
+/**
  * 查询top人气店铺
  * @param params
  */

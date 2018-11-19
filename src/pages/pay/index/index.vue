@@ -191,55 +191,10 @@
       </div>
     </div>
     <!-- 支付模态框 -->
-    <div class="auth-pop" v-if="isShowBalancePayPop">
-      <div class="auth-box">
-        <div class='auth-box-title'>输入支付密码</div>
-
-        <div class='auth-box-meny'>￥{{amount}}</div>
-        <div class="m-panel-bd" style='border-bottom:1rpx solid #DDDDDD;'>
-          <div class="m-media-box m-media-box-small-appmsg">
-            <div class="m-cell m-cell-access" style='font-size:28rpx;background:#F4F4FB;'>
-              <div class="m-cell-bd m-cell-primary" style='position:relative;right:154rpx;'>
-                <p>支付方式</p>
-              </div>
-              <div>余额支付</div>
-              <text class="m-cell-ft"></text>
-            </div>
-          </div>
-        </div>
-        <form>
-          <div class='content'>
-            <block v-for="(item,index) in 6" :key="index">
-              <input class='iptbox' type="password" :value="paymentCode.length>=index+1?paymentCode[index]:''" disabled
-                     @tap='getFocus()'/>
-            </block>
-          </div>
-          <input name="password" type="password" class='ipt' maxlength="6" :focus="isFocus" v-model="paymentCode"
-                 @blur="lossFocus"/>
-        </form>
-        <image :src="closeImg" class='auth-box-img' @tap='closeBalancePayPop()'/>
-      </div>
-    </div>
+    <balance-pay-pop v-if="isShowBalancePayPop" @closeBalancePayPop="closeBalancePayPop"
+                     :amount="amount" @inputFinished="mergeAccountPaid"></balance-pay-pop>
     <!-- 选择支付方式 -->
-    <div class="auth-pop" v-if="isShowPayList">
-      <div class="auth-box" style='background:#FFFFFF;position:relative;top:-40rpx'>
-        <div class='auth-box-zhi'>选择支付方式</div>
-        <div class='a-cell-content' @tap='changePayType(1)'>
-          <image :src='yueImg' class='a-cell-con-img'/>
-          <div class='a-cell-tetx'>
-            <div class='a-cell-title'>余额支付</div>
-            <div class='a-cells-te'>使用你的账号余额支付</div>
-          </div>
-        </div>
-        <div class='a-cell-content' @tap='changePayType(2)'>
-          <image :src='weiXinImg' class='a-cell-con-img'/>
-          <div class='a-cell-tetx' style='margin-top:23rpx;'>
-            <div class='a-cell-title'>微信支付</div>
-          </div>
-        </div>
-        <image :src="closeImg" class='auth-box-imgs' @tap='toggleShowPayList'/>
-      </div>
-    </div>
+    <pay-list v-if="isShowPayList" @changePayType="changePayType" @toggleShowPayList="toggleShowPayList"></pay-list>
   </div>
 </template>
 
@@ -260,14 +215,13 @@
   } from 'api/index';
   import MD5 from 'public/js/util/md5';
   import config from 'public/config/index.js';
+  import payList from 'components/pay-list/pay-list.vue';
+  import balancePayPop from 'components/balance-pay-pop/balance-pay-pop.vue';
 
   export default {
     data() {
       return {
         isLoading: true,
-        yueImg: require('public/images/pay/yue.png'),
-        weiXinImg: require('public/images/pay/weixin.png'),
-        closeImg: require('public/images/close.png'),
         positionImg: require('public/images/location.png'),
         stripedImg: require('public/images/user/striped.png'),
         arrowsRightImg: require('public/images/right.png'),
@@ -302,19 +256,12 @@
         idList: [],
         isShowBalancePayPop: false, // 是否展示余额支付的弹框
         mergePayId: '',
-        isFocus: false, // 支付密码输入框获取焦点
-        paymentCode: '', // 支付密码
         pms: []
       };
     },
-    watch: {
-      paymentCode(newVal, oldVal) {
-        if (newVal.length >= 6) {
-          this.mergeAccountPaid();
-        }
-      }
+    components: {
+      payList, balancePayPop
     },
-    components: {},
     computed: {
       /**
        * 计算实际付款的金额
@@ -329,21 +276,7 @@
       }
     },
     methods: {
-      /**
-       * 失去焦点
-       */
-      lossFocus() {
-        this.isFocus = false;
-      },
-      /**
-       * 获取焦点
-       */
-      getFocus() {
-        this.isFocus = true;
-      },
       closeBalancePayPop() {
-        this.paymentCode = '';
-        this.lossFocus();
         this.isShowBalancePayPop = false;
       },
       /**
@@ -363,7 +296,16 @@
           if (res.firstErrorMessage === '' && res.verifyResult) {
             this.acknowledgement();
           } else {
-            this.$bridge.link.navigateTo('/pages/user/account-safety/main?backStepNumber=3');
+            this.$bridge.dialog.confirm({
+              title: '温馨提示',
+              confirmText: '去设置',
+              content: '为了您的账户安全，请设置支付密码？',
+              confirmCallback: async () => {
+                this.$bridge.link.navigateTo('/pages/user/account-safety/main?backStepNumber=3');
+              },
+              cancelCallback: () => {
+              }
+            });
           }
         } else {
           this.acknowledgement();
@@ -372,10 +314,10 @@
       /**
        * 余额支付
        */
-      async mergeAccountPaid() {
+      async mergeAccountPaid(paymentCode) {
         let params = {
           mergePayId: this.mergePayId,
-          transactionPassword: MD5.hexMD5(this.paymentCode),
+          transactionPassword: MD5.hexMD5(paymentCode),
           passportId: this.userInfo.id
         };
         let res = await payForBalance(params);
@@ -399,8 +341,6 @@
         let res = await createdOrderAndMergePayInfo(params);
         if (res.id !== '') {
           this.isShowBalancePayPop = true;
-          this.paymentCode = '';
-          this.isFocus = true;
           this.mergePayId = res.id;
         }
       },
@@ -836,8 +776,6 @@
     margin-top: rpx(20);
   }
 
-  /*textarea start*/
-
   .u-textarea {
     display: block;
     border: 0;
@@ -1109,137 +1047,6 @@
     line-height: rpx(100);
     color: #fff;
     text-align: center;
-  }
-
-  .auth-pop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    flex-wrap: wrap;
-    z-index: 999;
-  }
-
-  .auth-box {
-    width: rpx(640);
-    background-color: #f4f4fb;
-    box-shadow: 0 rpx(10) rpx(30) rgba(0, 0, 0, 0.5);
-    height: rpx(515);
-    border-radius: rpx(4);
-    position: relative;
-    top: rpx(-222);
-  }
-
-  .auth-box-title {
-    margin-top: rpx(40);
-    font-size: rpx(32);
-    font-family: PingFangSC-Semibold;
-  }
-
-  .auth-box-meny {
-    margin-top: rpx(40);
-    font-size: rpx(72);
-  }
-
-  .content {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    float: left;
-    position: relative;
-    top: rpx(51);
-    left: rpx(26);
-    background: #fff;
-    border-radius: rpx(4);
-  }
-
-  .iptbox {
-    width: rpx(94.5);
-    height: rpx(94);
-    border: rpx(1) solid #ddd;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-  }
-
-  .ipt {
-    width: 0;
-    height: 0;
-  }
-
-  .btn-area {
-    width: 80%;
-    background-color: orange;
-    color: white;
-  }
-
-  .auth-box-img {
-    width: rpx(20);
-    height: rpx(20);
-    position: relative;
-    top: rpx(-355);
-    right: rpx(16);
-    z-index: 2;
-  }
-
-  /*支付方式*/
-
-  .auth-box-zhi {
-    margin-top: rpx(27);
-    font-size: rpx(32);
-    color: #999;
-  }
-
-  .a-cell-con-img {
-    width: rpx(100);
-    height: rpx(100);
-  }
-
-  .a-cell-content {
-    display: flex;
-    flex-direction: row;
-    margin-left: rpx(47);
-    margin-top: rpx(28);
-  }
-
-  .a-cell-title {
-    font-size: rpx(35);
-    color: black;
-  }
-
-  .a-cell-tetx {
-    display: flex;
-    flex-direction: column;
-    text-align: left;
-    line-height: rpx(54);
-    margin-left: rpx(26);
-    width: 72%;
-  }
-
-  .a-cells-te {
-    font-size: rpx(28);
-    color: #666;
-    width: 92%;
-  }
-
-  .m-panel-sp-listbox {
-    height: rpx(604);
-  }
-
-  .auth-box-imgs {
-    width: rpx(20);
-    height: rpx(20);
-    position: absolute;
-    top: rpx(38);
-    right: rpx(40);
-    z-index: 2;
   }
 
   .shoppingcart {

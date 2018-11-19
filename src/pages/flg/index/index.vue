@@ -1,17 +1,20 @@
 <template>
   <scroll-view scroll-y="true" @scrolltolower="dropDown" class="container" style='height:100%;'>
-    <div class="notification-wrapper" v-if="data.distributorStatus==='PENDING_APPROVAL'">
+    <div class="notification-wrapper"
+         v-if="data.distributorStatus==='PENDING_APPROVAL' || data.distributorStatus==='DISAGREED' || data.distributorStatus==='AGREED_AND_DISABLED'">
       <img :src="notification"/>
-      <text>您的入馆申请正在审核中, 请耐心等待!</text>
+      <text v-if="data.distributorStatus==='PENDING_APPROVAL'">您的入馆申请正在审核中, 请耐心等待!</text>
+      <text v-if="data.distributorStatus==='DISAGREED'">您的入馆申请未通过，再次申请成功率更大噢</text>
+      <text v-if="data.distributorStatus==='AGREED_AND_DISABLED'">您的芳聊馆已失效，可联系管理员进行激活</text>
     </div>
     <div class="banner">
       <img :src="bgIndex" class="bg-index"/>
-      <div class="content-wrapper">
+      <div class="content-wrapper" @tap="goShopDecoration()">
         <img :src="data.avatarUrl" class="head-img"/>
-        <div v-if="data.storeId && data.storeId!==''">
+        <div v-if="data.distributorStatus && data.distributorStatus==='AGREED'">
           <div class="name">{{data.storeName}}</div>
           <div style="display:flex;flex-direction: row">
-            <div class="desc opened" @tap="goShopDecoration()">进入我的馆</div>
+            <div class="desc opened">进入我的馆</div>
             <img class="share" :src="shareImg"/>
           </div>
         </div>
@@ -30,16 +33,21 @@
         <div class="icon"></div>
         <div class="name">好馆推荐</div>
       </div>
-      <ul v-if="topList.length>0">
+      <ul v-if="topList.length>0" class="clearfix">
         <li v-for="(item,index) in topList" :key="index" class="item">
-          <img class="img" :src="item.storeBackgroundPictureUrl"/>
+          <div class="img" :style="{backgroundImage:'url('+item.storeBackgroundPictureUrl+')'}"></div>
           <div class="name">{{item.name}}</div>
           <div class="zhishu">网红指数  {{item.popularityIndex}}</div>
         </li>
-        <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
-        <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
       </ul>
+      <div v-if="topList.length==0 && isEnd">
+        <image :src='noData' class='shoppingcart'></image>
+        <div class='text'>成为第一个开馆的人</div>
+      </div>
     </div>
+    <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
+    <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
+    <!--权益的弹框-->
     <div v-if="isShowRights" class="right-pop">
       <div class="modal-mask" @tap="toggleRightsPop" @touchmove="preventTouchMove"></div>
       <div class="modal-dialog">
@@ -56,6 +64,7 @@
         </div>
       </div>
     </div>
+    <!--开馆-输入馆名-->
     <div v-if="showModal" class="entry-distributor-name">
       <div class="modal-mask" @tap="hideModal" @touchmove="preventTouchMove"></div>
       <div class="modal-dialog">
@@ -72,6 +81,19 @@
         </div>
       </div>
     </div>
+    <!--点击活动的弹框-->
+    <div v-if="isShowNotice" class="entry-distributor-name">
+      <div class="modal-mask" @tap="hideShowNotice" @touchmove="preventTouchMove"></div>
+      <div class="modal-dialog">
+        <div class="modal-title">活动</div>
+        <image :src="closeImg" class="close" @tap="hideShowNotice"/>
+        <div class="modal-content">
+          <div class="modal-input">
+            <div>{{wfxSetting.notice}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </scroll-view>
 </template>
 
@@ -80,8 +102,7 @@
     fetchWFXMember,
     fetchTopStore,
     fetchWFXOperationSetting,
-    applyWFXDistributor,
-    fetchUserInfo
+    applyWFXDistributor
   } from 'api/index';
 
   /**
@@ -90,6 +111,7 @@
   export default {
     data() {
       return {
+        isShowNotice: false,
         memberUserInfo: {},
         wfxSetting: {
           notice: '', // 活动
@@ -102,6 +124,7 @@
         notification: require('public/images/flg/index/notification.png'),
         bgIndex: require('public/images/flg/index/bg-index.png'),
         shareImg: require('public/images/flg/index/share.png'),
+        closeImg: require('public/images/close.png'),
         userInfo: {},
         isLoading: false,
         pageSize: 10, // 页数
@@ -126,11 +149,12 @@
         }
       };
     },
-    components: {},
-    computed: {},
     methods: {
-      showNotice(content) {
-        this.$bridge.dialog.alert({content: content});
+      hideShowNotice() {
+        this.isShowNotice = false;
+      },
+      showNotice() {
+        this.isShowNotice = true;
       },
       /**
        * 点我开馆
@@ -195,40 +219,28 @@
        * 申请成为微分销
        */
       async apply() {
-        let operatingUnitId = this.$bridge.storage.get('operatingUnitId');
         let params = {
           passportId: this.userInfo.id,
-          operatingUnitId: operatingUnitId,
-          systemType: 'B2C',
-          deviceType: 'MOBILE',
-          storeId: '986901391685849088'
+          id: this.data.id,
+          distributorName: this.distributorName,
+          memberRowVersion: this.data.memberRowVersion,
+          rowVersion: this.data.rowVersion
         };
-        let data = await fetchUserInfo(params, {isLoading: true});
-        if (data.firstErrorMessage === '') {
-          this.memberUserInfo = data;
-          let params = {
-            passportId: this.userInfo.id,
-            id: data.member.id,
-            distributorName: this.distributorName,
-            memberRowVersion: data.member.rowVersion,
-            rowVersion: data.member.rowVersion
-          };
-          let res = await applyWFXDistributor(params);
-          if (res.firstErrorMessage === '' && res.result) {
-            this.$bridge.dialog.alert({content: '恭喜您，申请成功，等待后台审核'});
-            this.data.distributorStatus = 'PENDING_APPROVAL';
-          } else {
-            this.$bridge.dialog.alert({content: res.firstErrorMessage});
-          }
+        let res = await applyWFXDistributor(params);
+        if (res.firstErrorMessage === '' && res.result) {
+          this.$bridge.dialog.alert({content: '提交成功，您的申请已经在排队处理中'});
+          this.data.distributorStatus = 'PENDING_APPROVAL';
         } else {
-          this.$bridge.dialog.alert({content: data.firstErrorMessage});
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
       },
       /**
        * 跳转到店铺装修
        */
       goShopDecoration() {
-        this.$bridge.link.navigateTo('/pages/flg/shop-decoration/main');
+        if (this.data.distributorStatus === 'AGREED') {
+          this.$bridge.link.navigateTo('/pages/flg/shop-decoration/main');
+        }
       },
       /**
        * 下拉加载
@@ -265,9 +277,15 @@
         };
         let res = await fetchTopStore(params, {isLoading: this.pageNumber === 1});
         if (res.firstErrorMessage === '') {
-          this.topList = this.topList.concat(res.data.result);
+          // 如果没有配置默认图 就用第一张图
+          res.result.forEach((item) => {
+            if (!item.storeBackgroundPictureUrl) {
+              item.storeBackgroundPictureUrl = 'https://cdn.xiniunet.com/img/store/bg1.png';
+            }
+          });
+          this.topList = this.topList.concat(res.result);
           // 判断数据是否全部加载完
-          if (this.topList.length >= res.totalCount || res.data.result.length < this.pageSize) {
+          if (res.result.length < this.pageSize) {
             this.isEnd = true;
             this.canDropDown = false;
           } else {
@@ -340,9 +358,9 @@
       border-radius: rpx(10);
     .content-wrapper
       position: absolute
-      width: 100%;
-      height: 100%;
-      top: 0
+      width: 250px;
+      height: 100px;
+      top: 25px;
       left: 45px
       display: flex;
       align-items: center;
@@ -406,11 +424,11 @@
     width: 345px;
     margin: 0 auto;
     margin-top: 6px
-    height: 25px;
-    line-height: 25px
     .title
       display: flex
       align-items: center
+      height: 25px
+      line-height: 25px
       .icon
         display: inline-block
         height: 20px;
@@ -433,6 +451,11 @@
         .img
           width: 165px;
           height: 165px;
+          overflow: hidden;
+          background-repeat: no-repeat;
+          background-position: top;
+          background-size: cover;
+          vertical-align: top;
         .name
           margin-top: 5px;
           font-size: 14px;
@@ -514,6 +537,13 @@
     input-holder
       color: #666;
       font-size: 14px;
+
+  .close
+    position: absolute
+    width: 16px;
+    height: 16px;
+    top: 15px;
+    right: 15px;
 
   .right-pop
     .modal-title
