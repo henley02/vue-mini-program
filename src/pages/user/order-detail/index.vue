@@ -221,10 +221,9 @@
         }
       }
     },
-    onLoad(options) {
-      this.orderId = options.orderId;
-    },
     onShow() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
+      this.orderId = this.$root.$mp.query.orderId;
       if (this.orderId) {
         this.userInfo = this.$bridge.storage.get('userInfo');
         this.getOrderDetail();

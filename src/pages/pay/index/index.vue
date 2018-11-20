@@ -592,7 +592,6 @@
       async fetchAddressById() {
         let res = await fetchAddressById({ids: this.locationId.split(','), passportId: this.userInfo.id});
         if (res.firstErrorMessage === '') {
-          console.log(res.result[0]);
           this.address = res.result[0];
           this.getFreight();
         }
@@ -667,7 +666,6 @@
     },
     onShow() {
       this.userInfo = this.$bridge.storage.get('userInfo');
-      console.log(this.userInfo);
       this.argumentsStr = this.$root.$mp.query.data;
       this.locationId = this.$bridge.storage.get('locationId');
       if (this.locationId === '') {

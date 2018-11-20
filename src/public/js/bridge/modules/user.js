@@ -23,8 +23,20 @@ export default {
   wxLogin() {
     return new Promise((resolve, reject) => {
       wx.login({
-        success: () => {
-          resolve(true);
+        success: (data) => {
+          resolve(data);
+        },
+        fail: (error) => {
+          reject(error);
+        }
+      });
+    });
+  },
+  wxUserInfo() {
+    return new Promise((resolve, reject) => {
+      wx.login({
+        success: (data) => {
+          resolve(data);
         },
         fail: (error) => {
           reject(error);

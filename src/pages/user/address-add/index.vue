@@ -245,31 +245,8 @@
       }
     },
     onShow() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.id = this.$root.$mp.query.id || '';
-      this.isShowAreaSelect = false;
-      this.form = {
-        countryId: '',
-        countryName: '',
-        provinceId: '',
-        provinceName: '',
-        cityId: '',
-        cityName: '',
-        districtId: '',
-        districtName: '',
-        postCode: '',
-        address: '',
-        receiptAddress: '',
-        contactName: '',
-        contactPhone: '',
-        receiptName: '',
-        receiptPhone: '',
-        id: '',
-        isDefault: false,
-        memberId: '',
-        memberName: '',
-        rowVersion: '',
-        tenantId: ''
-      };
       this.userInfo = this.$bridge.storage.get('userInfo');
       if (this.id !== '') {
         this.getAddressInfo();

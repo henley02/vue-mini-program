@@ -107,8 +107,7 @@
       }
     },
     onShow() {
-      this.isNext = false;
-      this.temporary = '';
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
     }
   };
 </script>

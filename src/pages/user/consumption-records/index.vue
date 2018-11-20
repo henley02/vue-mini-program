@@ -87,15 +87,14 @@
       }
     },
     onShow() {
-      this.userInfo = this.$bridge.storage.get('userInfo');
-      this.fetchList();
-    },
-    onLoad() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       wx.getSystemInfo({
         success: (res) => {
           this.scrollHeight = res.windowHeight + 'px';
         }
       });
+      this.userInfo = this.$bridge.storage.get('userInfo');
+      this.fetchList();
     }
   };
 </script>

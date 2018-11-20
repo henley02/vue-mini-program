@@ -11,10 +11,10 @@ export const getProductClassify = (params) => fetch({
 }, {isLoading: true});
 
 /**
- * 首页--根据类别获取商品列表
+ * 根据类别获取商品列表\搜索商品
  * @param params
  */
-export const getGoodList = (params, config) => fetch({method: 'api.ebusiness.findCommodityExtend.advanced', ...params}, config);
+export const getGoodList = (params, config) => fetch({method: 'api.wfx.wfxCommodity.find', ...params}, config);
 
 /**
  * 获取商品详情
@@ -321,12 +321,6 @@ export const fetchCommodityEvaluationNumber = (params) => fetch({method: 'api.eb
  * @param config
  */
 export const fetchEvaluateList = (params, config) => fetch({method: 'api.ebusiness.evaluationNew.find', ...params}, config);
-
-/**
- * 搜索商品
- * @param params
- */
-export const fetchSearchProductList = (params, config) => fetch({method: 'api.ebusiness.findCommodityExtend.advanced', ...params}, config);
 
 /**
  * 加入购物车

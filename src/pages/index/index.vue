@@ -169,20 +169,22 @@
           params.sortType = this.selectedFilterSort;
         }
         let res = await getGoodList(params, {isLoading: this.data.pageNumber === 1});
-        if (this.data.pageNumber === 1) {
-          this.goods = res.result;
-        } else {
-          this.goods = this.goods.concat(res.result);
+        if (res.firstErrorMessage === '') {
+          if (this.data.pageNumber === 1) {
+            this.goods = res.result;
+          } else {
+            this.goods = this.goods.concat(res.result);
+          }
+          // 判断数据是否全部加载完
+          if (res.result.length < this.data.pageSize) {
+            this.isEnd = true;
+            this.canDropDown = false;
+          } else {
+            this.canDropDown = true;
+            this.data.pageNumber++;
+          }
+          this.isLoading = false;
         }
-        // 判断数据是否全部加载完
-        if (res.result.length < this.data.pageSize) {
-          this.isEnd = true;
-          this.canDropDown = false;
-        } else {
-          this.canDropDown = true;
-          this.data.pageNumber++;
-        }
-        this.isLoading = false;
       },
       /**
        * 获取商家信息

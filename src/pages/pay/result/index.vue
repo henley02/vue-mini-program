@@ -35,10 +35,8 @@
         this.$bridge.link.goIndex();
       }
     },
-    onUnload() {
-      Object.assign(this.$data, this.$options.data());// 还原原始数据
-    },
     onShow() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       let {result, amount} = this.$root.$mp.query;
       this.result = result;
       this.amount = amount;

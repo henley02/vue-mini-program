@@ -38,11 +38,11 @@
   </div>
 </template>
 <script>
-  import {fetchSearchProductList} from 'api/index';
+  import {getGoodList} from 'api/index';
 
   /**
    * 搜索页面
-    */
+   */
   export default {
     data() {
       return {
@@ -100,7 +100,7 @@
           pageNumber: this.pageNumber,
           pageSize: this.pageSize
         };
-        let res = await fetchSearchProductList(params, {isLoading: this.pageNumber === 1});
+        let res = await getGoodList(params, {isLoading: this.pageNumber === 1});
         this.list = this.list.concat(res.result);
         // 判断数据是否全部加载完
         if (this.list.length >= res.totalCount || res.result.length < this.pageSize) {
@@ -114,11 +114,7 @@
       }
     },
     onLoad() {
-      this.inputVal = '';
-      this.list = [];
-      this.pageNumber = 1;
-      this.isEnd = false;
-      this.canDropDown = true;
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       wx.getSystemInfo({
         success: (res) => {
           this.scrollHeight = (res.windowHeight - 62) + 'px';
@@ -170,6 +166,7 @@
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
     font-size: rpx(28);
   }
+
   .food-item
     display: flex
     margin: rpx(20) 0 rpx(20) rpx(10)
@@ -208,6 +205,7 @@
           padding-bottom: rpx(8)
           font-size: rpx(32)
           color: #ea281a
+
   .no-data-wrapper
     position: absolute;
     left: 0;

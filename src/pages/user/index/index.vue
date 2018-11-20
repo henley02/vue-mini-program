@@ -239,7 +239,6 @@
           this.$bridge.link.goLogin();
           return false;
         }
-        console.log(res);
         if (!res.user.avatar) {
           res.user.avatar = this.defaultHead;
         }

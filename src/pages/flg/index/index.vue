@@ -33,7 +33,7 @@
         <div class="icon"></div>
         <div class="name">好馆推荐</div>
       </div>
-      <ul v-if="topList.length>0" class="clearfix">
+      <ul class="clearfix">
         <li v-for="(item,index) in topList" :key="index" class="item">
           <div class="img" :style="{backgroundImage:'url('+item.storeBackgroundPictureUrl+')'}"></div>
           <div class="name">{{item.name}}</div>

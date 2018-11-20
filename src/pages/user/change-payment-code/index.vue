@@ -111,7 +111,7 @@
     },
     onShow() {
       clearInterval(this.t);
-      this.isSend = false;
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.userInfo = this.$bridge.storage.get('userInfo');
     }
   };

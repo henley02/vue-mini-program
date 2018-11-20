@@ -246,6 +246,7 @@
       }
     },
     onLoad(options) {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.orderId = options.orderId;
       if (!this.orderId) {
         // 订单异常点击确定后返回上一个页面

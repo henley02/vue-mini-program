@@ -514,7 +514,6 @@
       this.id = this.$root.$mp.query.id || '';
       this.getProductDetail();
       this.userInfo = this.$bridge.storage.get('userInfo');
-      console.log(this.userInfo);
       this.fetchCommodityEvaluationNumber();
       if (!this.userInfo) {
         this.getLocation();

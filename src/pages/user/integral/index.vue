@@ -122,20 +122,15 @@
       }
     },
     onShow() {
-      this.userInfo = this.$bridge.storage.get('userInfo');
-      this.integralList = [];
-      this.pageNumber = 1;
-      this.isEnd = false;
-      this.canDropDown = true;
-      this.fetchList();
-      this.getPoint();
-    },
-    onLoad() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       wx.getSystemInfo({
         success: (res) => {
           this.scrollHeight = res.windowHeight + 'px';
         }
       });
+      this.userInfo = this.$bridge.storage.get('userInfo');
+      this.fetchList();
+      this.getPoint();
     }
   };
 </script>

@@ -103,7 +103,6 @@
             totalCount++;
           });
         });
-        console.log(totalCount);
         return {
           selectedCount, // 选中的数量
           totalPrice: totalPrice.toFixed(2), // 总价
@@ -199,7 +198,6 @@
                   }
                 }
               });
-              console.log(this.cartList);
             } else {
               this.$bridge.dialog.alert({content: res.firstErrorMessage});
             }
@@ -250,7 +248,6 @@
             });
           });
           this.cartList = res.supplierCartList;
-          console.log(this.cartList);
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
@@ -259,9 +256,6 @@
     },
     onShow() {
       Object.assign(this.$data, this.$options.data());// 还原原始数据
-      this.cartList = [];
-      this.isLoading = true;
-      this.isEdit = false;
       this.userInfo = this.$bridge.storage.get('userInfo');
       if (!this.userInfo) {
         this.$bridge.link.goLogin();

@@ -374,7 +374,6 @@
               wx.hideLoading();
             },
             fail: (res) => {
-              console.log(res);
               wx.hideLoading();
             }
           });

@@ -255,11 +255,7 @@
       }
     },
     onLoad(options) {
-      this.selectedServiceTypeIndex = -1;
-      this.selectedRefundReasonIndex = -1;
-      this.requestedAmount = '';
-      this.imgList = [];
-      this.refundRemark = '';
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       if (options.orderStatus === '待发货') {
         this.serviceType = [{name: '退款', type: 'REFUND'}];
       } else {

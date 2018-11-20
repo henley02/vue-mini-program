@@ -193,11 +193,17 @@
       /**
        * 小程序支付
        */
-      gotopay() {
+      async gotopay() {
+        let loginCode = await this.$bridge.user.wxLogin();
+        console.log(loginCode);
         wx.login({
           success: (datainfo) => {
+            console.log('-----datainfo----');
+            console.log(datainfo);
             wx.getUserInfo({
               success: async (data) => {
+                console.log('-----data----');
+                console.log(data);
                 let params = {
                   appId: config.appId,
                   jsCode: encodeURIComponent(datainfo.code),
@@ -207,7 +213,8 @@
                 let res = await fetchOpenid(params);
                 if (res.firstErrorMessage === '' && res.result) {
                   let val = {
-                    orderIdList: this.payData.idList, // 单ID集合----------------------- 必填
+                    passportId: this.userInfo.id,
+                    orderIdList: this.payData.id.split(','), // 单ID集合----------------------- 必填
                     payType: 'MINIAPP', // 支付方式------传"MINIAPP"--------必填
                     storeId: '986901391685849088', // 店铺ID--------------------------- 必填
                     appId: config.appId, // 小程序AppId----------------------必填
@@ -238,6 +245,9 @@
             });
           }
         });
+      },
+      closeBalancePayPop() {
+        this.isShowBalancePayPop = false;
       },
       /**
        * 余额支付
@@ -304,7 +314,6 @@
       pay(order) {
         this.payData = order;
         this.isShowPayList = true;
-        console.log(order);
       },
       toggleShowPayList() {
         this.isShowPayList = !this.isShowPayList;
@@ -477,6 +486,7 @@
       }
     },
     onShow() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.type = this.$root.$mp.query.type || 'ALL';
       this.userInfo = this.$bridge.storage.get('userInfo');
       if (this.type === 'EVALUATION') {

@@ -134,24 +134,17 @@
     created() {
     },
     onShow() {
-      this.tabIndex = 0;
-      this.list = [];
-      this.pageNumber = 1;
-      this.isEnd = false;
-      this.canDropDown = true;
       this.userInfo = this.$bridge.storage.get('userInfo');
       this.getData();
     },
     onLoad(options) {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
       wx.getSystemInfo({
         success: (res) => {
           this.scrollHeight = res.windowHeight - 50 + 'px';
         }
       });
       this.type = options.type;
-      if (this.type === 1) {
-      } else if (this.type === 2) {
-      }
     }
   };
 </script>

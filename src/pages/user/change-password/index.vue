@@ -74,6 +74,9 @@
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
       }
+    },
+    onShow() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
     }
   };
 </script>
