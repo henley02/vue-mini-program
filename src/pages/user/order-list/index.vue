@@ -229,10 +229,10 @@
                       'signType': 'MD5',
                       'paySign': result.miniAppPrePayParams.paySign,
                       'success': (res) => {
-                        this.$bridge.link.redirectTo(`/pages/pay/result/main?result=success&amount=${this.amount}`);
+                        this.$bridge.link.redirectTo(`/pages/pay/result/main?result=success&amount=${this.payData.paidAmount}`);
                       },
                       'fail': (res) => {
-                        this.$bridge.link.redirectTo(`/pages/pay/result/main?result=fail&amount=${this.amount}`);
+                        this.$bridge.link.redirectTo(`/pages/pay/result/main?result=fail&amount=${this.payData.paidAmount}`);
                       }
                     });
                   }
