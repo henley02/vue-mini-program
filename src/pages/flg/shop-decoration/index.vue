@@ -81,14 +81,20 @@
         <div class='no-order-text'>暂无数据</div>
       </div>
     </div>
-    <div v-if="isShowCanvas">
+    <div v-if="isShowCanvas" class="share-wrapper">
       <div class="share-mask"></div>
       <view class='canvas-box'>
-        <canvas style="width:750rpx; height:940rpx;" canvas-id="shareCanvas"/>
-        <div :src='imagePath'></div>
-        <div class="btn-list">
-          <div class="wx-friend">微信好友</div>
-          <div class="save-img">保存图片</div>
+        <canvas :style="{width:canvas.width, height:canvas.height}" canvas-id="shareCanvas"/>
+        <div :src='shareImage'></div>
+        <div class="btn-list" style="display: none">
+          <div class="wx-friend">
+            <div class="bg-friend bg"></div>
+            <div class="text">微信好友</div>
+          </div>
+          <div class="save-img">
+            <div class="bg-save bg"></div>
+            <div class="text">保存图片</div>
+          </div>
         </div>
       </view>
     </div>
@@ -104,7 +110,11 @@
   export default {
     data() {
       return {
-        imagePath: '',
+        canvas: {
+          width: '0px',
+          height: '0px'
+        },
+        shareImage: '',
         isShowCanvas: false,
         closeImg: require('public/images/close.png'),
         like: require('public/images/flg/shop-decoration/like.png'),
@@ -277,87 +287,56 @@
         this.$bridge.link.navigateTo('/pages/flg/product-list/main');
       },
       shareBtn() {
-        this.drawSharePic(this.bg, this.goldImg);
+        this.drawSharePic(this.imgList[0].imageUrl, this.goldImg);
       },
       /**
        * 绘制分享的图片
        * @param goodsPicPath 商品图片的本地链接
        * @param qrCodePath 二维码的本地链接
        */
-      drawSharePic(goodsPicPath, qrCodePath) {
+      async drawSharePic(goodsPicPath, qrCodePath) {
+        let systemInfo = await this.$bridge.system.getSystemInfo();
+        console.log(systemInfo);
+        this.canvas = {
+          width: systemInfo.windowWidth + 'px',
+          height: systemInfo.windowHeight + 'px'
+        };
         wx.showLoading({
           title: '正在生成图片...',
           mask: true
         });
         // y方向的偏移量，因为是从上往下绘制的，所以y一直向下偏移，不断增大。
-        let yOffset = 20;
-        const goodsTitle = '因为是从上往下绘制的，所以y一直向下偏移，不断增大';
-        let goodsTitleArray = [];
-        // 为了防止标题过长，分割字符串,每行18个
-        for (let i = 0; i < goodsTitle.length / 18; i++) {
-          if (i > 2) {
-            break;
-          }
-          goodsTitleArray.push(goodsTitle.substr(i * 18, 18));
-        }
-        const price = '500';
-        const marketPrice = '100';
-        const title1 = '您的好友邀请您一起分享精品好货';
-        const title2 = '立即打开看看吧';
-        const codeText = '长按识别小程序码查看详情';
-
+        let yOffset = 10;
+        let xOffset = systemInfo.windowWidth * 0.1;
         const canvasCtx = wx.createCanvasContext('shareCanvas');
-        // 绘制背景
-        canvasCtx.setFillStyle('white');
-        canvasCtx.fillRect(0, 0, 390, 800);
-        // 绘制分享的标题文字
-        canvasCtx.setFontSize(24);
-        canvasCtx.setFillStyle('#333333');
-        canvasCtx.setTextAlign('center');
-        canvasCtx.fillText(title1, 195, 40);
-        // 绘制分享的第二行标题文字
-        canvasCtx.fillText(title2, 195, 70);
         // 绘制商品图片
-        canvasCtx.drawImage(goodsPicPath, 0, 90, 390, 390);
-        // 绘制商品标题
-        yOffset = 490;
-        goodsTitleArray.forEach(function (value) {
-          canvasCtx.setFontSize(20);
-          canvasCtx.setFillStyle('#333333');
-          canvasCtx.setTextAlign('left');
-          canvasCtx.fillText(value, 20, yOffset);
-          yOffset += 25;
-        });
-        // 绘制价格
-        yOffset += 8;
-        canvasCtx.setFontSize(20);
-        canvasCtx.setFillStyle('#f9555c');
-        canvasCtx.setTextAlign('left');
-        canvasCtx.fillText('￥', 20, yOffset);
-        canvasCtx.setFontSize(30);
-        canvasCtx.setFillStyle('#f9555c');
-        canvasCtx.setTextAlign('left');
-        canvasCtx.fillText(price, 40, yOffset);
-        // 绘制原价
-        const xOffset = (price.length / 2 + 1) * 24 + 50;
-        canvasCtx.setFontSize(20);
-        canvasCtx.setFillStyle('#999999');
-        canvasCtx.setTextAlign('left');
-        canvasCtx.fillText('原价:¥' + marketPrice, xOffset, yOffset);
-        // 绘制原价的删除线
-        canvasCtx.setLineWidth(1);
-        canvasCtx.moveTo(xOffset, yOffset - 6);
-        canvasCtx.lineTo(xOffset + (3 + marketPrice.toString().length / 2) * 20, yOffset - 6);
-        canvasCtx.setStrokeStyle('#999999');
-        canvasCtx.stroke();
-        // 绘制最底部文字
-        canvasCtx.setFontSize(18);
-        canvasCtx.setFillStyle('#333333');
+        canvasCtx.drawImage(goodsPicPath, xOffset, yOffset, systemInfo.windowWidth * 0.8, systemInfo.windowWidth * 1.15);
+        // 绘制背景
+        // 绘制分享的标题文字
+        let str = '褪去身体的疲惫, 芳聊馆是你的最佳选择!';
+        canvasCtx.font = '14px FZCHYFW--GB1-0';
+        canvasCtx.setFillStyle('#333');
         canvasCtx.setTextAlign('center');
-        canvasCtx.fillText(codeText, 195, 780);
+        yOffset += systemInfo.windowWidth * 1.15 + xOffset;
+        canvasCtx.fillText(str, systemInfo.windowWidth / 2, yOffset);
+
+        canvasCtx.font = '12px PingFangSC-Regular';
+        canvasCtx.setFillStyle('#888');
+        canvasCtx.setTextAlign('left');
+        yOffset += 10;
+        canvasCtx.fillText('识别小程序码', xOffset + 20, yOffset + 30);
+        canvasCtx.stroke();
         // 绘制二维码
-        canvasCtx.drawImage(qrCodePath, 95, 550, 200, 200);
+        canvasCtx.drawImage(qrCodePath, (systemInfo.windowWidth - 60) / 2, yOffset, 60, 60);
+
+        canvasCtx.font = '12px PingFangSC-Regular';
+        canvasCtx.setFillStyle('#888');
+        canvasCtx.setTextAlign('left');
+        canvasCtx.fillText('进入芳聊馆', (systemInfo.windowWidth - 60) / 2 + 70, yOffset + 30);
+        canvasCtx.stroke();
+
         canvasCtx.draw();
+        this.isShowCanvas = true;
         // 绘制之后加一个延时去生成图片，如果直接生成可能没有绘制完成，导出图片会有问题。
         setTimeout(() => {
           wx.canvasToTempFilePath({
@@ -369,11 +348,13 @@
             destHeight: 800,
             canvasId: 'shareCanvas',
             success: (res) => {
+              console.log(res.tempFilePath);
               this.shareImage = res.tempFilePath;
-              this.showSharePic = true;
+              this.isShowCanvas = true;
               wx.hideLoading();
             },
             fail: (res) => {
+              console.log(res);
               wx.hideLoading();
             }
           });
@@ -672,21 +653,42 @@
           background-size: cover;
           vertical-align: top;
 
-  .share-mask
-    position: fixed;
-    top: 0;
-    left: 0
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.40);
-    .canvas-box
+  .share-wrapper
+    .share-mask
       position: fixed;
-      top: 999999 rpx;
+      top: 0;
       left: 0
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.40);
+    .canvas-box
+      position: absolute;
+      top: 0;
     .btn-list
       width: 100%;
-      height: 130px
+      height: 100px
       background: #FFFFFF;
-
+      display: flex;
+      flex-direction: row
+      align-items: center
+      .text
+        font-family: PingFangSC-Regular;
+        font-size: 14px;
+        color: #333333;
+        margin-top: 8px
+      .bg
+        width: 50px
+        height: 50px;
+        background-repeat: no-repeat
+        background-size: 100% 100%
+        margin: 00 auto;
+      .wx-friend, .save-img
+        display: inline-block
+        width: 50%;
+        text-align: center
+        .bg-friend
+          background-image: url('../../../public/images/flg/shop-decoration/wx-friend.png')
+        .bg-save
+          background-image: url('../../../public/images/flg/shop-decoration/save.png')
 </style>

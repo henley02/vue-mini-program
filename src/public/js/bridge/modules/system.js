@@ -1,4 +1,17 @@
 export default {
+  getSystemInfo() {
+    return new Promise((resolve, reject) => {
+      try {
+        wx.getSystemInfo({
+          success: (res) => {
+            resolve(res);
+          }
+        });
+      } catch (e) {
+        throw new Error(e);
+      }
+    });
+  },
   /**
    * 获取dom元素信息
    * @param el
