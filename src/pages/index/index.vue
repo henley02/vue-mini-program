@@ -50,13 +50,13 @@
               </div>
               <div class="content border-1px">
                 <div class="name-wrapper">
-                  <div class="name">{{item.name}}</div>
+                  <div class="name">{{item.title}}</div>
                 </div>
                 <div class="price">
                   <span class="now">￥{{item.showPrice}}</span>
                 </div>
                 <div class="extra">
-                  <span class='many'>{{item.saleQuantity}}条成交</span>
+                  <span class='many'>{{item.salesQuantityCount}}条成交</span>
                 </div>
               </div>
             </li>
@@ -76,7 +76,7 @@
 </template>
 
 <script>
-  import {getProductClassify, getGoodList, getMerchant} from 'api/index';
+  import {getGoodList, getMerchant} from 'api/index';
 
   export default {
     data() {
@@ -202,9 +202,11 @@
        * 获取分类列表
        */
       async fetchProductInfo() {
-        let res = await getProductClassify({});
-        this.classifyList = res.result;
-        this.currentCategoryID = res.result[0].id;
+        let res = await getGoodList({
+          isReturnCategory: true
+        }, {isLoading: false});
+        this.classifyList = res.categoryList;
+        this.currentCategoryID = res.categoryList[0].id;
         await this.getMerchantInfo();
         this.fetchGoodList();
       },
