@@ -34,7 +34,7 @@
         <div class="name">好馆推荐</div>
       </div>
       <ul class="clearfix">
-        <li v-for="(item,index) in topList" :key="index" class="item">
+        <li v-for="(item,index) in topList" :key="index" class="item" @tap="goProductList(item)">
           <div class="img" :style="{backgroundImage:'url('+item.storeBackgroundPictureUrl+')'}"></div>
           <div class="name">{{item.name}}</div>
           <div class="zhishu">网红指数  {{item.popularityIndex}}</div>
@@ -104,6 +104,7 @@
     fetchWFXOperationSetting,
     applyWFXDistributor
   } from 'api/index';
+  import {tenantId} from 'public/config/index.js';
 
   /**
    * 芳聊馆首页
@@ -150,6 +151,9 @@
       };
     },
     methods: {
+      goProductList(item) {
+        this.$bridge.link.navigateTo(`/pages/flg/product-list/main?memberId=${item.memberId}`);
+      },
       hideShowNotice() {
         this.isShowNotice = false;
       },
@@ -302,7 +306,8 @@
       async fetchWFXMember() {
         let res = await fetchWFXMember({
           id: this.userInfo.memberId,
-          passportId: this.userInfo.id
+          passportId: this.userInfo.id,
+          tenantId: tenantId
         }, {isLoading: this.pageNumber === 1});
         if (res.firstErrorMessage === '') {
           this.data = res.wfxMember;
