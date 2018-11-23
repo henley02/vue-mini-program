@@ -9,22 +9,23 @@
         <div class="pro-inner">
           <div class="pro-i-hd">
             <div class="pro-face">
-              <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
-                   alt="">
+              <img
+                src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
+                alt="">
             </div>
             <div class="pro-intro">
-              <div class="pi-tit">素食的芳聊馆</div>
+              <div class="pi-tit">{{wfxData.storeName}}</div>
               <p>欢迎来到我的门店!</p>
             </div>
           </div>
           <div class="pro-i-bt">
             <div class="pro-bt-col">
               <div>售出</div>
-              <div>40</div>
+              <div>{{wfxData.salesQuantityCount}}</div>
             </div>
             <div class="pro-bt-col">
               <div>网红指数</div>
-              <div>3694</div>
+              <div>{{wfxData.popularityIndex}}</div>
             </div>
           </div>
         </div>
@@ -43,8 +44,9 @@
           <div class="pro-content-item">
             <div class="pro-goods">
               <div class="goods-pic">
-                <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
-                     alt="">
+                <img
+                  src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
+                  alt="">
               </div>
               <div class="goods-info">
                 <div class="goods-intro">香薰精油家用室内卫生间空气清新剂卧室持久留香香水</div>
@@ -58,8 +60,9 @@
             </div>
             <div class="pro-goods">
               <div class="goods-pic">
-                <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
-                     alt="">
+                <img
+                  src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
+                  alt="">
               </div>
               <div class="goods-info">
                 <div class="goods-intro">香薰精油家用室内卫生间空气清新剂卧室持久留香香水</div>
@@ -73,8 +76,9 @@
             </div>
             <div class="pro-goods">
               <div class="goods-pic">
-                <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
-                     alt="">
+                <img
+                  src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
+                  alt="">
               </div>
               <div class="goods-info">
                 <div class="goods-intro">香薰精油家用室内卫生间空气清新剂卧室持久留香香水</div>
@@ -97,14 +101,37 @@
   /**
    * 芳聊馆--产品列表（产品单）
    */
+  import {fetchWFXMember} from 'api/index';
+
   export default {
     data() {
-      return {};
+      return {
+        memberId: '',
+        wfxData: {}
+      };
     },
     components: {},
     computed: {},
-    methods: {},
+    methods: {
+      /**
+       * 获取微分销的信息
+       */
+      async fetchWFXMember() {
+        let res = await fetchWFXMember({
+          id: this.memberId
+        });
+        if (res.firstErrorMessage === '') {
+          this.wfxData = res.wfxMember;
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+      }
+    },
     onShow() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
+      this.memberId = this.$root.$mp.query.memberId;
+      console.log(this.$root.$mp.query);
+      this.fetchWFXMember();
     }
   };
 </script>
@@ -112,12 +139,13 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~public/stylus/variable";
   @import "~public/stylus/mixin";
-  .container{
+  .container {
     width: 100%;
     height: 100%;
     background: #f5f5f9;
-    overflow-y:auto;
+    overflow-y: auto;
   }
+
   .u-notice {
     height: 36px;
     display: flex;

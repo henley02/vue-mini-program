@@ -41,9 +41,9 @@
     </div>
     <div class="popularity-list-pop" v-if="isShowPopularityListPop">
       <div class="modal-mask" @tap="hideModal" @touchmove="preventTouchMove"></div>
-      <div v-if="popularityList.length>0" class="modal-dialog">
+      <div class="modal-dialog">
         <image :src="closeImg" class="close" @tap="hideModal"/>
-        <div class="top">
+        <div class="top" v-if="popularityList.length>0">
           <image :src="popularityList[0].sourceMemberAvatarUrl" class="top-image"/>
           <div class="content">{{popularityList[0].sourceMemberName}}占领了网红指数贡献榜</div>
           <div class="tips">TIPS: 下单+20网红指数  点赞+1网红指数</div>
@@ -72,13 +72,13 @@
               </div>
             </li>
           </ul>
+          <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
+          <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
+          <div v-if="popularityList.length===0 && isEnd" class="no-data">
+            <image :src='noDataImg'/>
+            <div class='no-order-text'>暂无数据</div>
+          </div>
         </scroll-view>
-      </div>
-      <div v-if="isLoading && pageNumber !== 1" class="drop-down-status">正在加载ing</div>
-      <div v-if="isEnd && pageNumber > 1" class="drop-down-status">亲，已经到底部了</div>
-      <div v-if="popularityList.length===0 && isEnd">
-        <image :src='noDataImg'/>
-        <div class='no-order-text'>暂无数据</div>
       </div>
     </div>
     <div v-if="isShowCanvas" class="share-wrapper">
@@ -103,6 +103,7 @@
 
 <script>
   import {fetchWFXMember, like, fetchPopularityList, updateWFXStorePictureUrl} from 'api/index';
+  import {tenantId} from 'public/config/index.js';
 
   /**
    * 芳聊馆--店铺装修
@@ -182,6 +183,7 @@
        */
       showPopularityListPop() {
         this.isShowPopularityListPop = true;
+        this.changePopularityTab('week');
       },
       /**
        * 获取榜单的数据
@@ -200,10 +202,10 @@
         } else {
           params.isWeek = false;
         }
-        let res = await fetchPopularityList(params);
+        let res = await fetchPopularityList(params, {isLoading: this.pageNumber === 1});
         this.popularityList = this.popularityList.concat(res.result);
         // 判断数据是否全部加载完
-        if (this.popularityList.length >= res.totalAmount || res.result.length < this.pageSize) {
+        if (this.popularityList.length >= res.totalCount || res.result.length < this.pageSize) {
           this.isEnd = true;
           this.canDropDown = false;
         } else {
@@ -261,7 +263,7 @@
        * 获取微分销的信息
        */
       async fetchWFXMember() {
-        let res = await fetchWFXMember({id: this.userInfo.memberId, passportId: this.userInfo.id});
+        let res = await fetchWFXMember({id: this.userInfo.memberId, passportId: this.userInfo.id, tenantId: tenantId});
         if (res.firstErrorMessage === '') {
           if (!res.wfxMember.storeBackgroundPictureUrl) {
             res.wfxMember.storeBackgroundPictureUrl = this.imgList[0].imageUrl;
@@ -284,7 +286,7 @@
         this.isShowImgList = true;
       },
       goProductList() {
-        this.$bridge.link.navigateTo('/pages/flg/product-list/main');
+        this.$bridge.link.navigateTo(`/pages/flg/product-list/main?tenantId=${this.data.storeId}`);
       },
       shareBtn() {
         this.drawSharePic(this.imgList[0].imageUrl, this.goldImg);
@@ -514,7 +516,7 @@
         border-bottom: 1px solid #DDDDDD
         .top-image
           position: absolute
-          top: -79px;
+          top: -85px;
           margin-left: -40px;
           width: 79px;
           height: 79px
@@ -691,4 +693,14 @@
           background-image: url('../../../public/images/flg/shop-decoration/wx-friend.png')
         .bg-save
           background-image: url('../../../public/images/flg/shop-decoration/save.png')
+
+  .no-data
+    text-align: center
+    margin-top: 10px
+    image
+      width: 100px
+      height: 100px
+    .no-order-text
+      font-size: 12px
+      color: #3c3c3c
 </style>
