@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="dis-center-hd">
-      <div class="dis-hd-btn">去提现</div>
+      <div class="dis-hd-btn"></div>
       <div class="dis-money">
         <div class="dis-m-money">
           <span>￥</span>
@@ -23,8 +23,13 @@
     <div class="dis-detail-list">
       <div class="detail-title">
         <span class="d-tit"><i></i>基金明细</span>
-        <div class="calendar-col">
-          2018-10<i class="calendar-icon"></i>
+        <div class="calendar-col" @tap="togglePicker()">
+          <picker mode="date" :value="date" fields="month" :start="startDate" :end="endDate" @change="bindDateChange">
+            <view class="picker">
+              {{showDate}}
+            </view>
+          </picker>
+          <i class="calendar-icon"></i>
         </div>
       </div>
       <ul>
@@ -58,17 +63,86 @@
 </template>
 
 <script>
+  import {fetchTransactionList} from 'api/index';
+
   /**
    * 分销中心
    */
   export default {
     data() {
-      return {};
+      return {
+        isShowPicker: false,
+        date: '2018-01-01',
+        startDate: '2014-01-01',
+        endDate: '2018-01-01',
+        list: [],
+        userInfo: {},
+        isLoading: false,
+        pageSize: 10, // 页数
+        pageNumber: 1, // 页码
+        isEnd: false,
+        canDropDown: true // 是否可以下拉加载
+      };
     },
     components: {},
-    computed: {},
-    methods: {},
+    computed: {
+      showDate() {
+        let arr = this.date.split('-');
+        return arr[0] + '-' + arr[1];
+      }
+    },
+    methods: {
+      togglePicker() {
+        this.isShowPicker = !this.isShowPicker;
+      },
+      bindDateChange(e) {
+        console.log(e.target.value);
+        this.value = e.target.value;
+        this.togglePicker();
+      },
+      /**
+       * 下拉加载
+       */
+      dropDown() {
+        if (this.isEnd || !this.canDropDown) {
+          return false;
+        }
+        this.canDropDown = false;
+        this.getData();
+      },
+      async getData() {
+        this.isLoading = true;
+        let params = {
+          commissionType: 'WFX',
+          passportId: this.userInfo.id,
+          memberId: this.userInfo.memberId,
+          pageSize: this.pageSize,
+          pageNumber: this.pageNumber
+        };
+        if (this.pageNumber === 1) {
+          this.list = [];
+        }
+        let res = await fetchTransactionList(params, {isLoading: this.pageNumber === 1});
+        if (res.firstErrorMessage === '') {
+          this.list = this.list.concat(res.result);
+          // 判断数据是否全部加载完
+          if (res.result.length < this.pageSize) {
+            this.isEnd = true;
+            this.canDropDown = false;
+          } else {
+            this.canDropDown = true;
+            this.pageNumber++;
+          }
+          this.isLoading = false;
+        } else {
+          this.$bridge.dialog.alert({content: res.firstErrorMessage});
+        }
+      }
+    },
     onShow() {
+      Object.assign(this.$data, this.$options.data());// 还原原始数据
+      this.userInfo = this.$bridge.storage.get('userInfo');
+      this.getData();
     },
     onLoad() {
 
@@ -109,7 +183,7 @@
     padding: 40px 12px 16px;
   }
 
-  .dis-m-money{
+  .dis-m-money {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -164,7 +238,7 @@
     font-size: 16px;
   }
 
-  .mc-em{
+  .mc-em {
     font-size 12px;
   }
 
@@ -179,7 +253,7 @@
     padding: 12px;
     color: #000;
     font-size: 14px;
-    border-bottom:1px solid #ddd;
+    border-bottom: 1px solid #ddd;
   }
 
   .d-tit {

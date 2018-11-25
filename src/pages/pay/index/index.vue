@@ -204,7 +204,7 @@
    */
   import {
     fetchOrderInfo,
-    fetchDefaultAddress,
+    fetchAddressList,
     fetchAddressById,
     fetchFreight,
     checkIsSettingPayPassword,
@@ -597,13 +597,24 @@
         }
       },
       async getDefaultAddress() {
-        let res = await fetchDefaultAddress({
-          ip: '127.0.0.1',
+        let res = await fetchAddressList({
           memberId: this.userInfo.memberId,
-          passportId: this.userInfo.id
-        });
-        if (res.firstErrorMessage === '' && res.location.provinceName) {
-          this.address = res.location;
+          passportId: this.userInfo.id,
+          pageNumber: 1,
+          pageSize: 10
+        }, {isLoading: true});
+        if (res.firstErrorMessage === '') {
+          res.result.forEach(item => {
+            if (this.locationId) {
+              if (item.id === this.locationId) {
+                this.address = item;
+              }
+            } else {
+              if (item.isDefault) {
+                this.address = item;
+              }
+            }
+          });
           this.getFreight();
         }
       },
@@ -668,6 +679,7 @@
       this.userInfo = this.$bridge.storage.get('userInfo');
       this.argumentsStr = this.$root.$mp.query.data;
       this.locationId = this.$bridge.storage.get('locationId');
+      console.log(this.locationId);
       if (this.locationId === '') {
         this.getDefaultAddress();
       } else {
@@ -721,6 +733,8 @@
   }
 
   .detail-address {
+    position: relative;
+    margin-top: rpx(-32);
     padding-left: rpx(20);
   }
 

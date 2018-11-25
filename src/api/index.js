@@ -454,3 +454,9 @@ export const like = (params) => fetch({method: 'api.wfx.store.like', ...params},
  * @param params
  */
 export const fetchPopularityList = (params) => fetch({method: 'api.wfx.popularityList.find', ...params}, {isLoading: true});
+
+/**
+ * 高级查询佣金交易表
+ * @param params
+ */
+export const fetchTransactionList = (params) => fetch({method: 'api.wfx.commissionTransaction.find', ...params}, {isLoading: true});

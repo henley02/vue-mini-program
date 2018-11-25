@@ -9,9 +9,7 @@
         <div class="pro-inner">
           <div class="pro-i-hd">
             <div class="pro-face">
-              <img
-                src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
-                alt="">
+              <img :src="wfxData.avatarUrl" alt="">
             </div>
             <div class="pro-intro">
               <div class="pi-tit">{{wfxData.storeName}}</div>
@@ -33,65 +31,29 @@
       <div class="m-pro-content">
         <div class="m-pro-nav">
           <ul>
-            <li class="active"><span>香薰套盒</span></li>
-            <li><span>香薰套盒</span></li>
-            <li><span>香薰套盒</span></li>
-            <li><span>香薰套盒</span></li>
-            <li><span>香薰套盒</span></li>
+            <li v-for="(item,index) in classifyList" :class="{'active': currentCategoryID===item.id}"
+                @click="selectMenu(item)" :key="index">
+              <span>{{item.categoryName}}</span></li>
           </ul>
         </div>
-        <div class="pro-content">
+        <scroll-view class="pro-content" scroll-y @scrolltolower="dropDown">
           <div class="pro-content-item">
-            <div class="pro-goods">
+            <div class="pro-goods" v-for="(item,index) in goods" @click="goDetail(item.id)" :key="index">
               <div class="goods-pic">
-                <img
-                  src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
-                  alt="">
+                <img :src="item.pictureUrl" alt="">
               </div>
               <div class="goods-info">
-                <div class="goods-intro">香薰精油家用室内卫生间空气清新剂卧室持久留香香水</div>
+                <div class="goods-intro">{{item.title}}</div>
                 <div class="goods-handle">
                   <div class="g-money">
-                    <span>￥</span>200
-                  </div>
-                  <div class="g-cart-icon"></div>
-                </div>
-              </div>
-            </div>
-            <div class="pro-goods">
-              <div class="goods-pic">
-                <img
-                  src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
-                  alt="">
-              </div>
-              <div class="goods-info">
-                <div class="goods-intro">香薰精油家用室内卫生间空气清新剂卧室持久留香香水</div>
-                <div class="goods-handle">
-                  <div class="g-money">
-                    <span>￥</span>200
-                  </div>
-                  <div class="g-cart-icon"></div>
-                </div>
-              </div>
-            </div>
-            <div class="pro-goods">
-              <div class="goods-pic">
-                <img
-                  src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1542703606838&di=2250ecceaf5f7fc659719cf4e69eeb38&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fpic%2Fitem%2F242dd42a2834349b193b6c82caea15ce36d3bef3.jpg"
-                  alt="">
-              </div>
-              <div class="goods-info">
-                <div class="goods-intro">香薰精油家用室内卫生间空气清新剂卧室持久留香香水</div>
-                <div class="goods-handle">
-                  <div class="g-money">
-                    <span>￥</span>200
+                    <span>￥</span>{{item.showPrice}}
                   </div>
                   <div class="g-cart-icon"></div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </scroll-view>
       </div>
     </div>
   </div>
@@ -101,18 +63,54 @@
   /**
    * 芳聊馆--产品列表（产品单）
    */
-  import {fetchWFXMember} from 'api/index';
+  import {fetchWFXMember, getGoodList, getMerchant} from 'api/index';
 
   export default {
     data() {
       return {
         memberId: '',
-        wfxData: {}
+        wfxData: {},
+        classifyList: [], // 商品分类列表
+        data: {
+          pageSize: 10, // 页数
+          operatingUnitId: '',
+          pageNumber: 1 // 页码
+        },
+        currentCategoryID: -1, // 当前选中的商品分类
+        goods: [], // 商品列表
+        isEnd: false, // 数据是否加载完
+        canDropDown: true, // 是否可以下拉加载
+        isLoading: false
       };
     },
     components: {},
     computed: {},
     methods: {
+      /**
+       * 下拉加载
+       */
+      dropDown(e) {
+        if (this.isEnd || !this.canDropDown) {
+          return false;
+        }
+        this.canDropDown = false;
+        this.fetchGoodList();
+      },
+      /**
+       * 跳转到商品详情
+       */
+      goDetail(id) {
+        this.$bridge.link.goProductDetail(id);
+      },
+      selectMenu(item) {
+        this.currentCategoryID = item.id;
+        this.data.pageNumber = 1;
+        this.isEnd = false;
+        this.canDropDown = true;
+        this.selectedFilterType = '';
+        this.selectedFilterSort = '';
+        this.fetchGoodList();
+      },
       /**
        * 获取微分销的信息
        */
@@ -125,6 +123,65 @@
         } else {
           this.$bridge.dialog.alert({content: res.firstErrorMessage});
         }
+      },
+      /**
+       * 获取商家信息
+       */
+      async getMerchantInfo() {
+        let params = {
+          deviceType: 'MOBILE',
+          systemType: 'B2C'
+        };
+        let res = await getMerchant(params);
+        this.data.operatingUnitId = res.systemSite.operatingUnitId;
+        this.$bridge.storage.save('operatingUnitId', res.systemSite.operatingUnitId);
+      },
+      /**
+       * 根据分类id获取对应的商品列表
+       */
+      async fetchGoodList() {
+        this.isLoading = true;
+        if (this.data.pageNumber === 1) {
+          this.goods = [];
+        }
+        let params = {
+          categoryIds: this.currentCategoryID.split(' '),
+          operatingUnitId: this.data.operatingUnitId,
+          systemType: 'B2C',
+          deviceType: 'MOBILE',
+          pageNumber: this.data.pageNumber,
+          pageSize: this.data.pageSize
+        };
+        if (this.selectedFilterType) {
+          params.sortColumn = this.selectedFilterType;
+          params.sortType = this.selectedFilterSort;
+        }
+        let res = await getGoodList(params, {isLoading: this.data.pageNumber === 1});
+        if (res.firstErrorMessage === '') {
+          if (this.data.pageNumber === 1) {
+            this.goods = res.result;
+          } else {
+            this.goods = this.goods.concat(res.result);
+          }
+          // 判断数据是否全部加载完
+          if (res.result.length < this.data.pageSize) {
+            this.isEnd = true;
+            this.canDropDown = false;
+          } else {
+            this.canDropDown = true;
+            this.data.pageNumber++;
+          }
+          this.isLoading = false;
+        }
+      },
+      async fetchProductInfo() {
+        let res = await getGoodList({
+          isReturnCategory: true
+        }, {isLoading: false});
+        this.classifyList = res.categoryList;
+        this.currentCategoryID = res.categoryList[0].id;
+        await this.getMerchantInfo();
+        this.fetchGoodList();
       }
     },
     onShow() {
@@ -132,6 +189,7 @@
       this.memberId = this.$root.$mp.query.memberId;
       console.log(this.$root.$mp.query);
       this.fetchWFXMember();
+      this.fetchProductInfo();
     }
   };
 </script>

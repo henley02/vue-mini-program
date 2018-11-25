@@ -85,13 +85,12 @@
       <div class="share-mask"></div>
       <view class='canvas-box'>
         <canvas :style="{width:canvas.width, height:canvas.height}" canvas-id="shareCanvas"/>
-        <div :src='shareImage'></div>
-        <div class="btn-list" style="display: none">
-          <div class="wx-friend">
+        <div class="btn-list">
+          <button class="wx-friend" open-type="share">
             <div class="bg-friend bg"></div>
             <div class="text">微信好友</div>
-          </div>
-          <div class="save-img">
+          </button>
+          <div class="save-img" @tap="saveImageToAlbum">
             <div class="bg-save bg"></div>
             <div class="text">保存图片</div>
           </div>
@@ -291,6 +290,42 @@
       shareBtn() {
         this.drawSharePic(this.imgList[0].imageUrl, this.goldImg);
       },
+      async saveImageToAlbum() {
+        let systemInfo = await this.$bridge.system.getSystemInfo();
+        wx.canvasToTempFilePath({
+          x: 0,
+          y: 0,
+          width: systemInfo.windowWidth,
+          height: systemInfo.windowHeight,
+          destWidth: systemInfo.windowWidth * 2,
+          destHeight: systemInfo.windowHeight * 2,
+          canvasId: 'shareCanvas',
+          success: (res) => {
+            this.shareImage = res.tempFilePath;
+            // 将图片保存到相册
+            wx.saveImageToPhotosAlbum({
+              filePath: this.shareImage,
+              success(res) {
+                wx.showModal({
+                  title: '保存成功',
+                  content: '图片成功保存到相册了，快去分享朋友圈吧',
+                  showCancel: false,
+                  confirmText: '好的',
+                  confirmColor: '#818FFB',
+                  success: (res) => {
+                    if (res.confirm) {
+                      this.isShowCanvas = false;
+                    }
+                  }
+                });
+              }
+            });
+          },
+          fail: (res) => {
+            console.log(res);
+          }
+        }, this);
+      },
       /**
        * 绘制分享的图片
        * @param goodsPicPath 商品图片的本地链接
@@ -311,15 +346,17 @@
         let yOffset = 10;
         let xOffset = systemInfo.windowWidth * 0.1;
         const canvasCtx = wx.createCanvasContext('shareCanvas');
+        canvasCtx.setFillStyle('white');
+        canvasCtx.fillRect(xOffset - systemInfo.windowWidth * 0.1 / 2, yOffset, systemInfo.windowWidth * 0.9, systemInfo.windowHeight * 0.8);
         // 绘制商品图片
-        canvasCtx.drawImage(goodsPicPath, xOffset, yOffset, systemInfo.windowWidth * 0.8, systemInfo.windowWidth * 1.15);
+        canvasCtx.drawImage(goodsPicPath, xOffset, yOffset + 10, systemInfo.windowWidth * 0.8, systemInfo.windowHeight * 0.6);
         // 绘制背景
         // 绘制分享的标题文字
         let str = '褪去身体的疲惫, 芳聊馆是你的最佳选择!';
         canvasCtx.font = '14px FZCHYFW--GB1-0';
         canvasCtx.setFillStyle('#333');
         canvasCtx.setTextAlign('center');
-        yOffset += systemInfo.windowWidth * 1.15 + xOffset;
+        yOffset += systemInfo.windowHeight * 0.6 + xOffset;
         canvasCtx.fillText(str, systemInfo.windowWidth / 2, yOffset);
 
         canvasCtx.font = '12px PingFangSC-Regular';
@@ -335,33 +372,17 @@
         canvasCtx.setFillStyle('#888');
         canvasCtx.setTextAlign('left');
         canvasCtx.fillText('进入芳聊馆', (systemInfo.windowWidth - 60) / 2 + 70, yOffset + 30);
-        canvasCtx.stroke();
-
-        canvasCtx.draw();
         this.isShowCanvas = true;
-        // 绘制之后加一个延时去生成图片，如果直接生成可能没有绘制完成，导出图片会有问题。
-        setTimeout(() => {
-          wx.canvasToTempFilePath({
-            x: 0,
-            y: 0,
-            width: 390,
-            height: 800,
-            destWidth: 390,
-            destHeight: 800,
-            canvasId: 'shareCanvas',
-            success: (res) => {
-              console.log(res.tempFilePath);
-              this.shareImage = res.tempFilePath;
-              this.isShowCanvas = true;
-              wx.hideLoading();
-            },
-            fail: (res) => {
-              console.log(res);
-              wx.hideLoading();
-            }
-          });
-        }, 2000);
+        canvasCtx.draw();
+        wx.hideLoading();
       }
+    },
+    onShareAppMessage() {
+      return {
+        title: '自定义分享标题',
+        desc: '自定义分享描述',
+        path: '/pages/flg/product-list/main?isShare=1'
+      };
     },
     onShow() {
       Object.assign(this.$data, this.$options.data());// 还原原始数据
@@ -668,6 +689,8 @@
       position: absolute;
       top: 0;
     .btn-list
+      position: fixed;
+      bottom: 0;
       width: 100%;
       height: 100px
       background: #FFFFFF;
@@ -689,10 +712,13 @@
         display: inline-block
         width: 50%;
         text-align: center
+        background-color: #fff;
         .bg-friend
           background-image: url('../../../public/images/flg/shop-decoration/wx-friend.png')
         .bg-save
           background-image: url('../../../public/images/flg/shop-decoration/save.png')
+      .wx-friend::after
+        border: none;
 
   .no-data
     text-align: center
