@@ -1,9 +1,9 @@
 <template>
   <div class="container">
-    <div class="u-notice">
+  <!--  <div class="u-notice">
       <i class="u-bell-icon"></i>
       <span>新用户首单立减9元</span>
-    </div>
+    </div>-->
     <div class="mod-main">
       <div class="m-pro-hd">
         <div class="pro-inner">

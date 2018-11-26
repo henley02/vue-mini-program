@@ -460,3 +460,9 @@ export const fetchPopularityList = (params) => fetch({method: 'api.wfx.popularit
  * @param params
  */
 export const fetchTransactionList = (params) => fetch({method: 'api.wfx.commissionTransaction.find', ...params}, {isLoading: true});
+
+/**
+ * 高级查询佣金余额表
+ * @param params
+ */
+export const fetchWfxBalance = (params) => fetch({method: 'api.wfx.commissionWfxBalance.find', ...params}, {isLoading: true});

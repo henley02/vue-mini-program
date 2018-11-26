@@ -5,18 +5,18 @@
       <div class="dis-money">
         <div class="dis-m-money">
           <span>￥</span>
-          <div class="b-money">900.00</div>
+          <div class="b-money">{{balanceInfo.balanceAmount}}</div>
         </div>
         <div class="dis-m-label">我的金额</div>
       </div>
       <div class="dis-m-cols">
         <div class="dis-m-col">
-          <div class="dis-mc-num"><span class="mc-em">￥</span>320.48</div>
+          <div class="dis-mc-num"><span class="mc-em">￥</span>{{balanceInfo.unrealizedAmount}}</div>
           <div class="dis-mc-label">未到账</div>
         </div>
         <div class="dis-m-col">
-          <div class="dis-mc-num"><span class="mc-em">￥</span>320.48</div>
-          <div class="dis-mc-label">未到账</div>
+          <div class="dis-mc-num"><span class="mc-em">￥</span>{{balanceInfo.drawAmount}}</div>
+          <div class="dis-mc-label">已提现</div>
         </div>
       </div>
     </div>
@@ -63,7 +63,7 @@
 </template>
 
 <script>
-  import {fetchTransactionList} from 'api/index';
+  import {fetchTransactionList, fetchWfxBalance} from 'api/index';
 
   /**
    * 分销中心
@@ -77,6 +77,11 @@
         endDate: '2018-01-01',
         list: [],
         userInfo: {},
+        balanceInfo: {
+          balanceAmount: 0, // 佣金账户余额
+          unrealizedAmount: 0, // 未到账佣金金额
+          drawAmount: 0 // 提现金额
+        },
         isLoading: false,
         pageSize: 10, // 页数
         pageNumber: 1, // 页码
@@ -109,6 +114,15 @@
         }
         this.canDropDown = false;
         this.getData();
+      },
+      async getBalance() {
+        let res = await fetchWfxBalance({
+          memberId: this.userInfo.memberId,
+          passportId: this.userInfo.id
+        }, {isLoading: true});
+        if (res.firstErrorMessage === '' && res.result.length > 0) {
+          this.balanceInfo = res.result[0];
+        }
       },
       async getData() {
         this.isLoading = true;
@@ -143,6 +157,7 @@
       Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.userInfo = this.$bridge.storage.get('userInfo');
       this.getData();
+      this.getBalance();
     },
     onLoad() {
 
