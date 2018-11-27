@@ -23,38 +23,27 @@
     <div class="dis-detail-list">
       <div class="detail-title">
         <span class="d-tit"><i></i>基金明细</span>
-        <div class="calendar-col" @tap="togglePicker()">
+        <div class="calendar-col">
           <picker mode="date" :value="date" fields="month" :start="startDate" :end="endDate" @change="bindDateChange">
             <view class="picker">
-              {{showDate}}
+              <text>{{showDate}}</text>
+              <i class="calendar-icon"></i>
             </view>
           </picker>
-          <i class="calendar-icon"></i>
         </div>
       </div>
       <ul>
-        <li>
+        <li v-for="(item,index) in list" :key="index" @tap="goDetail(item)">
           <div class="point-info">
             <i class="point-icon"></i>
             <div class="point-intro">
-              <div class="pn-tit">销售订单获得基金</div>
-              <div class="pn-time">10-09 12:56</div>
+              <div class="pn-tit">{{item.sourceText}}</div>
+              <div class="pn-time">{{item.time}}</div>
             </div>
           </div>
           <div class="point-number">
-            <span class="c-green">+ 80</span>
-          </div>
-        </li>
-        <li>
-          <div class="point-info">
-            <i class="point-icon"></i>
-            <div class="point-intro">
-              <div class="pn-tit">提现</div>
-              <div class="pn-time">10-09 12:56</div>
-            </div>
-          </div>
-          <div class="point-number">
-            <span class="c-red">- 232</span>
+            <span
+              :class="{'c-green':item.amount>=0,'c-red':item.amount<0}">{{item.amount < 0 ? item.amount : '+' + item.amount}}</span>
           </div>
         </li>
       </ul>
@@ -71,10 +60,15 @@
   export default {
     data() {
       return {
+        typeObject: {
+          ORDER: '订单',
+          REFUND: '退款单',
+          REFUND_RETURN: '退货单',
+          DRAW: '提现'
+        },
         isShowPicker: false,
-        date: '2018-01-01',
-        startDate: '2014-01-01',
-        endDate: '2018-01-01',
+        startDate: '2018-01-01',
+        endDate: '',
         list: [],
         userInfo: {},
         balanceInfo: {
@@ -92,18 +86,20 @@
     components: {},
     computed: {
       showDate() {
-        let arr = this.date.split('-');
+        let arr = this.startDate.split('-');
         return arr[0] + '-' + arr[1];
       }
     },
     methods: {
-      togglePicker() {
-        this.isShowPicker = !this.isShowPicker;
+      goDetail(item) {
+        this.$bridge.link.navigateTo(`/pages/distribution-center/detail/main?id=${item.sourceId}&sourceType=${item.sourceType}`);
       },
       bindDateChange(e) {
-        console.log(e.target.value);
-        this.value = e.target.value;
-        this.togglePicker();
+        this.startDate = e.target.value + '-01';
+        this.pageNumber = 1;
+        this.isEnd = false;
+        this.canDropDown = true;
+        this.getData();
       },
       /**
        * 下拉加载
@@ -131,13 +127,18 @@
           passportId: this.userInfo.id,
           memberId: this.userInfo.memberId,
           pageSize: this.pageSize,
-          pageNumber: this.pageNumber
+          pageNumber: this.pageNumber,
+          beginTransactionTime: this.startDate + ' 00:00:01'
         };
         if (this.pageNumber === 1) {
           this.list = [];
         }
         let res = await fetchTransactionList(params, {isLoading: this.pageNumber === 1});
         if (res.firstErrorMessage === '') {
+          res.result.forEach((item) => {
+            item.sourceText = this.typeObject[item.sourceType];
+            item.time = this._dateFormat(item.transactionTime, 'MM-dd hh:mm');
+          });
           this.list = this.list.concat(res.result);
           // 判断数据是否全部加载完
           if (res.result.length < this.pageSize) {
@@ -156,11 +157,13 @@
     onShow() {
       Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.userInfo = this.$bridge.storage.get('userInfo');
-      this.getData();
-      this.getBalance();
-    },
-    onLoad() {
-
+      if (!this.userInfo) {
+        this.$bridge.link.goLogin();
+      } else {
+        this.endDate = this._dateFormat(new Date().getTime().toString(), 'yyyy-MM-dd');
+        this.getData();
+        this.getBalance();
+      }
     }
   };
 </script>
@@ -360,4 +363,7 @@
     color: #EA281A;
   }
 
+  .picker
+    display: flex
+    align-items: center
 </style>

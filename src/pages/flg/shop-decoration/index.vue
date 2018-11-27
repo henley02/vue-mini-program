@@ -90,10 +90,10 @@
             <div class="bg-friend bg"></div>
             <div class="text">微信好友</div>
           </button>
-          <div class="save-img" @tap="saveImageToAlbum">
+          <button class="save-img" @tap="saveImageToAlbum">
             <div class="bg-save bg"></div>
             <div class="text">保存图片</div>
-          </div>
+          </button>
         </div>
       </view>
     </div>
@@ -285,12 +285,33 @@
         this.isShowImgList = true;
       },
       goProductList() {
-        this.$bridge.link.navigateTo(`/pages/flg/product-list/main?tenantId=${this.data.storeId}`);
+        this.$bridge.link.navigateTo(`/pages/flg/product-list/main?memberId=${this.data.id}`);
       },
       shareBtn() {
         this.drawSharePic(this.imgList[0].imageUrl, this.goldImg);
       },
       async saveImageToAlbum() {
+        console.log(1111);
+        wx.getSetting({
+          success: (res) => {
+            if (!res.authSetting['scope.writePhotosAlbum']) {
+              wx.authorize({
+                scope: 'scope.writePhotosAlbum',
+                success() { // 这里是用户同意授权后的回调
+                  console.log(2);
+                },
+                fail() { // 这里是用户拒绝授权后的回调
+                  console.log(3);
+                }
+              });
+            } else {
+              console.log(1);
+            }
+          },
+          fail: (res) => {
+            console.log(res);
+          }
+        });
         let systemInfo = await this.$bridge.system.getSystemInfo();
         wx.canvasToTempFilePath({
           x: 0,
@@ -379,8 +400,7 @@
     },
     onShareAppMessage() {
       return {
-        title: '自定义分享标题',
-        desc: '自定义分享描述',
+        title: `褪去疲惫即刻放松，${this.data.storeName}`,
         path: '/pages/flg/product-list/main?isShare=1'
       };
     },
@@ -701,7 +721,6 @@
         font-family: PingFangSC-Regular;
         font-size: 14px;
         color: #333333;
-        margin-top: 8px
       .bg
         width: 50px
         height: 50px;
@@ -717,7 +736,8 @@
           background-image: url('../../../public/images/flg/shop-decoration/wx-friend.png')
         .bg-save
           background-image: url('../../../public/images/flg/shop-decoration/save.png')
-      .wx-friend::after
+      .wx-friend
+      .wx-friend::after, .save-img::after
         border: none;
 
   .no-data

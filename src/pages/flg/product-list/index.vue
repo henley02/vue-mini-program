@@ -7,13 +7,13 @@
     <div class="mod-main">
       <div class="m-pro-hd">
         <div class="pro-inner">
-          <div class="pro-i-hd">
+          <div class="pro-i-hd" @tap="goPersonalCenter()">
             <div class="pro-face">
               <img :src="wfxData.avatarUrl" alt="">
             </div>
             <div class="pro-intro">
               <div class="pi-tit">{{wfxData.storeName}}</div>
-              <p>欢迎来到我的门店!</p>
+              <p>{{wfxData.storeIntroduction || '欢迎来到我的门店!'}}</p>
             </div>
           </div>
           <div class="pro-i-bt">
@@ -70,6 +70,7 @@
       return {
         memberId: '',
         wfxData: {},
+        userInfo: {},
         classifyList: [], // 商品分类列表
         data: {
           pageSize: 10, // 页数
@@ -86,6 +87,11 @@
     components: {},
     computed: {},
     methods: {
+      goPersonalCenter() {
+        if (this.userInfo.memberId === this.memberId) {
+          this.$bridge.link.navigateTo(`/pages/flg/personal-center/main`);
+        }
+      },
       /**
        * 下拉加载
        */
@@ -187,6 +193,8 @@
     onShow() {
       Object.assign(this.$data, this.$options.data());// 还原原始数据
       this.memberId = this.$root.$mp.query.memberId;
+      this.userInfo = this.$bridge.storage.get('userInfo');
+      console.log(this.userInfo);
       console.log(this.$root.$mp.query);
       this.fetchWFXMember();
       this.fetchProductInfo();

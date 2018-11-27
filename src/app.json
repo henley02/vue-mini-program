@@ -6,6 +6,7 @@
     "pages/pay/index/main",
     "pages/pay/result/main",
     "pages/flg/index/main",
+    "pages/flg/personal-center/main",
     "pages/flg/product-list/main",
     "pages/flg/shop-decoration/main",
     "pages/user/account-safety/main",

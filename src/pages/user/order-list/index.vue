@@ -22,7 +22,7 @@
               <label v-if="item.status == 'REFUND'">已退款</label>
               <label v-if="item.status == 'CANCELLED'">已取消</label>
             </div>
-            <div class="m-panel-hda" style='border-top:0;'>订单编号：{{item.id}}</div>
+            <div class="m-panel-hda" style='border-top:0;'>订单编号：{{item.orderNumber}}</div>
 
             <div class="m-product-list">
               <navigator class="m-product-item" :url="'/pages/user/refund-detail/main?id='+item.id">
@@ -54,7 +54,7 @@
 
         <block v-for="(order,index) in list" :key="index" v-if="type !=='EVALUATION'">
           <div class="m-panel m-panel-access">
-            <div class="m-panel-hd">订单编号：{{order.id}}
+            <div class="m-panel-hd">订单编号：{{order.number}}
               <label v-if="order.status == 'UN_PAID'">待付款</label>
               <label v-if="order.status == 'UN_SHIPMENT'">待发货</label>
               <label v-if="order.status == 'UN_SIGNED'">待收货</label>

@@ -31,7 +31,7 @@
 
     <div class="m-product-all">
       <div>
-        <div class="m-panel-hd">订单编号：{{orderId}}
+        <div class="m-panel-hd">订单编号：{{order.number}}
           <label>{{order.orderStatus}}</label>
         </div>
       </div>

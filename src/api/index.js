@@ -466,3 +466,9 @@ export const fetchTransactionList = (params) => fetch({method: 'api.wfx.commissi
  * @param params
  */
 export const fetchWfxBalance = (params) => fetch({method: 'api.wfx.commissionWfxBalance.find', ...params}, {isLoading: true});
+
+/**
+ * 更新微分销店铺信息
+ * @param params
+ */
+export const updateWFXStore = (params) => fetch({method: 'api.wfx.wfxStore.update', ...params}, {isLoading: true});
